@@ -1,0 +1,149 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS CloudFront distribution security rules"
+tags = ["aws", "cloudfront", "cdn", "security"]
+
+[[rules]]
+name = "cloudfront-minimum-tls-1.2"
+description = "Ensure CloudFront distribution uses TLS 1.2 minimum"
+level = 2
+object = "aws_cloudfront_distribution"
+tags = ["encryption", "tls", "soc2"]
+
+  [[rules.conditions]]
+  property = "viewer_certificate.minimum_protocol_version"
+  condition = "EQUAL"
+  value = "TLSv1.2_2021"
+
+[[rules]]
+name = "cloudfront-https-only"
+description = "Ensure CloudFront distribution enforces HTTPS only"
+level = 2
+object = "aws_cloudfront_distribution"
+tags = ["encryption", "https", "soc2"]
+
+  [[rules.conditions]]
+  property = "default_cache_behavior.viewer_protocol_policy"
+  condition = "EQUAL"
+  value = "https-only"
+
+[[rules]]
+name = "cloudfront-waf-enabled"
+description = "Ensure CloudFront distribution has WAF web ACL associated"
+level = 2
+object = "aws_cloudfront_distribution"
+tags = ["waf", "protection", "ddos"]
+
+  [[rules.conditions]]
+  property = "web_acl_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudfront-logging-enabled"
+description = "Ensure CloudFront distribution has access logging enabled"
+level = 2
+object = "aws_cloudfront_distribution"
+tags = ["logging", "audit", "soc2"]
+
+  [[rules.conditions]]
+  property = "logging_config.bucket"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudfront-geo-restriction"
+description = "Ensure CloudFront distribution has geo-restriction configured"
+level = 1
+object = "aws_cloudfront_distribution"
+tags = ["geo-restriction", "compliance"]
+
+  [[rules.conditions]]
+  property = "restrictions.geo_restriction.restriction_type"
+  condition = "DIFFERENT"
+  value = "none"
+
+[[rules]]
+name = "cloudfront-custom-error-pages"
+description = "Ensure CloudFront distribution has custom error responses configured"
+level = 1
+object = "aws_cloudfront_distribution"
+tags = ["hardening", "error-handling"]
+
+  [[rules.conditions]]
+  property = "custom_error_response"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudfront-origin-protocol-https"
+description = "Ensure CloudFront origin uses HTTPS only"
+level = 2
+object = "aws_cloudfront_distribution"
+tags = ["encryption", "origin", "https"]
+
+  [[rules.conditions]]
+  property = "origin.custom_origin_config.origin_protocol_policy"
+  condition = "EQUAL"
+  value = "https-only"
+
+[[rules]]
+name = "cloudfront-origin-access-identity"
+description = "Ensure CloudFront uses Origin Access Identity for S3 origins"
+level = 2
+object = "aws_cloudfront_distribution"
+tags = ["access-control", "s3", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "origin.s3_origin_config.origin_access_identity"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudfront-default-root-object"
+description = "Ensure CloudFront distribution has a default root object"
+level = 1
+object = "aws_cloudfront_distribution"
+tags = ["hardening", "misconfiguration"]
+
+  [[rules.conditions]]
+  property = "default_root_object"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudfront-field-level-encryption"
+description = "Ensure CloudFront distribution uses field-level encryption for sensitive data"
+level = 1
+object = "aws_cloudfront_distribution"
+tags = ["encryption", "data-protection"]
+
+  [[rules.conditions]]
+  property = "default_cache_behavior.field_level_encryption_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudfront-no-deprecated-ssl"
+description = "Ensure CloudFront distribution does not use SSLv3"
+level = 3
+object = "aws_cloudfront_distribution"
+tags = ["encryption", "deprecated", "vulnerability"]
+
+  [[rules.conditions]]
+  property = "viewer_certificate.ssl_support_method"
+  condition = "DIFFERENT"
+  value = "vip"
+
+[[rules]]
+name = "cloudfront-response-headers-policy"
+description = "Ensure CloudFront distribution has response headers policy attached"
+level = 1
+object = "aws_cloudfront_distribution"
+tags = ["headers", "security-headers", "hardening"]
+
+  [[rules.conditions]]
+  property = "default_cache_behavior.response_headers_policy_id"
+  condition = "DIFFERENT"
+  value = ""

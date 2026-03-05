@@ -1,0 +1,103 @@
+[metadata]
+version = "1.0.0"
+provider = "cloudflare"
+description = "Cloudflare Page Rules security and configuration rules"
+tags = ["cloudflare", "page-rules", "cdn", "security"]
+
+[[rules]]
+name = "cloudflare-always-use-https"
+description = "Ensure page rule enforces HTTPS redirect"
+level = 2
+object = "cloudflare_page_rule"
+tags = ["https", "encryption", "redirect"]
+
+  [[rules.conditions]]
+  property = "actions.always_use_https"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "cloudflare-ssl-strict"
+description = "Ensure page rule uses Full (Strict) SSL mode"
+level = 2
+object = "cloudflare_page_rule"
+tags = ["ssl", "encryption", "strict"]
+
+  [[rules.conditions]]
+  property = "actions.ssl"
+  condition = "EQUAL"
+  value = "strict"
+
+[[rules]]
+name = "cloudflare-security-level"
+description = "Ensure page rule sets security level to high or under_attack"
+level = 1
+object = "cloudflare_page_rule"
+tags = ["security-level", "protection"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "actions.security_level", condition = "EQUAL", value = "high" },
+    { property = "actions.security_level", condition = "EQUAL", value = "under_attack" },
+  ]
+
+[[rules]]
+name = "cloudflare-browser-check"
+description = "Ensure page rule has browser integrity check enabled"
+level = 1
+object = "cloudflare_page_rule"
+tags = ["bot-protection", "integrity"]
+
+  [[rules.conditions]]
+  property = "actions.browser_check"
+  condition = "EQUAL"
+  value = "on"
+
+[[rules]]
+name = "cloudflare-cache-level"
+description = "Ensure page rule has appropriate cache level set"
+level = 0
+object = "cloudflare_page_rule"
+tags = ["cache", "performance"]
+
+  [[rules.conditions]]
+  property = "actions.cache_level"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudflare-waf-enabled"
+description = "Ensure page rule does not disable WAF"
+level = 3
+object = "cloudflare_page_rule"
+tags = ["waf", "protection", "critical"]
+
+  [[rules.conditions]]
+  property = "actions.waf"
+  condition = "DIFFERENT"
+  value = "off"
+
+[[rules]]
+name = "cloudflare-minify-enabled"
+description = "Ensure page rule enables minification for performance"
+level = 0
+object = "cloudflare_page_rule"
+tags = ["performance", "optimization"]
+
+  [[rules.conditions]]
+  property = "actions.minify"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudflare-no-forwarding-http"
+description = "Ensure page rule forwarding URL uses HTTPS"
+level = 2
+object = "cloudflare_page_rule"
+tags = ["redirect", "https", "security"]
+
+  [[rules.conditions]]
+  property = "actions.forwarding_url.url"
+  condition = "STARTS_WITH"
+  value = "https://"

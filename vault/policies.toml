@@ -1,0 +1,125 @@
+[metadata]
+version = "1.0.0"
+provider = "vault"
+description = "HashiCorp Vault policy security rules"
+tags = ["vault", "policies", "security", "secrets-management"]
+
+[[rules]]
+name = "vault-no-wildcard-path"
+description = "Ensure Vault policy does not use wildcard path '*'"
+level = 3
+object = "vault_policy"
+tags = ["wildcard", "least-privilege", "critical", "soc2"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "path \"*\""
+
+[[rules]]
+name = "vault-no-root-policy-assignment"
+description = "Ensure Vault policy is not the root policy"
+level = 3
+object = "vault_policy"
+tags = ["root", "least-privilege", "critical"]
+
+  [[rules.conditions]]
+  property = "name"
+  condition = "DIFFERENT"
+  value = "root"
+
+[[rules]]
+name = "vault-no-sudo-capability"
+description = "Ensure Vault policy does not grant sudo capability broadly"
+level = 2
+object = "vault_policy"
+tags = ["sudo", "privilege-escalation", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"sudo\""
+
+[[rules]]
+name = "vault-deny-by-default"
+description = "Ensure Vault policy uses explicit deny where needed"
+level = 1
+object = "vault_policy"
+tags = ["default-deny", "least-privilege", "best-practice"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "INCLUDE"
+  value = "capabilities"
+
+[[rules]]
+name = "vault-no-create-on-sys"
+description = "Ensure Vault policy does not grant create on sys/ paths"
+level = 2
+object = "vault_policy"
+tags = ["sys", "admin", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "path \"sys/*\""
+
+[[rules]]
+name = "vault-no-delete-capability-broad"
+description = "Ensure Vault policy does not grant broad delete capabilities"
+level = 2
+object = "vault_policy"
+tags = ["delete", "data-protection", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"delete\""
+
+[[rules]]
+name = "vault-policy-has-description"
+description = "Ensure Vault policy name follows naming convention"
+level = 0
+object = "vault_policy"
+tags = ["naming", "governance"]
+
+  [[rules.conditions]]
+  property = "name"
+  condition = "REGEX"
+  value = "^[a-z][a-z0-9-]+$"
+
+[[rules]]
+name = "vault-no-list-on-root"
+description = "Ensure Vault policy does not grant list on root path"
+level = 2
+object = "vault_policy"
+tags = ["enumeration", "discovery", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "path \"/\""
+
+[[rules]]
+name = "vault-no-update-on-auth"
+description = "Ensure Vault policy does not grant update on auth/ paths broadly"
+level = 2
+object = "vault_policy"
+tags = ["auth", "admin", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "path \"auth/*\""
+
+[[rules]]
+name = "vault-minimum-capabilities"
+description = "Ensure Vault policy grants only read and list at minimum"
+level = 1
+object = "vault_policy"
+tags = ["minimum-privilege", "read-only", "best-practice"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "INCLUDE"
+  value = "\"read\""

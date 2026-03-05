@@ -1,0 +1,125 @@
+[metadata]
+version = "1.0.0"
+provider = "azure"
+description = "Azure Container Registry security rules"
+tags = ["azure", "acr", "containers", "security"]
+
+[[rules]]
+name = "acr-admin-disabled"
+description = "Ensure ACR admin user is disabled"
+level = 3
+object = "azurerm_container_registry"
+tags = ["authentication", "admin", "least-privilege", "soc2"]
+
+  [[rules.conditions]]
+  property = "admin_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "acr-cmk-encryption"
+description = "Ensure ACR uses customer-managed key for encryption"
+level = 2
+object = "azurerm_container_registry"
+tags = ["encryption", "cmk", "soc2"]
+
+  [[rules.conditions]]
+  property = "encryption.key_vault_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "acr-private-endpoint"
+description = "Ensure ACR uses private endpoint"
+level = 2
+object = "azurerm_container_registry"
+tags = ["network", "private-endpoint", "isolation"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "acr-quarantine-enabled"
+description = "Ensure ACR has quarantine policy enabled"
+level = 1
+object = "azurerm_container_registry"
+tags = ["supply-chain", "quarantine", "scanning"]
+
+  [[rules.conditions]]
+  property = "quarantine_policy_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "acr-content-trust"
+description = "Ensure ACR has content trust enabled"
+level = 2
+object = "azurerm_container_registry"
+tags = ["supply-chain", "trust", "integrity"]
+
+  [[rules.conditions]]
+  property = "trust_policy.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "acr-geo-replication"
+description = "Ensure ACR has geo-replication configured for disaster recovery"
+level = 1
+object = "azurerm_container_registry"
+tags = ["availability", "disaster-recovery", "geo-replication"]
+
+  [[rules.conditions]]
+  property = "georeplications"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "acr-sku-premium"
+description = "Ensure ACR uses Premium SKU for security features"
+level = 1
+object = "azurerm_container_registry"
+tags = ["sku", "features", "security"]
+
+  [[rules.conditions]]
+  property = "sku"
+  condition = "EQUAL"
+  value = "Premium"
+
+[[rules]]
+name = "acr-retention-policy"
+description = "Ensure ACR has retention policy enabled for untagged manifests"
+level = 1
+object = "azurerm_container_registry"
+tags = ["cleanup", "retention", "cost"]
+
+  [[rules.conditions]]
+  property = "retention_policy.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "acr-network-rule-set"
+description = "Ensure ACR has network rule set with default deny"
+level = 2
+object = "azurerm_container_registry"
+tags = ["network", "firewall", "default-deny"]
+
+  [[rules.conditions]]
+  property = "network_rule_set.default_action"
+  condition = "EQUAL"
+  value = "Deny"
+
+[[rules]]
+name = "acr-tags-present"
+description = "Ensure ACR has required tags"
+level = 1
+object = "azurerm_container_registry"
+tags = ["tagging", "governance"]
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""

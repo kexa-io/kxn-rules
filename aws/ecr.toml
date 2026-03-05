@@ -1,0 +1,101 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS ECR container registry security rules"
+tags = ["aws", "ecr", "containers", "security"]
+
+[[rules]]
+name = "ecr-image-scanning-enabled"
+description = "Ensure ECR repository has image scanning on push enabled"
+level = 2
+object = "aws_ecr_repository"
+tags = ["scanning", "vulnerabilities", "soc2"]
+
+  [[rules.conditions]]
+  property = "image_scanning_configuration.scan_on_push"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "ecr-immutable-tags"
+description = "Ensure ECR repository has immutable image tags"
+level = 2
+object = "aws_ecr_repository"
+tags = ["supply-chain", "integrity", "immutability"]
+
+  [[rules.conditions]]
+  property = "image_tag_mutability"
+  condition = "EQUAL"
+  value = "IMMUTABLE"
+
+[[rules]]
+name = "ecr-encryption-kms"
+description = "Ensure ECR repository uses KMS encryption"
+level = 2
+object = "aws_ecr_repository"
+tags = ["encryption", "kms", "soc2"]
+
+  [[rules.conditions]]
+  property = "encryption_configuration.encryption_type"
+  condition = "EQUAL"
+  value = "KMS"
+
+[[rules]]
+name = "ecr-lifecycle-policy"
+description = "Ensure ECR repository has lifecycle policy configured"
+level = 1
+object = "aws_ecr_repository"
+tags = ["cost", "cleanup", "governance"]
+
+  [[rules.conditions]]
+  property = "lifecycle_policy"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "ecr-no-public-access"
+description = "Ensure ECR repository is not publicly accessible"
+level = 3
+object = "aws_ecr_repository"
+tags = ["access-control", "public-exposure", "critical"]
+
+  [[rules.conditions]]
+  property = "repository_policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Principal\":\"*\""
+
+[[rules]]
+name = "ecr-tags-present"
+description = "Ensure ECR repository has required tags"
+level = 1
+object = "aws_ecr_repository"
+tags = ["tagging", "governance"]
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "ecr-kms-key-custom"
+description = "Ensure ECR repository uses customer-managed KMS key"
+level = 1
+object = "aws_ecr_repository"
+tags = ["encryption", "cmk", "kms"]
+
+  [[rules.conditions]]
+  property = "encryption_configuration.kms_key"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "ecr-scan-findings-clean"
+description = "Ensure ECR images have no critical vulnerabilities"
+level = 3
+object = "aws_ecr_repository"
+tags = ["scanning", "vulnerabilities", "critical"]
+
+  [[rules.conditions]]
+  property = "image_scanning_findings.finding_severity_counts.CRITICAL"
+  condition = "EQUAL"
+  value = 0

@@ -1,0 +1,128 @@
+[metadata]
+version = "1.0.0"
+provider = "azure"
+description = "Azure Cosmos DB security and compliance rules"
+tags = ["azure", "cosmosdb", "database", "security"]
+
+[[rules]]
+name = "cosmosdb-no-public-access"
+description = "Ensure Cosmos DB account disables public network access"
+level = 3
+object = "azurerm_cosmosdb_account"
+tags = ["network", "public-exposure", "soc2"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "cosmosdb-cmk-encryption"
+description = "Ensure Cosmos DB account uses customer-managed key encryption"
+level = 2
+object = "azurerm_cosmosdb_account"
+tags = ["encryption", "cmk", "soc2"]
+
+  [[rules.conditions]]
+  property = "key_vault_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cosmosdb-vnet-filter"
+description = "Ensure Cosmos DB account has virtual network filter enabled"
+level = 2
+object = "azurerm_cosmosdb_account"
+tags = ["network", "vnet", "isolation"]
+
+  [[rules.conditions]]
+  property = "is_virtual_network_filter_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "cosmosdb-ip-firewall"
+description = "Ensure Cosmos DB account has IP firewall rules configured"
+level = 2
+object = "azurerm_cosmosdb_account"
+tags = ["network", "firewall", "access-control"]
+
+  [[rules.conditions]]
+  property = "ip_range_filter"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cosmosdb-automatic-failover"
+description = "Ensure Cosmos DB account has automatic failover enabled"
+level = 2
+object = "azurerm_cosmosdb_account"
+tags = ["availability", "disaster-recovery", "resilience"]
+
+  [[rules.conditions]]
+  property = "enable_automatic_failover"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "cosmosdb-backup-periodic"
+description = "Ensure Cosmos DB account has backup policy configured"
+level = 2
+object = "azurerm_cosmosdb_account"
+tags = ["backup", "disaster-recovery", "soc2"]
+
+  [[rules.conditions]]
+  property = "backup.type"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cosmosdb-consistency-bounded"
+description = "Ensure Cosmos DB account uses bounded staleness or stronger consistency"
+level = 1
+object = "azurerm_cosmosdb_account"
+tags = ["consistency", "data-integrity"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "consistency_policy.consistency_level", condition = "EQUAL", value = "Strong" },
+    { property = "consistency_policy.consistency_level", condition = "EQUAL", value = "BoundedStaleness" },
+    { property = "consistency_policy.consistency_level", condition = "EQUAL", value = "Session" },
+  ]
+
+[[rules]]
+name = "cosmosdb-aad-auth"
+description = "Ensure Cosmos DB account uses Azure Active Directory authentication"
+level = 2
+object = "azurerm_cosmosdb_account"
+tags = ["authentication", "aad", "identity"]
+
+  [[rules.conditions]]
+  property = "local_authentication_disabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "cosmosdb-private-endpoint"
+description = "Ensure Cosmos DB account uses private endpoints"
+level = 2
+object = "azurerm_cosmosdb_account"
+tags = ["network", "private-endpoint", "isolation"]
+
+  [[rules.conditions]]
+  property = "private_endpoint_connection"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cosmosdb-tags-present"
+description = "Ensure Cosmos DB account has required tags"
+level = 1
+object = "azurerm_cosmosdb_account"
+tags = ["tagging", "governance"]
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""

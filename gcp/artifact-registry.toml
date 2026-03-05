@@ -1,0 +1,101 @@
+[metadata]
+version = "1.0.0"
+provider = "gcp"
+description = "GCP Artifact Registry security rules"
+tags = ["gcp", "artifact-registry", "containers", "security"]
+
+[[rules]]
+name = "artifact-registry-cmk-encryption"
+description = "Ensure Artifact Registry uses customer-managed encryption key"
+level = 2
+object = "google_artifact_registry_repository"
+tags = ["encryption", "cmk", "soc2"]
+
+  [[rules.conditions]]
+  property = "kms_key_name"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "artifact-registry-cleanup-policy"
+description = "Ensure Artifact Registry has cleanup policies configured"
+level = 1
+object = "google_artifact_registry_repository"
+tags = ["cleanup", "cost", "governance"]
+
+  [[rules.conditions]]
+  property = "cleanup_policies"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "artifact-registry-no-public"
+description = "Ensure Artifact Registry repository is not publicly accessible"
+level = 3
+object = "google_artifact_registry_repository"
+tags = ["access-control", "public-exposure", "critical"]
+
+  [[rules.conditions]]
+  property = "mode"
+  condition = "DIFFERENT"
+  value = "REMOTE_REPOSITORY"
+
+[[rules]]
+name = "artifact-registry-vulnerability-scanning"
+description = "Ensure Artifact Registry has vulnerability scanning enabled"
+level = 2
+object = "google_artifact_registry_repository"
+tags = ["scanning", "vulnerabilities", "supply-chain"]
+
+  [[rules.conditions]]
+  property = "docker_config.immutable_tags"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "artifact-registry-format-docker"
+description = "Ensure Artifact Registry repository has explicit format set"
+level = 0
+object = "google_artifact_registry_repository"
+tags = ["configuration", "governance"]
+
+  [[rules.conditions]]
+  property = "format"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "artifact-registry-labels"
+description = "Ensure Artifact Registry repository has labels for governance"
+level = 1
+object = "google_artifact_registry_repository"
+tags = ["tagging", "governance"]
+
+  [[rules.conditions]]
+  property = "labels"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "artifact-registry-description"
+description = "Ensure Artifact Registry repository has a description"
+level = 0
+object = "google_artifact_registry_repository"
+tags = ["documentation", "governance"]
+
+  [[rules.conditions]]
+  property = "description"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "artifact-registry-immutable-tags"
+description = "Ensure Artifact Registry Docker images use immutable tags"
+level = 2
+object = "google_artifact_registry_repository"
+tags = ["supply-chain", "integrity", "immutability"]
+
+  [[rules.conditions]]
+  property = "docker_config.immutable_tags"
+  condition = "EQUAL"
+  value = true

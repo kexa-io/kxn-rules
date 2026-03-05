@@ -1,0 +1,127 @@
+[metadata]
+version = "1.0.0"
+provider = "gcp"
+description = "GCP Cloud Run security and configuration rules"
+tags = ["gcp", "cloudrun", "serverless", "security"]
+
+[[rules]]
+name = "cloudrun-no-unauthenticated"
+description = "Ensure Cloud Run service does not allow unauthenticated invocations"
+level = 3
+object = "google_cloud_run_service"
+tags = ["authentication", "public-exposure", "soc2"]
+
+  [[rules.conditions]]
+  property = "metadata.annotations.run.googleapis.com/ingress"
+  condition = "DIFFERENT"
+  value = "all"
+
+[[rules]]
+name = "cloudrun-vpc-connector"
+description = "Ensure Cloud Run service uses VPC connector for egress"
+level = 2
+object = "google_cloud_run_service"
+tags = ["network", "vpc", "isolation"]
+
+  [[rules.conditions]]
+  property = "template.metadata.annotations.run.googleapis.com/vpc-access-connector"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudrun-min-instances"
+description = "Ensure Cloud Run service has minimum instances set to avoid cold starts"
+level = 1
+object = "google_cloud_run_service"
+tags = ["availability", "performance"]
+
+  [[rules.conditions]]
+  property = "template.metadata.annotations.autoscaling.knative.dev/minScale"
+  condition = "SUP_OR_EQUAL"
+  value = "1"
+
+[[rules]]
+name = "cloudrun-max-instances"
+description = "Ensure Cloud Run service has maximum instances limited"
+level = 1
+object = "google_cloud_run_service"
+tags = ["cost", "availability", "dos-protection"]
+
+  [[rules.conditions]]
+  property = "template.metadata.annotations.autoscaling.knative.dev/maxScale"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudrun-concurrency-limited"
+description = "Ensure Cloud Run service has concurrency appropriately limited"
+level = 1
+object = "google_cloud_run_service"
+tags = ["performance", "stability"]
+
+  [[rules.conditions]]
+  property = "template.spec.container_concurrency"
+  condition = "INF_OR_EQUAL"
+  value = 250
+
+[[rules]]
+name = "cloudrun-cpu-limit"
+description = "Ensure Cloud Run service has CPU limits defined"
+level = 1
+object = "google_cloud_run_service"
+tags = ["resources", "cost", "stability"]
+
+  [[rules.conditions]]
+  property = "template.spec.containers.resources.limits.cpu"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudrun-memory-limit"
+description = "Ensure Cloud Run service has memory limits defined"
+level = 1
+object = "google_cloud_run_service"
+tags = ["resources", "cost", "stability"]
+
+  [[rules.conditions]]
+  property = "template.spec.containers.resources.limits.memory"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cloudrun-service-account"
+description = "Ensure Cloud Run service uses a dedicated service account"
+level = 2
+object = "google_cloud_run_service"
+tags = ["identity", "least-privilege", "soc2"]
+
+  [[rules.conditions]]
+  property = "template.spec.service_account_name"
+  condition = "NOT_ENDS_WITH"
+  value = "-compute@developer.gserviceaccount.com"
+
+[[rules]]
+name = "cloudrun-ingress-internal"
+description = "Ensure Cloud Run service restricts ingress to internal traffic"
+level = 2
+object = "google_cloud_run_service"
+tags = ["network", "ingress", "isolation"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "metadata.annotations.run.googleapis.com/ingress", condition = "EQUAL", value = "internal" },
+    { property = "metadata.annotations.run.googleapis.com/ingress", condition = "EQUAL", value = "internal-and-cloud-load-balancing" },
+  ]
+
+[[rules]]
+name = "cloudrun-execution-environment"
+description = "Ensure Cloud Run service uses second generation execution environment"
+level = 1
+object = "google_cloud_run_service"
+tags = ["security", "sandbox", "hardening"]
+
+  [[rules.conditions]]
+  property = "template.metadata.annotations.run.googleapis.com/execution-environment"
+  condition = "EQUAL"
+  value = "gen2"

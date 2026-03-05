@@ -1,0 +1,189 @@
+[metadata]
+version = "1.0.0"
+provider = "kubernetes"
+description = "Kubernetes workload reliability and best practices rules"
+tags = ["kubernetes", "workloads", "reliability", "best-practices"]
+
+[[rules]]
+name = "k8s-deployment-replicas-minimum"
+description = "Ensure Deployment has at least 2 replicas for high availability"
+level = 2
+object = "kubernetes_deployment"
+tags = ["availability", "replicas", "soc2"]
+
+  [[rules.conditions]]
+  property = "spec.replicas"
+  condition = "SUP_OR_EQUAL"
+  value = 2
+
+[[rules]]
+name = "k8s-deployment-rolling-update"
+description = "Ensure Deployment uses RollingUpdate strategy"
+level = 2
+object = "kubernetes_deployment"
+tags = ["deployment-strategy", "availability", "zero-downtime"]
+
+  [[rules.conditions]]
+  property = "spec.strategy.type"
+  condition = "EQUAL"
+  value = "RollingUpdate"
+
+[[rules]]
+name = "k8s-deployment-max-surge"
+description = "Ensure Deployment rolling update has maxSurge configured"
+level = 1
+object = "kubernetes_deployment"
+tags = ["deployment-strategy", "availability"]
+
+  [[rules.conditions]]
+  property = "spec.strategy.rollingUpdate.maxSurge"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-deployment-max-unavailable"
+description = "Ensure Deployment rolling update has maxUnavailable configured"
+level = 1
+object = "kubernetes_deployment"
+tags = ["deployment-strategy", "availability"]
+
+  [[rules.conditions]]
+  property = "spec.strategy.rollingUpdate.maxUnavailable"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-deployment-revision-history"
+description = "Ensure Deployment has revision history limit set"
+level = 0
+object = "kubernetes_deployment"
+tags = ["cleanup", "resources"]
+
+  [[rules.conditions]]
+  property = "spec.revisionHistoryLimit"
+  condition = "INF_OR_EQUAL"
+  value = 10
+
+[[rules]]
+name = "k8s-deployment-progress-deadline"
+description = "Ensure Deployment has progress deadline set"
+level = 1
+object = "kubernetes_deployment"
+tags = ["deployment-strategy", "timeout"]
+
+  [[rules.conditions]]
+  property = "spec.progressDeadlineSeconds"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-deployment-anti-affinity"
+description = "Ensure Deployment has pod anti-affinity for spread across nodes"
+level = 1
+object = "kubernetes_deployment"
+tags = ["availability", "anti-affinity", "resilience"]
+
+  [[rules.conditions]]
+  property = "spec.template.spec.affinity.podAntiAffinity"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-deployment-topology-spread"
+description = "Ensure Deployment has topology spread constraints"
+level = 1
+object = "kubernetes_deployment"
+tags = ["availability", "topology", "spread"]
+
+  [[rules.conditions]]
+  property = "spec.template.spec.topologySpreadConstraints"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-deployment-readiness-probe"
+description = "Ensure Deployment containers have readiness probes"
+level = 2
+object = "kubernetes_deployment"
+tags = ["health-check", "availability", "best-practice"]
+
+  [[rules.conditions]]
+  property = "spec.template.spec.containers.readinessProbe"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-deployment-liveness-probe"
+description = "Ensure Deployment containers have liveness probes"
+level = 2
+object = "kubernetes_deployment"
+tags = ["health-check", "availability", "best-practice"]
+
+  [[rules.conditions]]
+  property = "spec.template.spec.containers.livenessProbe"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-statefulset-replicas"
+description = "Ensure StatefulSet has at least 2 replicas"
+level = 2
+object = "kubernetes_stateful_set"
+tags = ["availability", "replicas"]
+
+  [[rules.conditions]]
+  property = "spec.replicas"
+  condition = "SUP_OR_EQUAL"
+  value = 2
+
+[[rules]]
+name = "k8s-statefulset-pvc-template"
+description = "Ensure StatefulSet has persistent volume claim templates"
+level = 1
+object = "kubernetes_stateful_set"
+tags = ["storage", "persistence"]
+
+  [[rules.conditions]]
+  property = "spec.volumeClaimTemplates"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "k8s-statefulset-pod-management"
+description = "Ensure StatefulSet uses OrderedReady pod management policy"
+level = 1
+object = "kubernetes_stateful_set"
+tags = ["ordering", "stability"]
+
+  [[rules.conditions]]
+  property = "spec.podManagementPolicy"
+  condition = "EQUAL"
+  value = "OrderedReady"
+
+[[rules]]
+name = "k8s-deployment-resource-requests"
+description = "Ensure Deployment containers have resource requests defined"
+level = 2
+object = "kubernetes_deployment"
+tags = ["resources", "scheduling", "stability"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "spec.template.spec.containers.resources.requests.cpu", condition = "DIFFERENT", value = "" },
+    { property = "spec.template.spec.containers.resources.requests.memory", condition = "DIFFERENT", value = "" },
+  ]
+
+[[rules]]
+name = "k8s-deployment-resource-limits"
+description = "Ensure Deployment containers have resource limits defined"
+level = 2
+object = "kubernetes_deployment"
+tags = ["resources", "limits", "stability"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "spec.template.spec.containers.resources.limits.cpu", condition = "DIFFERENT", value = "" },
+    { property = "spec.template.spec.containers.resources.limits.memory", condition = "DIFFERENT", value = "" },
+  ]

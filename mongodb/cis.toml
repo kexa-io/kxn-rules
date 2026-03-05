@@ -1,0 +1,185 @@
+[metadata]
+version = "1.0.0"
+provider = "mongodb"
+description = "MongoDB CIS security rules"
+tags = ["cis", "mongodb", "database", "security"]
+
+[[rules]]
+name = "mongodb-cis-3.1-auth-enabled"
+description = "CIS 3.1 - Ensure authentication is enabled"
+level = 3
+object = "cmdLineOpts"
+tags = ["cis-3.1", "authentication", "soc2"]
+
+  [[rules.conditions]]
+  property = "parsed.security.authorization"
+  condition = "EQUAL"
+  value = "enabled"
+
+[[rules]]
+name = "mongodb-cis-3.2-scram-sha-256"
+description = "CIS 3.2 - Ensure SCRAM-SHA-256 authentication mechanism is used"
+level = 2
+object = "serverStatus"
+tags = ["cis-3.2", "authentication", "encryption"]
+
+  [[rules.conditions]]
+  property = "security.authentication.mechanisms"
+  condition = "INCLUDE"
+  value = "SCRAM-SHA-256"
+
+[[rules]]
+name = "mongodb-cis-3.4-tls-required"
+description = "CIS 3.4 - Ensure TLS/SSL is required for all connections"
+level = 3
+object = "cmdLineOpts"
+tags = ["cis-3.4", "encryption", "tls", "soc2"]
+
+  [[rules.conditions]]
+  property = "parsed.net.tls.mode"
+  condition = "EQUAL"
+  value = "requireTLS"
+
+[[rules]]
+name = "mongodb-cis-3.5-tls-certificate-validation"
+description = "CIS 3.5 - Ensure TLS certificate validation is enabled"
+level = 2
+object = "cmdLineOpts"
+tags = ["cis-3.5", "encryption", "tls"]
+
+  [[rules.conditions]]
+  property = "parsed.net.tls.allowInvalidCertificates"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "mongodb-cis-4.1-audit-logging-enabled"
+description = "CIS 4.1 - Ensure audit logging is enabled"
+level = 2
+object = "cmdLineOpts"
+tags = ["cis-4.1", "audit", "logging", "soc2"]
+
+  [[rules.conditions]]
+  property = "parsed.auditLog.destination"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "mongodb-cis-4.2-audit-filter-configured"
+description = "CIS 4.2 - Ensure audit filter is properly configured"
+level = 2
+object = "cmdLineOpts"
+tags = ["cis-4.2", "audit", "logging"]
+
+  [[rules.conditions]]
+  property = "parsed.auditLog.filter"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "mongodb-cis-2.1-no-bind-all"
+description = "CIS 2.1 - Ensure MongoDB is not bound to all interfaces"
+level = 3
+object = "cmdLineOpts"
+tags = ["cis-2.1", "network", "exposure"]
+
+  [[rules.conditions]]
+  property = "parsed.net.bindIp"
+  condition = "DIFFERENT"
+  value = "0.0.0.0"
+
+[[rules]]
+name = "mongodb-cis-2.2-default-port-changed"
+description = "CIS 2.2 - Ensure MongoDB default port is changed"
+level = 1
+object = "cmdLineOpts"
+tags = ["cis-2.2", "network", "hardening"]
+
+  [[rules.conditions]]
+  property = "parsed.net.port"
+  condition = "DIFFERENT"
+  value = 27017
+
+[[rules]]
+name = "mongodb-cis-2.3-max-connections"
+description = "CIS 2.3 - Ensure maximum connections are limited"
+level = 1
+object = "cmdLineOpts"
+tags = ["cis-2.3", "availability", "dos-protection"]
+
+  [[rules.conditions]]
+  property = "parsed.net.maxIncomingConnections"
+  condition = "INF_OR_EQUAL"
+  value = 65536
+
+[[rules]]
+name = "mongodb-cis-5.1-profiling-enabled"
+description = "CIS 5.1 - Ensure database profiling is enabled"
+level = 1
+object = "serverStatus"
+tags = ["cis-5.1", "monitoring", "performance"]
+
+  [[rules.conditions]]
+  property = "opcounters.query"
+  condition = "SUP_OR_EQUAL"
+  value = 0
+
+[[rules]]
+name = "mongodb-cis-3.6-javascript-disabled"
+description = "CIS 3.6 - Ensure server-side JavaScript execution is disabled"
+level = 2
+object = "cmdLineOpts"
+tags = ["cis-3.6", "injection", "hardening"]
+
+  [[rules.conditions]]
+  property = "parsed.security.javascriptEnabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "mongodb-cis-2.4-wire-protocol-encryption"
+description = "CIS 2.4 - Ensure wire protocol compression uses secure algorithms"
+level = 1
+object = "cmdLineOpts"
+tags = ["cis-2.4", "encryption", "network"]
+
+  [[rules.conditions]]
+  property = "parsed.net.compression.compressors"
+  condition = "DIFFERENT"
+  value = "disabled"
+
+[[rules]]
+name = "mongodb-cis-3.3-no-default-admin"
+description = "CIS 3.3 - Ensure default admin user is not used"
+level = 2
+object = "users"
+tags = ["cis-3.3", "authentication", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "user"
+  condition = "DIFFERENT"
+  value = "admin"
+
+[[rules]]
+name = "mongodb-cis-4.3-log-verbosity"
+description = "CIS 4.3 - Ensure log verbosity is set appropriately"
+level = 1
+object = "cmdLineOpts"
+tags = ["cis-4.3", "logging", "monitoring"]
+
+  [[rules.conditions]]
+  property = "parsed.systemLog.verbosity"
+  condition = "SUP_OR_EQUAL"
+  value = 1
+
+[[rules]]
+name = "mongodb-cis-5.2-encryption-at-rest"
+description = "CIS 5.2 - Ensure encryption at rest is enabled"
+level = 2
+object = "cmdLineOpts"
+tags = ["cis-5.2", "encryption", "data-protection", "soc2"]
+
+  [[rules.conditions]]
+  property = "parsed.security.enableEncryption"
+  condition = "EQUAL"
+  value = true

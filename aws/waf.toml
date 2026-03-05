@@ -1,0 +1,101 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS WAFv2 security rules"
+tags = ["aws", "waf", "security", "web-protection"]
+
+[[rules]]
+name = "waf-default-action-block"
+description = "Ensure WAF web ACL default action is block"
+level = 2
+object = "aws_wafv2_web_acl"
+tags = ["default-deny", "security", "soc2"]
+
+  [[rules.conditions]]
+  property = "default_action.block"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "waf-logging-enabled"
+description = "Ensure WAF web ACL has logging enabled"
+level = 2
+object = "aws_wafv2_web_acl"
+tags = ["logging", "audit", "soc2"]
+
+  [[rules.conditions]]
+  property = "logging_configuration.log_destination_configs"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "waf-rate-limiting-rule"
+description = "Ensure WAF web ACL has rate-based rule for DDoS protection"
+level = 2
+object = "aws_wafv2_web_acl"
+tags = ["ddos", "rate-limiting", "availability"]
+
+  [[rules.conditions]]
+  property = "rule"
+  condition = "INCLUDE"
+  value = "rate-based"
+
+[[rules]]
+name = "waf-managed-rules-enabled"
+description = "Ensure WAF web ACL uses AWS managed rule groups"
+level = 1
+object = "aws_wafv2_web_acl"
+tags = ["managed-rules", "best-practice"]
+
+  [[rules.conditions]]
+  property = "rule"
+  condition = "INCLUDE"
+  value = "managed-rule-group"
+
+[[rules]]
+name = "waf-sql-injection-rule"
+description = "Ensure WAF web ACL has SQL injection protection"
+level = 2
+object = "aws_wafv2_web_acl"
+tags = ["sqli", "injection", "owasp"]
+
+  [[rules.conditions]]
+  property = "rule"
+  condition = "INCLUDE"
+  value = "SQLi"
+
+[[rules]]
+name = "waf-xss-rule"
+description = "Ensure WAF web ACL has XSS protection"
+level = 2
+object = "aws_wafv2_web_acl"
+tags = ["xss", "injection", "owasp"]
+
+  [[rules.conditions]]
+  property = "rule"
+  condition = "INCLUDE"
+  value = "XSS"
+
+[[rules]]
+name = "waf-metrics-enabled"
+description = "Ensure WAF web ACL has CloudWatch metrics enabled"
+level = 1
+object = "aws_wafv2_web_acl"
+tags = ["monitoring", "metrics", "observability"]
+
+  [[rules.conditions]]
+  property = "visibility_config.cloudwatch_metrics_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "waf-sampled-requests-enabled"
+description = "Ensure WAF web ACL has sampled requests enabled"
+level = 1
+object = "aws_wafv2_web_acl"
+tags = ["monitoring", "debugging", "observability"]
+
+  [[rules.conditions]]
+  property = "visibility_config.sampled_requests_enabled"
+  condition = "EQUAL"
+  value = true

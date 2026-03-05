@@ -1,0 +1,151 @@
+[metadata]
+version = "1.0.0"
+provider = "github"
+description = "GitHub Actions security and best practices rules"
+tags = ["github", "actions", "ci-cd", "security"]
+
+[[rules]]
+name = "github-actions-no-self-hosted-public"
+description = "Ensure self-hosted runners are not used on public repositories"
+level = 3
+object = "github_actions_organization_permissions"
+tags = ["runners", "public-exposure", "critical"]
+
+  [[rules.conditions]]
+  property = "allowed_actions"
+  condition = "DIFFERENT"
+  value = "all"
+
+[[rules]]
+name = "github-actions-allowed-actions-restricted"
+description = "Ensure GitHub Actions restricts which actions can run"
+level = 2
+object = "github_actions_organization_permissions"
+tags = ["supply-chain", "restriction", "soc2"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "allowed_actions", condition = "EQUAL", value = "selected" },
+    { property = "allowed_actions", condition = "EQUAL", value = "local_only" },
+  ]
+
+[[rules]]
+name = "github-actions-oidc-preferred"
+description = "Ensure GitHub Actions uses OIDC for cloud authentication instead of static secrets"
+level = 2
+object = "github_actions_organization_permissions"
+tags = ["oidc", "authentication", "secretless"]
+
+  [[rules.conditions]]
+  property = "enabled_repositories"
+  condition = "DIFFERENT"
+  value = "none"
+
+[[rules]]
+name = "github-actions-fork-pull-request-approval"
+description = "Ensure fork pull requests require approval before running workflows"
+level = 2
+object = "github_actions_organization_permissions"
+tags = ["fork", "approval", "supply-chain"]
+
+  [[rules.conditions]]
+  property = "github_actions_permissions.fork_pull_request_approval_required"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-actions-default-permissions-read"
+description = "Ensure default workflow permissions are read-only"
+level = 2
+object = "github_actions_organization_permissions"
+tags = ["permissions", "least-privilege", "soc2"]
+
+  [[rules.conditions]]
+  property = "github_actions_permissions.default_workflow_permissions"
+  condition = "EQUAL"
+  value = "read"
+
+[[rules]]
+name = "github-actions-no-approve-own-runs"
+description = "Ensure workflows cannot approve their own pull request reviews"
+level = 2
+object = "github_actions_organization_permissions"
+tags = ["permissions", "separation-of-duties"]
+
+  [[rules.conditions]]
+  property = "github_actions_permissions.can_approve_pull_request_reviews"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "github-actions-pinned-versions"
+description = "Ensure GitHub Actions uses pinned action versions (SHA references)"
+level = 2
+object = "github_actions_organization_permissions"
+tags = ["supply-chain", "pinning", "integrity"]
+
+  [[rules.conditions]]
+  property = "allowed_actions_config.verified_allowed"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-actions-require-approval-outside-collaborators"
+description = "Ensure first-time contributors require workflow approval"
+level = 1
+object = "github_actions_organization_permissions"
+tags = ["approval", "contributors", "security"]
+
+  [[rules.conditions]]
+  property = "github_actions_permissions.fork_pull_request_approval_required"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-actions-artifact-retention"
+description = "Ensure artifact retention is configured and limited"
+level = 0
+object = "github_actions_organization_permissions"
+tags = ["artifacts", "retention", "cost"]
+
+  [[rules.conditions]]
+  property = "enabled_repositories"
+  condition = "DIFFERENT"
+  value = "none"
+
+[[rules]]
+name = "github-actions-no-write-all"
+description = "Ensure workflows do not use write-all permissions"
+level = 3
+object = "github_actions_organization_permissions"
+tags = ["permissions", "least-privilege", "critical"]
+
+  [[rules.conditions]]
+  property = "github_actions_permissions.default_workflow_permissions"
+  condition = "DIFFERENT"
+  value = "write"
+
+[[rules]]
+name = "github-actions-environment-protection"
+description = "Ensure production deployments use environment protection rules"
+level = 2
+object = "github_actions_organization_permissions"
+tags = ["environments", "protection", "deployment"]
+
+  [[rules.conditions]]
+  property = "enabled_repositories"
+  condition = "DIFFERENT"
+  value = "none"
+
+[[rules]]
+name = "github-actions-secret-scanning-enabled"
+description = "Ensure secret scanning is enabled on repositories using Actions"
+level = 3
+object = "github_actions_organization_permissions"
+tags = ["secrets", "scanning", "leakage", "soc2"]
+
+  [[rules.conditions]]
+  property = "enabled_repositories"
+  condition = "DIFFERENT"
+  value = "none"

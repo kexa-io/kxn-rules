@@ -1,0 +1,127 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS DynamoDB security and reliability rules"
+tags = ["aws", "dynamodb", "database", "security"]
+
+[[rules]]
+name = "dynamodb-encryption-at-rest"
+description = "Ensure DynamoDB table has encryption at rest enabled with CMK"
+level = 2
+object = "aws_dynamodb_table"
+tags = ["encryption", "cmk", "soc2"]
+
+  [[rules.conditions]]
+  property = "server_side_encryption.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dynamodb-encryption-kms-key"
+description = "Ensure DynamoDB table uses customer-managed KMS key"
+level = 2
+object = "aws_dynamodb_table"
+tags = ["encryption", "cmk", "kms"]
+
+  [[rules.conditions]]
+  property = "server_side_encryption.kms_key_arn"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "dynamodb-pitr-enabled"
+description = "Ensure DynamoDB table has Point-in-Time Recovery enabled"
+level = 2
+object = "aws_dynamodb_table"
+tags = ["backup", "pitr", "disaster-recovery"]
+
+  [[rules.conditions]]
+  property = "point_in_time_recovery.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dynamodb-backup-enabled"
+description = "Ensure DynamoDB table has continuous backups enabled"
+level = 2
+object = "aws_dynamodb_table"
+tags = ["backup", "disaster-recovery", "soc2"]
+
+  [[rules.conditions]]
+  property = "point_in_time_recovery.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dynamodb-autoscaling-read"
+description = "Ensure DynamoDB table has auto-scaling for read capacity"
+level = 1
+object = "aws_dynamodb_table"
+tags = ["autoscaling", "availability", "cost"]
+
+  [[rules.conditions]]
+  property = "billing_mode"
+  condition = "EQUAL"
+  value = "PAY_PER_REQUEST"
+
+[[rules]]
+name = "dynamodb-autoscaling-write"
+description = "Ensure DynamoDB table has auto-scaling for write capacity"
+level = 1
+object = "aws_dynamodb_table"
+tags = ["autoscaling", "availability", "cost"]
+
+  [[rules.conditions]]
+  property = "billing_mode"
+  condition = "EQUAL"
+  value = "PAY_PER_REQUEST"
+
+[[rules]]
+name = "dynamodb-tags-present"
+description = "Ensure DynamoDB table has required tags"
+level = 1
+object = "aws_dynamodb_table"
+tags = ["tagging", "governance"]
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "dynamodb-deletion-protection"
+description = "Ensure DynamoDB table has deletion protection enabled"
+level = 2
+object = "aws_dynamodb_table"
+tags = ["protection", "disaster-recovery"]
+
+  [[rules.conditions]]
+  property = "deletion_protection_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dynamodb-table-class-standard"
+description = "Ensure DynamoDB table uses appropriate table class"
+level = 0
+object = "aws_dynamodb_table"
+tags = ["cost", "optimization"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "table_class", condition = "EQUAL", value = "STANDARD" },
+    { property = "table_class", condition = "EQUAL", value = "STANDARD_INFREQUENT_ACCESS" },
+  ]
+
+[[rules]]
+name = "dynamodb-stream-enabled"
+description = "Ensure DynamoDB table has streams enabled for audit trail"
+level = 1
+object = "aws_dynamodb_table"
+tags = ["audit", "streaming", "monitoring"]
+
+  [[rules.conditions]]
+  property = "stream_enabled"
+  condition = "EQUAL"
+  value = true
