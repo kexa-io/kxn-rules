@@ -1,0 +1,123 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP BigQuery security rules based on CIS GCP Foundations Benchmark and Forseti policies"
+tags = ["gcp", "bigquery", "data", "security", "cis"]
+
+# --- CIS 7.1 - BigQuery Dataset Not World-Readable ---
+
+[[rules]]
+name = "gcp-bigquery-no-public-access"
+description = "CIS 7.1 - Ensure BigQuery datasets are not anonymously or publicly accessible"
+level = 3
+object = "google_bigquery_dataset"
+tags = ["cis-7.1", "soc2", "pci-dss", "public-access", "forseti"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "access.0.special_group", condition = "DIFFERENT", value = "allAuthenticatedUsers" },
+    { property = "access.0.special_group", condition = "DIFFERENT", value = "projectReaders" },
+  ]
+
+# --- CIS 7.2 - BigQuery CMEK Encryption ---
+
+[[rules]]
+name = "gcp-bigquery-cmek-encryption"
+description = "CIS 7.2 - Ensure BigQuery datasets are encrypted with Customer-Managed Encryption Keys"
+level = 1
+object = "google_bigquery_dataset"
+tags = ["cis-7.2", "soc2", "pci-dss", "hipaa", "encryption", "forseti"]
+
+  [[rules.conditions]]
+  property = "default_encryption_configuration.0.kms_key_name"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- BigQuery Table Expiration ---
+
+[[rules]]
+name = "gcp-bigquery-table-expiration"
+description = "Ensure BigQuery datasets have a default table expiration configured"
+level = 0
+object = "google_bigquery_dataset"
+tags = ["soc2", "data-retention", "cost", "forseti"]
+
+  [[rules.conditions]]
+  property = "default_table_expiration_ms"
+  condition = "SUP"
+  value = 0
+
+# --- BigQuery Dataset Location ---
+
+[[rules]]
+name = "gcp-bigquery-dataset-location"
+description = "Ensure BigQuery datasets are in approved locations for data residency"
+level = 1
+object = "google_bigquery_dataset"
+tags = ["soc2", "hipaa", "data-residency", "forseti"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "location", condition = "EQUAL", value = "US" },
+    { property = "location", condition = "EQUAL", value = "EU" },
+    { property = "location", condition = "STARTS_WITH", value = "us-" },
+    { property = "location", condition = "STARTS_WITH", value = "europe-" },
+  ]
+
+# --- BigQuery Dataset Labels ---
+
+[[rules]]
+name = "gcp-bigquery-dataset-has-labels"
+description = "Ensure BigQuery datasets have labels for governance and cost tracking"
+level = 0
+object = "google_bigquery_dataset"
+tags = ["governance", "tagging"]
+
+  [[rules.conditions]]
+  property = "labels"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- BigQuery Dataset Delete Contents on Destroy ---
+
+[[rules]]
+name = "gcp-bigquery-no-delete-contents-on-destroy"
+description = "Ensure BigQuery datasets do not have delete_contents_on_destroy enabled"
+level = 2
+object = "google_bigquery_dataset"
+tags = ["soc2", "data-protection"]
+
+  [[rules.conditions]]
+  property = "delete_contents_on_destroy"
+  condition = "EQUAL"
+  value = false
+
+# --- BigQuery Dataset Default Partition Expiration ---
+
+[[rules]]
+name = "gcp-bigquery-partition-expiration"
+description = "Ensure BigQuery datasets have default partition expiration for cost control"
+level = 0
+object = "google_bigquery_dataset"
+tags = ["cost", "data-retention"]
+
+  [[rules.conditions]]
+  property = "default_partition_expiration_ms"
+  condition = "SUP"
+  value = 0
+
+# --- BigQuery Dataset Max Time Travel ---
+
+[[rules]]
+name = "gcp-bigquery-time-travel-window"
+description = "Ensure BigQuery datasets have adequate time travel window for data recovery"
+level = 0
+object = "google_bigquery_dataset"
+tags = ["soc2", "data-protection", "backup"]
+
+  [[rules.conditions]]
+  property = "max_time_travel_hours"
+  condition = "SUP_OR_EQUAL"
+  value = 168

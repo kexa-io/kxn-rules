@@ -1,163 +1,200 @@
 [metadata]
 version = "1.0.0"
 provider = "aws"
-description = "AWS CIS Foundations Benchmark - EC2 and EBS Security Rules"
-tags = ["cis", "aws", "ec2", "ebs", "security", "compute"]
+description = "AWS EC2 instance security rules based on AWS Config managed rules and CIS AWS Foundations Benchmark"
+tags = ["aws", "ec2", "security", "cis"]
 
-# CIS 2.2.1 - Ensure EBS volume encryption is enabled by default
+# --- Rule 1 ---
 [[rules]]
-name = "aws-ebs-encryption-by-default"
-description = "CIS 2.2.1 - Ensure EBS volume encryption is enabled by default in all regions"
-level = 2
-object = "aws_ebs_encryption_by_default"
-tags = ["cis-2.2.1", "soc2", "hipaa", "pci-dss", "encryption"]
-
-  [[rules.conditions]]
-  property = "enabled"
-  condition = "EQUAL"
-  value = true
-
-# EBS volumes must be encrypted
-[[rules]]
-name = "aws-ebs-volume-encrypted"
-description = "Ensure all EBS volumes are encrypted"
-level = 2
-object = "aws_ebs_volume"
-tags = ["soc2", "hipaa", "pci-dss", "encryption"]
-
-  [[rules.conditions]]
-  property = "encrypted"
-  condition = "EQUAL"
-  value = true
-
-# EBS volumes use KMS CMK
-[[rules]]
-name = "aws-ebs-volume-kms-key"
-description = "Ensure EBS volumes are encrypted with a customer-managed KMS key"
-level = 1
-object = "aws_ebs_volume"
-tags = ["encryption", "best-practice"]
-
-  [[rules.conditions]]
-  property = "kms_key_id"
-  condition = "DIFFERENT"
-  value = ""
-
-# EC2 instances should not use public IPs directly
-[[rules]]
-name = "aws-ec2-no-public-ip"
-description = "Ensure EC2 instances do not have a public IP address assigned directly"
-level = 1
+name = "aws-ec2-imdsv2-check"
+description = "Ensure EC2 instances use IMDSv2 for instance metadata service - AWS Config: EC2_IMDSV2_CHECK"
+level = 3
 object = "aws_instance"
-tags = ["soc2", "network", "best-practice"]
-
-  [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "public_ip", condition = "EQUAL", value = "" },
-    { property = "associate_public_ip_address", condition = "EQUAL", value = false },
-  ]
-
-# EC2 instances should use IMDSv2
-[[rules]]
-name = "aws-ec2-imdsv2-required"
-description = "CIS 5.6 - Ensure EC2 instance metadata service version 2 (IMDSv2) is required"
-level = 2
-object = "aws_instance"
-tags = ["cis-5.6", "soc2", "security"]
+tags = ["cis-5.6", "pci-dss", "soc2", "nist"]
 
   [[rules.conditions]]
   property = "metadata_options.0.http_tokens"
   condition = "EQUAL"
   value = "required"
 
-# EC2 instances should have monitoring enabled
+# --- Rule 2 ---
 [[rules]]
-name = "aws-ec2-detailed-monitoring"
-description = "Ensure EC2 detailed monitoring is enabled"
-level = 0
+name = "aws-ec2-instance-no-public-ip"
+description = "Ensure EC2 instances do not have public IP addresses - AWS Config: EC2_INSTANCE_NO_PUBLIC_IP"
+level = 2
 object = "aws_instance"
-tags = ["monitoring", "best-practice"]
+tags = ["cis-5.1", "pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "associate_public_ip_address"
+  condition = "EQUAL"
+  value = false
+
+# --- Rule 3 ---
+[[rules]]
+name = "aws-ec2-ebs-encryption-by-default"
+description = "Ensure EBS encryption is enabled by default - AWS Config: EC2_EBS_ENCRYPTION_BY_DEFAULT"
+level = 3
+object = "aws_ebs_encryption_by_default"
+tags = ["cis-2.2.1", "pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 4 ---
+[[rules]]
+name = "aws-ec2-encrypted-volumes"
+description = "Ensure EBS volumes are encrypted - AWS Config: ENCRYPTED_VOLUMES"
+level = 3
+object = "aws_ebs_volume"
+tags = ["cis-2.2.1", "pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "encrypted"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-ec2-instance-profile-attached"
+description = "Ensure EC2 instances have an IAM instance profile attached - AWS Config: EC2_INSTANCE_PROFILE_ATTACHED"
+level = 2
+object = "aws_instance"
+tags = ["soc2", "aws-well-architected"]
+
+  [[rules.conditions]]
+  property = "iam_instance_profile"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 6 ---
+[[rules]]
+name = "aws-ec2-instance-managed-by-ssm"
+description = "Ensure EC2 instances are managed by AWS Systems Manager - AWS Config: EC2_INSTANCE_MANAGED_BY_SSM"
+level = 2
+object = "aws_instance"
+tags = ["soc2", "aws-well-architected", "operations"]
+
+  [[rules.conditions]]
+  property = "tags.managed_by_ssm"
+  condition = "EQUAL"
+  value = "true"
+
+# --- Rule 7 ---
+[[rules]]
+name = "aws-ec2-instance-detailed-monitoring-enabled"
+description = "Ensure EC2 detailed monitoring is enabled - AWS Config: EC2_INSTANCE_DETAILED_MONITORING_ENABLED"
+level = 1
+object = "aws_instance"
+tags = ["soc2", "aws-well-architected", "monitoring"]
 
   [[rules.conditions]]
   property = "monitoring"
   condition = "EQUAL"
   value = true
 
-# EC2 instances should not use default security group
+# --- Rule 8 ---
 [[rules]]
-name = "aws-ec2-no-default-sg"
-description = "Ensure EC2 instances do not use the default security group"
-level = 2
+name = "aws-ec2-instances-in-vpc"
+description = "Ensure all EC2 instances are launched within a VPC - AWS Config: INSTANCES_IN_VPC"
+level = 3
 object = "aws_instance"
-tags = ["soc2", "network", "security"]
+tags = ["cis-5.1", "pci-dss", "soc2", "nist"]
 
   [[rules.conditions]]
   property = "vpc_security_group_ids"
-  condition = "NOT_INCLUDE"
-  value = "default"
+  condition = "DIFFERENT"
+  value = ""
 
-# EBS snapshots should not be public
+# --- Rule 9 ---
 [[rules]]
-name = "aws-ebs-snapshot-not-public"
-description = "Ensure EBS snapshots are not publicly restorable"
-level = 3
-object = "aws_ebs_snapshot"
-tags = ["soc2", "hipaa", "pci-dss", "data-exposure"]
+name = "aws-ec2-ebs-optimized-instance"
+description = "Ensure EC2 instances are EBS-optimized for better performance - AWS Config: EBS_OPTIMIZED_INSTANCE"
+level = 1
+object = "aws_instance"
+tags = ["aws-well-architected", "performance"]
 
   [[rules.conditions]]
-  property = "create_volume_permissions"
+  property = "ebs_optimized"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 10 ---
+[[rules]]
+name = "aws-ec2-ebs-snapshot-public-restorable-check"
+description = "Ensure EBS snapshots are not publicly restorable - AWS Config: EBS_SNAPSHOT_PUBLIC_RESTORABLE_CHECK"
+level = 3
+object = "aws_ebs_snapshot"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "create_volume_permission"
   condition = "NOT_INCLUDE"
   value = "all"
 
-# EC2 instances should have termination protection
+# --- Rule 11 ---
 [[rules]]
-name = "aws-ec2-termination-protection"
-description = "Ensure production EC2 instances have termination protection enabled"
-level = 1
-object = "aws_instance"
-tags = ["best-practice", "reliability"]
+name = "aws-ec2-volume-inuse-check"
+description = "Ensure EBS volumes are attached to EC2 instances - AWS Config: EC2_VOLUME_INUSE_CHECK"
+level = 0
+object = "aws_ebs_volume"
+tags = ["aws-well-architected", "cost-optimization"]
 
   [[rules.conditions]]
-  property = "disable_api_termination"
-  condition = "EQUAL"
-  value = true
+  property = "attachment.0.instance_id"
+  condition = "DIFFERENT"
+  value = ""
 
-# EC2 instances should use encrypted root volumes
+# --- Rule 12 ---
 [[rules]]
-name = "aws-ec2-encrypted-root-volume"
-description = "Ensure EC2 instances have encrypted root volumes"
+name = "aws-ec2-stopped-instance"
+description = "Ensure EC2 instances are not stopped for extended periods - AWS Config: EC2_STOPPED_INSTANCE"
+level = 1
+object = "aws_instance"
+tags = ["aws-well-architected", "cost-optimization"]
+
+  [[rules.conditions]]
+  property = "instance_state"
+  condition = "DIFFERENT"
+  value = "stopped"
+
+# --- Rule 13 ---
+[[rules]]
+name = "aws-ec2-token-hop-limit-check"
+description = "Ensure EC2 instance metadata token hop limit is 1 for security - AWS Config: EC2_TOKEN_HOP_LIMIT_CHECK"
 level = 2
 object = "aws_instance"
-tags = ["soc2", "hipaa", "encryption"]
+tags = ["soc2", "nist"]
 
   [[rules.conditions]]
-  property = "root_block_device.0.encrypted"
-  condition = "EQUAL"
-  value = true
+  property = "metadata_options.0.http_put_response_hop_limit"
+  condition = "INF_OR_EQUAL"
+  value = 1
 
-# AMIs should not be public
+# --- Rule 14 ---
 [[rules]]
-name = "aws-ami-not-public"
-description = "Ensure AMIs are not publicly accessible"
-level = 3
-object = "aws_ami"
-tags = ["soc2", "data-exposure"]
+name = "aws-ec2-launch-template-imdsv2-check"
+description = "Ensure EC2 launch templates enforce IMDSv2 - AWS Config: EC2_LAUNCH_TEMPLATE_IMDSV2_CHECK"
+level = 2
+object = "aws_launch_template"
+tags = ["soc2", "nist"]
 
   [[rules.conditions]]
-  property = "public"
+  property = "metadata_options.0.http_tokens"
   condition = "EQUAL"
-  value = false
+  value = "required"
 
-# EC2 instances should use recent AMIs
+# --- Rule 15 ---
 [[rules]]
-name = "aws-ec2-recent-ami"
-description = "Ensure EC2 instances are using AMIs created within the last 180 days"
-level = 1
-object = "aws_instance"
-tags = ["patching", "best-practice"]
+name = "aws-ec2-launch-template-public-ip-disabled"
+description = "Ensure EC2 launch templates do not assign public IPs - AWS Config: EC2_LAUNCH_TEMPLATE_PUBLIC_IP_DISABLED"
+level = 2
+object = "aws_launch_template"
+tags = ["soc2", "nist", "network-security"]
 
   [[rules.conditions]]
-  property = "ami_creation_date_age_days"
-  condition = "INF"
-  value = 180
+  property = "network_interfaces.0.associate_public_ip_address"
+  condition = "DIFFERENT"
+  value = "true"

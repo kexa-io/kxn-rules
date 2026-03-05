@@ -1,178 +1,276 @@
 [metadata]
 version = "1.0.0"
 provider = "aws"
-description = "AWS CIS Foundations Benchmark - S3 Security Rules"
-tags = ["cis", "aws", "s3", "security", "storage"]
+description = "AWS S3 security rules based on AWS Config managed rules and CIS AWS Foundations Benchmark"
+tags = ["aws", "s3", "security", "cis"]
 
-# CIS 2.1.1 - Ensure S3 bucket policy does not grant public access
+# --- Rule 1 ---
 [[rules]]
-name = "aws-s3-no-public-policy"
-description = "CIS 2.1.1 - Ensure S3 bucket policy does not grant public access"
+name = "aws-s3-bucket-versioning-enabled"
+description = "Ensure S3 bucket versioning is enabled - AWS Config: S3_BUCKET_VERSIONING_ENABLED"
+level = 2
+object = "aws_s3_bucket"
+tags = ["cis-2.1.3", "soc2", "backup", "aws-well-architected"]
+
+  [[rules.conditions]]
+  property = "versioning.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 2 ---
+[[rules]]
+name = "aws-s3-bucket-server-side-encryption-enabled"
+description = "Ensure S3 bucket has server-side encryption enabled - AWS Config: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED"
 level = 3
 object = "aws_s3_bucket"
-tags = ["cis-2.1.1", "soc2", "hipaa", "pci-dss"]
+tags = ["cis-2.1.1", "pci-dss", "hipaa", "soc2", "nist"]
 
   [[rules.conditions]]
-  property = "policy"
-  condition = "NOT_INCLUDE"
-  value = "\"Effect\":\"Allow\",\"Principal\":\"*\""
-
-# CIS 2.1.2 - Ensure S3 bucket MFA delete is enabled
-[[rules]]
-name = "aws-s3-mfa-delete"
-description = "CIS 2.1.2 - Ensure MFA Delete is enabled on S3 buckets"
-level = 2
-object = "aws_s3_bucket_versioning"
-tags = ["cis-2.1.2", "soc2"]
-
-  [[rules.conditions]]
-  property = "versioning_configuration.0.mfa_delete"
-  condition = "EQUAL"
-  value = "Enabled"
-
-# CIS 2.1.3 - Ensure S3 buckets have versioning enabled
-[[rules]]
-name = "aws-s3-versioning-enabled"
-description = "CIS 2.1.3 - Ensure S3 bucket versioning is enabled"
-level = 2
-object = "aws_s3_bucket_versioning"
-tags = ["cis-2.1.3", "soc2", "backup"]
-
-  [[rules.conditions]]
-  property = "versioning_configuration.0.status"
-  condition = "EQUAL"
-  value = "Enabled"
-
-# CIS 2.1.4 - Ensure S3 bucket server-side encryption is enabled
-[[rules]]
-name = "aws-s3-encryption-enabled"
-description = "CIS 2.1.4 - Ensure S3 bucket server-side encryption is enabled"
-level = 2
-object = "aws_s3_bucket_server_side_encryption_configuration"
-tags = ["cis-2.1.4", "soc2", "hipaa", "pci-dss", "encryption"]
-
-  [[rules.conditions]]
-  property = "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm"
+  property = "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm"
   condition = "DIFFERENT"
   value = ""
 
-# CIS 2.1.5 - Ensure S3 account-level public access block
+# --- Rule 3 ---
 [[rules]]
-name = "aws-s3-account-public-access-block"
-description = "CIS 2.1.5 - Ensure S3 account-level public access block is configured"
+name = "aws-s3-bucket-public-read-prohibited"
+description = "Ensure S3 bucket does not allow public read access - AWS Config: S3_BUCKET_PUBLIC_READ_PROHIBITED"
 level = 3
-object = "aws_s3_account_public_access_block"
-tags = ["cis-2.1.5", "soc2", "hipaa", "pci-dss"]
+object = "aws_s3_bucket"
+tags = ["cis-2.1.5", "pci-dss", "hipaa", "soc2", "nist"]
 
   [[rules.conditions]]
-  property = "block_public_acls"
-  condition = "EQUAL"
-  value = true
+  property = "acl"
+  condition = "DIFFERENT"
+  value = "public-read"
 
-  [[rules.conditions]]
-  property = "block_public_policy"
-  condition = "EQUAL"
-  value = true
-
-  [[rules.conditions]]
-  property = "ignore_public_acls"
-  condition = "EQUAL"
-  value = true
-
-  [[rules.conditions]]
-  property = "restrict_public_buckets"
-  condition = "EQUAL"
-  value = true
-
-# CIS 2.1.5 - Ensure S3 bucket-level public access block
+# --- Rule 4 ---
 [[rules]]
-name = "aws-s3-bucket-public-access-block"
-description = "CIS 2.1.5 - Ensure each S3 bucket has public access block enabled"
+name = "aws-s3-bucket-public-write-prohibited"
+description = "Ensure S3 bucket does not allow public write access - AWS Config: S3_BUCKET_PUBLIC_WRITE_PROHIBITED"
+level = 3
+object = "aws_s3_bucket"
+tags = ["cis-2.1.5", "pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "acl"
+  condition = "DIFFERENT"
+  value = "public-read-write"
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-s3-bucket-logging-enabled"
+description = "Ensure S3 bucket access logging is enabled - AWS Config: S3_BUCKET_LOGGING_ENABLED"
 level = 2
-object = "aws_s3_bucket_public_access_block"
-tags = ["cis-2.1.5", "soc2", "hipaa"]
+object = "aws_s3_bucket"
+tags = ["cis-2.1.3", "soc2", "nist", "aws-well-architected"]
 
   [[rules.conditions]]
-  property = "block_public_acls"
-  condition = "EQUAL"
-  value = true
-
-  [[rules.conditions]]
-  property = "block_public_policy"
-  condition = "EQUAL"
-  value = true
-
-  [[rules.conditions]]
-  property = "ignore_public_acls"
-  condition = "EQUAL"
-  value = true
-
-  [[rules.conditions]]
-  property = "restrict_public_buckets"
-  condition = "EQUAL"
-  value = true
-
-# S3 bucket encryption uses KMS (stronger than AES256)
-[[rules]]
-name = "aws-s3-kms-encryption"
-description = "Ensure S3 bucket encryption uses AWS KMS for enhanced key management"
-level = 1
-object = "aws_s3_bucket_server_side_encryption_configuration"
-tags = ["encryption", "best-practice"]
-
-  [[rules.conditions]]
-  property = "rule.0.apply_server_side_encryption_by_default.0.sse_algorithm"
-  condition = "EQUAL"
-  value = "aws:kms"
-
-# S3 bucket logging enabled
-[[rules]]
-name = "aws-s3-logging-enabled"
-description = "Ensure S3 bucket access logging is enabled"
-level = 1
-object = "aws_s3_bucket_logging"
-tags = ["logging", "audit", "soc2"]
-
-  [[rules.conditions]]
-  property = "target_bucket"
+  property = "logging.0.target_bucket"
   condition = "DIFFERENT"
   value = ""
 
-# S3 bucket lifecycle configuration
+# --- Rule 6 ---
 [[rules]]
-name = "aws-s3-lifecycle-configured"
-description = "Ensure S3 bucket has lifecycle rules configured for cost optimization"
-level = 0
-object = "aws_s3_bucket_lifecycle_configuration"
-tags = ["cost", "best-practice"]
-
-  [[rules.conditions]]
-  property = "rule.0.status"
-  condition = "EQUAL"
-  value = "Enabled"
-
-# S3 SSL-only access
-[[rules]]
-name = "aws-s3-ssl-only"
-description = "Ensure S3 bucket policy enforces SSL/TLS for all requests"
-level = 2
+name = "aws-s3-bucket-ssl-requests-only"
+description = "Ensure S3 bucket policy enforces SSL/TLS for all requests - AWS Config: S3_BUCKET_SSL_REQUESTS_ONLY"
+level = 3
 object = "aws_s3_bucket_policy"
-tags = ["encryption", "soc2", "pci-dss"]
+tags = ["cis-2.1.2", "pci-dss", "hipaa", "soc2", "nist"]
 
   [[rules.conditions]]
   property = "policy"
   condition = "INCLUDE"
   value = "aws:SecureTransport"
 
-# S3 object lock for immutability
+# --- Rule 7 ---
 [[rules]]
-name = "aws-s3-object-lock-enabled"
-description = "Ensure S3 bucket has Object Lock enabled for data immutability"
-level = 1
-object = "aws_s3_bucket_object_lock_configuration"
-tags = ["backup", "compliance", "ransomware"]
+name = "aws-s3-bucket-acl-prohibited"
+description = "Ensure S3 buckets do not use ACLs and rely on bucket policies instead - AWS Config: S3_BUCKET_ACL_PROHIBITED"
+level = 2
+object = "aws_s3_bucket"
+tags = ["soc2", "aws-well-architected"]
 
   [[rules.conditions]]
-  property = "object_lock_enabled"
+  property = "acl"
+  condition = "EQUAL"
+  value = "private"
+
+# --- Rule 8 ---
+[[rules]]
+name = "aws-s3-bucket-default-encryption-kms"
+description = "Ensure S3 bucket default encryption uses KMS - AWS Config: S3_DEFAULT_ENCRYPTION_KMS"
+level = 2
+object = "aws_s3_bucket"
+tags = ["pci-dss", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm"
+  condition = "EQUAL"
+  value = "aws:kms"
+
+# --- Rule 9 ---
+[[rules]]
+name = "aws-s3-bucket-mfa-delete-enabled"
+description = "Ensure S3 bucket has MFA delete protection enabled - AWS Config: S3_BUCKET_MFA_DELETE_ENABLED"
+level = 2
+object = "aws_s3_bucket"
+tags = ["cis-2.1.3", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "versioning.0.mfa_delete"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 10 ---
+[[rules]]
+name = "aws-s3-bucket-cross-region-replication-enabled"
+description = "Ensure S3 bucket has cross-region replication enabled for disaster recovery - AWS Config: S3_BUCKET_CROSS_REGION_REPLICATION_ENABLED"
+level = 1
+object = "aws_s3_bucket"
+tags = ["soc2", "aws-well-architected", "backup"]
+
+  [[rules.conditions]]
+  property = "replication_configuration.0.role"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 11 ---
+[[rules]]
+name = "aws-s3-bucket-lifecycle-policy-check"
+description = "Ensure S3 bucket has lifecycle policy configured - AWS Config: S3_LIFECYCLE_POLICY_CHECK"
+level = 1
+object = "aws_s3_bucket"
+tags = ["soc2", "aws-well-architected", "cost-optimization"]
+
+  [[rules.conditions]]
+  property = "lifecycle_rule.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 12 ---
+[[rules]]
+name = "aws-s3-account-level-public-access-blocks"
+description = "Ensure account-level S3 public access block is configured - AWS Config: S3_ACCOUNT_LEVEL_PUBLIC_ACCESS_BLOCKS"
+level = 3
+object = "aws_s3_account_public_access_block"
+tags = ["cis-2.1.5", "pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "block_public_acls", condition = "EQUAL", value = true },
+    { property = "block_public_policy", condition = "EQUAL", value = true },
+    { property = "ignore_public_acls", condition = "EQUAL", value = true },
+    { property = "restrict_public_buckets", condition = "EQUAL", value = true },
+  ]
+
+# --- Rule 13 ---
+[[rules]]
+name = "aws-s3-bucket-level-public-access-prohibited"
+description = "Ensure S3 bucket-level public access block is configured - AWS Config: S3_BUCKET_LEVEL_PUBLIC_ACCESS_PROHIBITED"
+level = 3
+object = "aws_s3_bucket_public_access_block"
+tags = ["cis-2.1.5", "pci-dss", "hipaa", "soc2"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "block_public_acls", condition = "EQUAL", value = true },
+    { property = "block_public_policy", condition = "EQUAL", value = true },
+    { property = "ignore_public_acls", condition = "EQUAL", value = true },
+    { property = "restrict_public_buckets", condition = "EQUAL", value = true },
+  ]
+
+# --- Rule 14 ---
+[[rules]]
+name = "aws-s3-bucket-default-lock-enabled"
+description = "Ensure S3 Object Lock is enabled by default on buckets - AWS Config: S3_BUCKET_DEFAULT_LOCK_ENABLED"
+level = 1
+object = "aws_s3_bucket"
+tags = ["soc2", "hipaa", "compliance"]
+
+  [[rules.conditions]]
+  property = "object_lock_configuration.0.object_lock_enabled"
   condition = "EQUAL"
   value = "Enabled"
+
+# --- Rule 15 ---
+[[rules]]
+name = "aws-s3-bucket-event-notifications-enabled"
+description = "Ensure S3 bucket has event notifications configured for security monitoring - AWS Config: S3_EVENT_NOTIFICATIONS_ENABLED"
+level = 1
+object = "aws_s3_bucket_notification"
+tags = ["soc2", "aws-well-architected", "monitoring"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "lambda_function.0.events.0", condition = "DIFFERENT", value = "" },
+    { property = "queue.0.events.0", condition = "DIFFERENT", value = "" },
+    { property = "topic.0.events.0", condition = "DIFFERENT", value = "" },
+  ]
+
+# --- Rule 16 ---
+[[rules]]
+name = "aws-s3-bucket-replication-enabled"
+description = "Ensure S3 bucket replication is enabled - AWS Config: S3_BUCKET_REPLICATION_ENABLED"
+level = 1
+object = "aws_s3_bucket"
+tags = ["soc2", "aws-well-architected", "backup"]
+
+  [[rules.conditions]]
+  property = "replication_configuration.0.rules.0.status"
+  condition = "EQUAL"
+  value = "Enabled"
+
+# --- Rule 17 ---
+[[rules]]
+name = "aws-s3-bucket-policy-not-more-permissive"
+description = "Ensure S3 bucket policy does not grant overly permissive access with wildcard principals - AWS Config: S3_BUCKET_POLICY_NOT_MORE_PERMISSIVE"
+level = 3
+object = "aws_s3_bucket_policy"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Principal\":\"*\""
+
+# --- Rule 18 ---
+[[rules]]
+name = "aws-s3-access-point-in-vpc-only"
+description = "Ensure S3 access points are restricted to VPC only - AWS Config: S3_ACCESS_POINT_IN_VPC_ONLY"
+level = 2
+object = "aws_s3_access_point"
+tags = ["soc2", "nist", "network-security"]
+
+  [[rules.conditions]]
+  property = "vpc_configuration.0.vpc_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 19 ---
+[[rules]]
+name = "aws-s3-bucket-policy-grantee-check"
+description = "Ensure S3 bucket policy does not grant access to unauthorized AWS accounts - AWS Config: S3_BUCKET_POLICY_GRANTEE_CHECK"
+level = 2
+object = "aws_s3_bucket_policy"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"}"
+
+# --- Rule 20 ---
+[[rules]]
+name = "aws-s3-version-lifecycle-policy-check"
+description = "Ensure S3 versioned bucket has lifecycle policy for noncurrent versions - AWS Config: S3_VERSION_LIFECYCLE_POLICY_CHECK"
+level = 1
+object = "aws_s3_bucket"
+tags = ["soc2", "aws-well-architected", "cost-optimization"]
+
+  [[rules.conditions]]
+  property = "lifecycle_rule.0.noncurrent_version_expiration.0.days"
+  condition = "SUP"
+  value = 0

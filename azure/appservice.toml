@@ -1,0 +1,245 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure App Service security rules based on Azure Policy built-in definitions"
+tags = ["azure", "appservice", "security", "cis"]
+
+# --- Web App ---
+
+[[rules]]
+name = "azure-appservice-https-only"
+description = "Web Application should only be accessible over HTTPS - Azure Policy: WebApp_AuditHTTP_Audit"
+level = 2
+object = "azurerm_linux_web_app"
+tags = ["encryption", "cis-9.1", "soc2", "pci-dss", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "https_only"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-appservice-windows-https-only"
+description = "Windows Web Application should only be accessible over HTTPS"
+level = 2
+object = "azurerm_windows_web_app"
+tags = ["encryption", "cis-9.1", "soc2", "pci-dss", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "https_only"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-appservice-minimum-tls"
+description = "App Service should use minimum TLS version 1.2 - Azure Policy: AppServiceMinTls_Audit"
+level = 2
+object = "azurerm_linux_web_app"
+tags = ["encryption", "cis-9.2", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "site_config.0.minimum_tls_version"
+  condition = "EQUAL"
+  value = "1.2"
+
+[[rules]]
+name = "azure-appservice-ftps-only"
+description = "FTPS only should be required for App Service - Azure Policy: AuditFTPS_WebApp_Audit"
+level = 2
+object = "azurerm_linux_web_app"
+tags = ["encryption", "cis-9.3", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "site_config.0.ftps_state"
+  condition = "EQUAL"
+  value = "FtpsOnly"
+
+[[rules]]
+name = "azure-appservice-authentication-enabled"
+description = "Authentication should be enabled on App Service - Azure Policy: Authentication_WebApp_Audit"
+level = 2
+object = "azurerm_linux_web_app"
+tags = ["authentication", "cis-9.4", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "auth_settings.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-appservice-client-certificates"
+description = "App Service should have client certificates enabled - Azure Policy: AppService_ClientCert_Audit"
+level = 1
+object = "azurerm_linux_web_app"
+tags = ["authentication", "cis-9.5", "soc2"]
+
+  [[rules.conditions]]
+  property = "client_certificate_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-appservice-managed-identity"
+description = "App Service should use managed identity - Azure Policy: AppService_UseManagedIdentity_Audit"
+level = 2
+object = "azurerm_linux_web_app"
+tags = ["authentication", "cis-9.6", "soc2", "nist"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "identity.0.type", condition = "EQUAL", value = "SystemAssigned" },
+    { property = "identity.0.type", condition = "EQUAL", value = "UserAssigned" },
+    { property = "identity.0.type", condition = "EQUAL", value = "SystemAssigned, UserAssigned" },
+  ]
+
+[[rules]]
+name = "azure-appservice-vnet-integration"
+description = "App Service should use VNet integration - Azure Policy: App_VNetIntegrationEnabled_Audit"
+level = 1
+object = "azurerm_linux_web_app"
+tags = ["network-security", "cis-9.7", "soc2"]
+
+  [[rules.conditions]]
+  property = "virtual_network_subnet_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-appservice-remote-debugging-disabled"
+description = "Remote debugging should be turned off for App Service - Azure Policy: AppService_DisableRemoteDebugging_Audit"
+level = 2
+object = "azurerm_linux_web_app"
+tags = ["security", "cis-9.8", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "site_config.0.remote_debugging_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-appservice-http20-enabled"
+description = "App Service should use HTTP/2.0"
+level = 0
+object = "azurerm_linux_web_app"
+tags = ["best-practice", "performance"]
+
+  [[rules.conditions]]
+  property = "site_config.0.http2_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Function App ---
+
+[[rules]]
+name = "azure-function-https-only"
+description = "Function App should only be accessible over HTTPS - Azure Policy: FunctionApp_AuditHTTP_Audit"
+level = 2
+object = "azurerm_linux_function_app"
+tags = ["encryption", "cis-9.9", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "https_only"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-function-minimum-tls"
+description = "Function App should use minimum TLS version 1.2 - Azure Policy: FunctionApp_MinTls_Audit"
+level = 2
+object = "azurerm_linux_function_app"
+tags = ["encryption", "cis-9.10", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "site_config.0.minimum_tls_version"
+  condition = "EQUAL"
+  value = "1.2"
+
+[[rules]]
+name = "azure-function-ftps-only"
+description = "FTPS only should be required for Function App - Azure Policy: AuditFTPS_FunctionApp_Audit"
+level = 2
+object = "azurerm_linux_function_app"
+tags = ["encryption", "cis-9.11", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "site_config.0.ftps_state"
+  condition = "EQUAL"
+  value = "FtpsOnly"
+
+[[rules]]
+name = "azure-function-managed-identity"
+description = "Function App should use a managed identity - Azure Policy: FunctionApp_UseManagedIdentity_Audit"
+level = 2
+object = "azurerm_linux_function_app"
+tags = ["authentication", "cis-9.12", "soc2", "nist"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "identity.0.type", condition = "EQUAL", value = "SystemAssigned" },
+    { property = "identity.0.type", condition = "EQUAL", value = "UserAssigned" },
+    { property = "identity.0.type", condition = "EQUAL", value = "SystemAssigned, UserAssigned" },
+  ]
+
+[[rules]]
+name = "azure-function-remote-debugging-disabled"
+description = "Remote debugging should be turned off for Function App"
+level = 2
+object = "azurerm_linux_function_app"
+tags = ["security", "cis-9.13", "soc2"]
+
+  [[rules.conditions]]
+  property = "site_config.0.remote_debugging_enabled"
+  condition = "EQUAL"
+  value = false
+
+# --- App Service Environment ---
+
+[[rules]]
+name = "azure-appservice-latest-dotnet"
+description = "App Service should use latest .NET framework version - Azure Policy: WebApp_Audit_NETFrameWork_Latest"
+level = 1
+object = "azurerm_linux_web_app"
+tags = ["patching", "cis-9.14", "soc2"]
+
+  [[rules.conditions]]
+  property = "site_config.0.application_stack.0.dotnet_version"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-appservice-latest-java"
+description = "App Service should use latest Java version - Azure Policy: WebApp_Audit_java_Latest"
+level = 1
+object = "azurerm_linux_web_app"
+tags = ["patching", "cis-9.15", "soc2"]
+
+  [[rules.conditions]]
+  property = "site_config.0.application_stack.0.java_version"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-appservice-latest-python"
+description = "App Service should use latest Python version - Azure Policy: WebApp_Audit_python_Latest"
+level = 1
+object = "azurerm_linux_web_app"
+tags = ["patching", "cis-9.16", "soc2"]
+
+  [[rules.conditions]]
+  property = "site_config.0.application_stack.0.python_version"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-appservice-private-endpoint"
+description = "App Service should use private endpoint for secure inbound connectivity"
+level = 1
+object = "azurerm_linux_web_app"
+tags = ["network-security", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false

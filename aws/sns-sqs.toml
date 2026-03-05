@@ -1,0 +1,116 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS SNS and SQS messaging security rules based on AWS Config managed rules"
+tags = ["aws", "sns", "sqs", "messaging", "security"]
+
+# --- SNS Rules ---
+
+# --- Rule 1 ---
+[[rules]]
+name = "aws-sns-encrypted-kms"
+description = "Ensure SNS topics are encrypted with KMS - AWS Config: SNS_ENCRYPTED_KMS"
+level = 2
+object = "aws_sns_topic"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "kms_master_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 2 ---
+[[rules]]
+name = "aws-sns-topic-no-public-access"
+description = "Ensure SNS topics do not allow public access - AWS Config: SNS_TOPIC_NO_PUBLIC_ACCESS"
+level = 3
+object = "aws_sns_topic_policy"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Principal\":\"*\""
+
+# --- Rule 3 ---
+[[rules]]
+name = "aws-sns-topic-message-delivery-notification-enabled"
+description = "Ensure SNS topic has delivery status logging enabled - AWS Config: SNS_TOPIC_MESSAGE_DELIVERY_NOTIFICATION_ENABLED"
+level = 1
+object = "aws_sns_topic"
+tags = ["soc2", "aws-well-architected", "monitoring"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "sqs_success_feedback_role_arn", condition = "DIFFERENT", value = "" },
+    { property = "lambda_success_feedback_role_arn", condition = "DIFFERENT", value = "" },
+    { property = "http_success_feedback_role_arn", condition = "DIFFERENT", value = "" },
+  ]
+
+# --- Rule 4 ---
+[[rules]]
+name = "aws-sns-topic-policy-no-wildcard-action"
+description = "Ensure SNS topic policies do not use wildcard actions"
+level = 3
+object = "aws_sns_topic_policy"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Action\":\"SNS:*\""
+
+# --- SQS Rules ---
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-sqs-queue-no-public-access"
+description = "Ensure SQS queues do not allow public access - AWS Config: SQS_QUEUE_NO_PUBLIC_ACCESS"
+level = 3
+object = "aws_sqs_queue"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Principal\":\"*\""
+
+# --- Rule 6 ---
+[[rules]]
+name = "aws-sqs-queue-dlq-check"
+description = "Ensure SQS queues have Dead Letter Queues configured - AWS Config: SQS_QUEUE_DLQ_CHECK"
+level = 2
+object = "aws_sqs_queue"
+tags = ["soc2", "aws-well-architected", "reliability"]
+
+  [[rules.conditions]]
+  property = "redrive_policy"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 7 ---
+[[rules]]
+name = "aws-sqs-queue-encrypted"
+description = "Ensure SQS queues are encrypted with KMS"
+level = 2
+object = "aws_sqs_queue"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "kms_master_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 8 ---
+[[rules]]
+name = "aws-sqs-queue-policy-no-full-access"
+description = "Ensure SQS queue policies do not grant full access - AWS Config: SQS_QUEUE_POLICY_FULL_ACCESS_CHECK"
+level = 3
+object = "aws_sqs_queue"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Action\":\"SQS:*\""

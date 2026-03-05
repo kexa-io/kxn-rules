@@ -1,0 +1,229 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure Monitoring and Diagnostics rules based on Azure Policy built-in definitions"
+tags = ["azure", "monitoring", "diagnostics", "cis"]
+
+# --- Activity Log ---
+
+[[rules]]
+name = "azure-activity-log-retention-365days"
+description = "Activity log should be retained for at least 365 days - Azure Policy: ActivityLogRetention_365orGreater"
+level = 2
+object = "azurerm_monitor_log_profile"
+tags = ["monitoring", "cis-5.1.1", "soc2", "pci-dss", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "retention_policy.0.days"
+  condition = "SUP_OR_EQUAL"
+  value = 365
+
+[[rules]]
+name = "azure-activity-log-retention-enabled"
+description = "Activity log retention policy should be enabled"
+level = 2
+object = "azurerm_monitor_log_profile"
+tags = ["monitoring", "cis-5.1.2", "soc2"]
+
+  [[rules.conditions]]
+  property = "retention_policy.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-activity-log-all-regions"
+description = "Activity log should capture events from all regions - Azure Policy: ActivityLog_CaptureAllRegions"
+level = 1
+object = "azurerm_monitor_log_profile"
+tags = ["monitoring", "cis-5.1.3", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "locations"
+  condition = "INCLUDE"
+  value = "global"
+
+[[rules]]
+name = "azure-activity-log-administrative-alert"
+description = "An activity log alert should exist for administrative operations - Azure Policy: ActivityLog_AdministrativeOperations_Audit"
+level = 2
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.1", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "criteria.0.category"
+  condition = "EQUAL"
+  value = "Administrative"
+
+[[rules]]
+name = "azure-activity-log-security-alert"
+description = "An activity log alert should exist for security operations - Azure Policy: ActivityLog_SecurityOperations_Audit"
+level = 2
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.2", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "criteria.0.category"
+  condition = "EQUAL"
+  value = "Security"
+
+[[rules]]
+name = "azure-activity-log-policy-alert"
+description = "An activity log alert should exist for policy operations - Azure Policy: ActivityLog_PolicyOperations_Audit"
+level = 1
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.3", "soc2"]
+
+  [[rules.conditions]]
+  property = "criteria.0.category"
+  condition = "EQUAL"
+  value = "Policy"
+
+# --- Diagnostic Settings ---
+
+[[rules]]
+name = "azure-diagnostic-keyvault-enabled"
+description = "Diagnostic logs in Key Vault should be enabled - Azure Policy: AuditDiagnosticLog_Audit"
+level = 2
+object = "azurerm_monitor_diagnostic_setting"
+tags = ["monitoring", "cis-5.3.1", "soc2", "pci-dss", "hipaa"]
+
+  [[rules.conditions]]
+  property = "log.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-diagnostic-log-analytics-workspace"
+description = "Diagnostic settings should send logs to a Log Analytics workspace"
+level = 2
+object = "azurerm_monitor_diagnostic_setting"
+tags = ["monitoring", "cis-5.3.2", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "log_analytics_workspace_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-diagnostic-storage-account"
+description = "Diagnostic settings should have a storage account configured for archival"
+level = 1
+object = "azurerm_monitor_diagnostic_setting"
+tags = ["monitoring", "cis-5.3.3", "soc2"]
+
+  [[rules.conditions]]
+  property = "storage_account_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Log Analytics ---
+
+[[rules]]
+name = "azure-log-analytics-daily-cap"
+description = "Log Analytics workspace should not have daily cap that could cause data loss"
+level = 1
+object = "azurerm_log_analytics_workspace"
+tags = ["monitoring", "best-practice"]
+
+  [[rules.conditions]]
+  property = "daily_quota_gb"
+  condition = "EQUAL"
+  value = -1
+
+[[rules]]
+name = "azure-log-analytics-retention"
+description = "Log Analytics workspace should retain data for at least 30 days"
+level = 2
+object = "azurerm_log_analytics_workspace"
+tags = ["monitoring", "cis-5.4.1", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "retention_in_days"
+  condition = "SUP_OR_EQUAL"
+  value = 30
+
+[[rules]]
+name = "azure-log-analytics-cmk"
+description = "Log Analytics workspace should use customer-managed key for encryption"
+level = 1
+object = "azurerm_log_analytics_workspace"
+tags = ["encryption", "soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Alerts ---
+
+[[rules]]
+name = "azure-alert-create-policy-assignment"
+description = "An alert should exist for creating or updating policy assignments - CIS 5.2.4"
+level = 1
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.4", "soc2"]
+
+  [[rules.conditions]]
+  property = "criteria.0.operation_name"
+  condition = "EQUAL"
+  value = "Microsoft.Authorization/policyAssignments/write"
+
+[[rules]]
+name = "azure-alert-create-nsg"
+description = "An alert should exist for creating or updating NSG - CIS 5.2.5"
+level = 1
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.5", "soc2"]
+
+  [[rules.conditions]]
+  property = "criteria.0.operation_name"
+  condition = "EQUAL"
+  value = "Microsoft.Network/networkSecurityGroups/write"
+
+[[rules]]
+name = "azure-alert-delete-nsg"
+description = "An alert should exist for deleting NSG - CIS 5.2.6"
+level = 1
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.6", "soc2"]
+
+  [[rules.conditions]]
+  property = "criteria.0.operation_name"
+  condition = "EQUAL"
+  value = "Microsoft.Network/networkSecurityGroups/delete"
+
+[[rules]]
+name = "azure-alert-create-nsg-rule"
+description = "An alert should exist for creating or updating NSG rules - CIS 5.2.7"
+level = 1
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.7", "soc2"]
+
+  [[rules.conditions]]
+  property = "criteria.0.operation_name"
+  condition = "EQUAL"
+  value = "Microsoft.Network/networkSecurityGroups/securityRules/write"
+
+[[rules]]
+name = "azure-alert-delete-nsg-rule"
+description = "An alert should exist for deleting NSG rules - CIS 5.2.8"
+level = 1
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.8", "soc2"]
+
+  [[rules.conditions]]
+  property = "criteria.0.operation_name"
+  condition = "EQUAL"
+  value = "Microsoft.Network/networkSecurityGroups/securityRules/delete"
+
+[[rules]]
+name = "azure-alert-create-security-solution"
+description = "An alert should exist for creating or updating security solutions - CIS 5.2.9"
+level = 1
+object = "azurerm_monitor_activity_log_alert"
+tags = ["monitoring", "cis-5.2.9", "soc2"]
+
+  [[rules.conditions]]
+  property = "criteria.0.operation_name"
+  condition = "EQUAL"
+  value = "Microsoft.Security/securitySolutions/write"

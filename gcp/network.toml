@@ -1,0 +1,228 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP VPC and network security rules based on CIS GCP Foundations Benchmark and Forseti policies"
+tags = ["gcp", "network", "vpc", "firewall", "security", "cis"]
+
+# --- CIS 3.1 - No Default Network ---
+
+[[rules]]
+name = "gcp-network-no-default-network"
+description = "CIS 3.1 - Ensure the default network does not exist in a project"
+level = 2
+object = "google_compute_network"
+tags = ["cis-3.1", "soc2", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "name"
+  condition = "DIFFERENT"
+  value = "default"
+
+# --- CIS 3.2 - No Legacy Networks ---
+
+[[rules]]
+name = "gcp-network-no-legacy"
+description = "CIS 3.2 - Ensure legacy networks do not exist"
+level = 2
+object = "google_compute_network"
+tags = ["cis-3.2", "soc2", "network"]
+
+  [[rules.conditions]]
+  property = "auto_create_subnetworks"
+  condition = "EQUAL"
+  value = false
+
+# --- CIS 3.6 - No SSH from 0.0.0.0/0 ---
+
+[[rules]]
+name = "gcp-firewall-no-ssh-from-internet"
+description = "CIS 3.6 - Ensure SSH access is restricted from the internet (0.0.0.0/0)"
+level = 3
+object = "google_compute_firewall"
+tags = ["cis-3.6", "soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  operator = "NAND"
+  criteria = [
+    { property = "source_ranges", condition = "INCLUDE", value = "0.0.0.0/0" },
+    { property = "allow.0.ports", condition = "INCLUDE", value = "22" },
+  ]
+
+# --- CIS 3.7 - No RDP from 0.0.0.0/0 ---
+
+[[rules]]
+name = "gcp-firewall-no-rdp-from-internet"
+description = "CIS 3.7 - Ensure RDP access is restricted from the internet (0.0.0.0/0)"
+level = 3
+object = "google_compute_firewall"
+tags = ["cis-3.7", "soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  operator = "NAND"
+  criteria = [
+    { property = "source_ranges", condition = "INCLUDE", value = "0.0.0.0/0" },
+    { property = "allow.0.ports", condition = "INCLUDE", value = "3389" },
+  ]
+
+# --- CIS 3.8 - VPC Flow Logs ---
+
+[[rules]]
+name = "gcp-subnet-flow-logs-enabled"
+description = "CIS 3.8 - Ensure VPC Flow Logs are enabled for every subnet in a VPC network"
+level = 2
+object = "google_compute_subnetwork"
+tags = ["cis-3.8", "soc2", "pci-dss", "audit", "forseti"]
+
+  [[rules.conditions]]
+  property = "log_config.0.aggregation_interval"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- CIS 3.9 - Firewall Logging ---
+
+[[rules]]
+name = "gcp-firewall-logging-enabled"
+description = "CIS 3.9 - Ensure firewall rules logging is enabled"
+level = 1
+object = "google_compute_firewall"
+tags = ["cis-3.9", "soc2", "audit", "forseti"]
+
+  [[rules.conditions]]
+  property = "log_config.0.metadata"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Private Google Access ---
+
+[[rules]]
+name = "gcp-subnet-private-google-access"
+description = "CIS 3.10 - Ensure Private Google Access is enabled for subnets"
+level = 1
+object = "google_compute_subnetwork"
+tags = ["cis-3.10", "soc2", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "private_ip_google_access"
+  condition = "EQUAL"
+  value = true
+
+# --- No Allow-All Ingress ---
+
+[[rules]]
+name = "gcp-firewall-no-allow-all-ingress"
+description = "Ensure firewall rules do not allow all ingress traffic"
+level = 3
+object = "google_compute_firewall"
+tags = ["soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  operator = "NAND"
+  criteria = [
+    { property = "direction", condition = "EQUAL", value = "INGRESS" },
+    { property = "source_ranges", condition = "INCLUDE", value = "0.0.0.0/0" },
+    { property = "allow.0.protocol", condition = "EQUAL", value = "all" },
+  ]
+
+# --- No Database Ports from Internet ---
+
+[[rules]]
+name = "gcp-firewall-no-db-ports-from-internet"
+description = "Ensure database ports (3306, 5432, 1433, 27017) are not exposed to the internet"
+level = 3
+object = "google_compute_firewall"
+tags = ["soc2", "pci-dss", "network"]
+
+  [[rules.conditions]]
+  operator = "NAND"
+  criteria = [
+    { property = "source_ranges", condition = "INCLUDE", value = "0.0.0.0/0" },
+    { property = "allow.0.ports", condition = "INCLUDE", value = "3306" },
+  ]
+
+# --- No HTTP from Internet ---
+
+[[rules]]
+name = "gcp-firewall-no-http-from-internet"
+description = "Ensure HTTP port 80 is not directly exposed from the internet (use load balancer)"
+level = 1
+object = "google_compute_firewall"
+tags = ["soc2", "network"]
+
+  [[rules.conditions]]
+  operator = "NAND"
+  criteria = [
+    { property = "source_ranges", condition = "INCLUDE", value = "0.0.0.0/0" },
+    { property = "allow.0.ports", condition = "INCLUDE", value = "80" },
+  ]
+
+# --- VPC Network Routing Mode ---
+
+[[rules]]
+name = "gcp-network-global-routing"
+description = "Ensure VPC networks use global routing mode for cross-region connectivity"
+level = 0
+object = "google_compute_network"
+tags = ["network", "forseti"]
+
+  [[rules.conditions]]
+  property = "routing_mode"
+  condition = "EQUAL"
+  value = "GLOBAL"
+
+# --- Cloud NAT Configured ---
+
+[[rules]]
+name = "gcp-network-cloud-nat-logging"
+description = "Ensure Cloud NAT has logging enabled"
+level = 1
+object = "google_compute_router_nat"
+tags = ["soc2", "audit", "network"]
+
+  [[rules.conditions]]
+  property = "log_config.0.enable"
+  condition = "EQUAL"
+  value = true
+
+# --- SSL Policy Minimum TLS 1.2 ---
+
+[[rules]]
+name = "gcp-network-ssl-policy-tls12"
+description = "Ensure SSL policies enforce TLS 1.2 as minimum version"
+level = 2
+object = "google_compute_ssl_policy"
+tags = ["soc2", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "min_tls_version"
+  condition = "EQUAL"
+  value = "TLS_1_2"
+
+# --- SSL Policy Modern Profile ---
+
+[[rules]]
+name = "gcp-network-ssl-policy-modern-profile"
+description = "Ensure SSL policies use MODERN or RESTRICTED profile"
+level = 1
+object = "google_compute_ssl_policy"
+tags = ["soc2", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "profile", condition = "EQUAL", value = "MODERN" },
+    { property = "profile", condition = "EQUAL", value = "RESTRICTED" },
+  ]
+
+# --- Cloud Armor Security Policy ---
+
+[[rules]]
+name = "gcp-network-cloud-armor-default-deny"
+description = "Ensure Cloud Armor security policies have a default deny rule"
+level = 2
+object = "google_compute_security_policy"
+tags = ["soc2", "pci-dss", "waf"]
+
+  [[rules.conditions]]
+  property = "rule.0.action"
+  condition = "EQUAL"
+  value = "deny(403)"

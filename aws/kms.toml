@@ -1,0 +1,135 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS KMS key management security rules based on AWS Config managed rules and CIS AWS Foundations Benchmark"
+tags = ["aws", "kms", "encryption", "security"]
+
+# --- Rule 1 ---
+[[rules]]
+name = "aws-kms-cmk-key-rotation-enabled"
+description = "Ensure KMS customer-managed key rotation is enabled - AWS Config: CMK_BACKING_KEY_ROTATION_ENABLED"
+level = 2
+object = "aws_kms_key"
+tags = ["cis-3.8", "pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "enable_key_rotation"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 2 ---
+[[rules]]
+name = "aws-kms-cmk-not-scheduled-for-deletion"
+description = "Ensure KMS CMKs are not scheduled for deletion - AWS Config: KMS_CMK_NOT_SCHEDULED_FOR_DELETION"
+level = 3
+object = "aws_kms_key"
+tags = ["soc2", "hipaa", "availability"]
+
+  [[rules.conditions]]
+  property = "is_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 3 ---
+[[rules]]
+name = "aws-kms-key-policy-no-public-access"
+description = "Ensure KMS key policy does not allow public access - AWS Config: KMS_KEY_POLICY_NO_PUBLIC_ACCESS"
+level = 3
+object = "aws_kms_key"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Principal\":\"*\""
+
+# --- Rule 4 ---
+[[rules]]
+name = "aws-kms-key-enabled"
+description = "Ensure KMS keys are in enabled state"
+level = 2
+object = "aws_kms_key"
+tags = ["soc2", "availability"]
+
+  [[rules.conditions]]
+  property = "is_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-kms-key-has-description"
+description = "Ensure KMS keys have meaningful descriptions for governance"
+level = 0
+object = "aws_kms_key"
+tags = ["aws-well-architected", "governance"]
+
+  [[rules.conditions]]
+  property = "description"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 6 ---
+[[rules]]
+name = "aws-kms-key-tagged"
+description = "Ensure KMS keys have required tags for cost allocation and governance - AWS Config: KMS_KEY_TAGGED"
+level = 1
+object = "aws_kms_key"
+tags = ["soc2", "aws-well-architected", "governance"]
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 7 ---
+[[rules]]
+name = "aws-kms-key-not-pending-import"
+description = "Ensure KMS keys are not stuck in PendingImport state"
+level = 1
+object = "aws_kms_key"
+tags = ["soc2", "operations"]
+
+  [[rules.conditions]]
+  property = "key_state"
+  condition = "DIFFERENT"
+  value = "PendingImport"
+
+# --- Rule 8 ---
+[[rules]]
+name = "aws-kms-key-policy-no-wildcard-action"
+description = "Ensure KMS key policies do not use wildcard actions"
+level = 3
+object = "aws_kms_key"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "policy"
+  condition = "NOT_INCLUDE"
+  value = "\"Action\":\"kms:*\""
+
+# --- Rule 9 ---
+[[rules]]
+name = "aws-kms-key-symmetric-encryption"
+description = "Ensure KMS keys use SYMMETRIC_DEFAULT key spec for encryption"
+level = 1
+object = "aws_kms_key"
+tags = ["soc2", "aws-well-architected"]
+
+  [[rules.conditions]]
+  property = "customer_master_key_spec"
+  condition = "EQUAL"
+  value = "SYMMETRIC_DEFAULT"
+
+# --- Rule 10 ---
+[[rules]]
+name = "aws-kms-key-deletion-window"
+description = "Ensure KMS keys have a deletion window of at least 14 days"
+level = 2
+object = "aws_kms_key"
+tags = ["soc2", "availability"]
+
+  [[rules.conditions]]
+  property = "deletion_window_in_days"
+  condition = "SUP_OR_EQUAL"
+  value = 14

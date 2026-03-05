@@ -1,120 +1,215 @@
 [metadata]
 version = "1.0.0"
 provider = "google"
-description = "GCP Cloud SQL security rules based on CIS Google Cloud Platform Benchmark"
-tags = ["cis", "gcp", "sql", "database", "security"]
+description = "GCP Cloud SQL security rules based on CIS GCP Foundations Benchmark and Forseti policies"
+tags = ["gcp", "sql", "database", "security", "cis"]
+
+# --- CIS 6.1 - No Public IP for SQL ---
 
 [[rules]]
 name = "gcp-sql-no-public-ip"
-description = "CIS 6.6 - Ensure that Cloud SQL database instances do not have public IPs"
-level = 3
+description = "CIS 6.1 - Ensure Cloud SQL database instances do not have public IPs"
+level = 2
 object = "google_sql_database_instance"
+tags = ["cis-6.1", "soc2", "pci-dss", "network", "forseti"]
 
   [[rules.conditions]]
   property = "settings.0.ip_configuration.0.ipv4_enabled"
   condition = "EQUAL"
   value = false
 
-[[rules]]
-name = "gcp-sql-no-authorize-all"
-description = "CIS 6.5 - Ensure that Cloud SQL database instances are not open to the world"
-level = 3
-object = "google_sql_database_instance"
-
-  [[rules.conditions]]
-  property = "settings.0.ip_configuration.0.authorized_networks"
-  condition = "NOT_INCLUDE"
-  value = "0.0.0.0/0"
+# --- CIS 6.2 - SSL Required ---
 
 [[rules]]
-name = "gcp-sql-ssl-required"
-description = "CIS 6.1 - Ensure that Cloud SQL database instances require all incoming connections to use SSL"
-level = 3
+name = "gcp-sql-require-ssl"
+description = "CIS 6.2 - Ensure Cloud SQL database instances require SSL"
+level = 2
 object = "google_sql_database_instance"
+tags = ["cis-6.2", "soc2", "pci-dss", "encryption", "forseti"]
 
   [[rules.conditions]]
   property = "settings.0.ip_configuration.0.require_ssl"
   condition = "EQUAL"
   value = true
 
+# --- CIS 6.3 - No 0.0.0.0/0 Authorized Networks ---
+
 [[rules]]
-name = "gcp-sql-backup-enabled"
-description = "CIS 6.7 - Ensure that Cloud SQL database instances are configured with automated backups"
+name = "gcp-sql-no-world-readable"
+description = "CIS 6.3 - Ensure Cloud SQL database instances do not authorize 0.0.0.0/0"
+level = 3
+object = "google_sql_database_instance"
+tags = ["cis-6.3", "soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "settings.0.ip_configuration.0.authorized_networks"
+  condition = "NOT_INCLUDE"
+  value = "0.0.0.0/0"
+
+# --- CIS 6.4 - Automated Backups ---
+
+[[rules]]
+name = "gcp-sql-automated-backups"
+description = "CIS 6.4 - Ensure Cloud SQL database instances have automated backups enabled"
 level = 2
 object = "google_sql_database_instance"
+tags = ["cis-6.4", "soc2", "hipaa", "backup", "forseti"]
 
   [[rules.conditions]]
   property = "settings.0.backup_configuration.0.enabled"
   condition = "EQUAL"
   value = true
 
+# --- Backup Retention ---
+
+[[rules]]
+name = "gcp-sql-backup-retention"
+description = "Ensure Cloud SQL backups are retained for at least 7 days"
+level = 1
+object = "google_sql_database_instance"
+tags = ["soc2", "hipaa", "backup"]
+
+  [[rules.conditions]]
+  property = "settings.0.backup_configuration.0.transaction_log_retention_days"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+# --- Point-in-Time Recovery ---
+
+[[rules]]
+name = "gcp-sql-point-in-time-recovery"
+description = "Ensure Cloud SQL instances have point-in-time recovery enabled"
+level = 1
+object = "google_sql_database_instance"
+tags = ["soc2", "hipaa", "backup"]
+
   [[rules.conditions]]
   property = "settings.0.backup_configuration.0.point_in_time_recovery_enabled"
   condition = "EQUAL"
   value = true
 
+# --- CIS 6.5 - MySQL local_infile Off ---
+
 [[rules]]
-name = "gcp-sql-no-default-database-flags"
-description = "CIS 6.2 - Ensure that the log_checkpoints database flag is set to on for PostgreSQL"
+name = "gcp-sql-mysql-no-local-infile"
+description = "CIS 6.5 - Ensure local_infile database flag is set to off for MySQL"
 level = 2
 object = "google_sql_database_instance"
+tags = ["cis-6.5", "soc2", "hardening"]
 
   [[rules.conditions]]
   property = "settings.0.database_flags"
   condition = "INCLUDE"
-  value = "log_checkpoints"
+  value = "local_infile=off"
+
+# --- CIS 6.6 - PostgreSQL log_checkpoints ---
 
 [[rules]]
-name = "gcp-sql-log-disconnections"
-description = "CIS 6.2.2 - Ensure that the log_disconnections flag is set to on for PostgreSQL"
-level = 2
-object = "google_sql_database_instance"
-
-  [[rules.conditions]]
-  property = "settings.0.database_flags"
-  condition = "INCLUDE"
-  value = "log_disconnections"
-
-[[rules]]
-name = "gcp-sql-cmek-encryption"
-description = "Ensure Cloud SQL instances are encrypted with CMEK"
-level = 2
-object = "google_sql_database_instance"
-
-  [[rules.conditions]]
-  property = "encryption_key_name"
-  condition = "DIFFERENT"
-  value = ""
-
-[[rules]]
-name = "gcp-sql-maintenance-window"
-description = "Ensure Cloud SQL instances have a maintenance window configured"
+name = "gcp-sql-pg-log-checkpoints"
+description = "CIS 6.6 - Ensure database flag log_checkpoints is set to on for PostgreSQL"
 level = 1
 object = "google_sql_database_instance"
+tags = ["cis-6.6", "soc2", "audit"]
 
   [[rules.conditions]]
-  property = "settings.0.maintenance_window"
-  condition = "DIFFERENT"
-  value = ""
+  property = "settings.0.database_flags"
+  condition = "INCLUDE"
+  value = "log_checkpoints=on"
+
+# --- CIS 6.7 - PostgreSQL log_connections ---
+
+[[rules]]
+name = "gcp-sql-pg-log-connections"
+description = "CIS 6.7 - Ensure database flag log_connections is set to on for PostgreSQL"
+level = 1
+object = "google_sql_database_instance"
+tags = ["cis-6.7", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "settings.0.database_flags"
+  condition = "INCLUDE"
+  value = "log_connections=on"
+
+# --- CIS 6.8 - PostgreSQL log_disconnections ---
+
+[[rules]]
+name = "gcp-sql-pg-log-disconnections"
+description = "CIS 6.8 - Ensure database flag log_disconnections is set to on for PostgreSQL"
+level = 1
+object = "google_sql_database_instance"
+tags = ["cis-6.8", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "settings.0.database_flags"
+  condition = "INCLUDE"
+  value = "log_disconnections=on"
+
+# --- High Availability ---
 
 [[rules]]
 name = "gcp-sql-high-availability"
-description = "Ensure Cloud SQL instances are configured for high availability"
+description = "Ensure Cloud SQL instances have high availability configured"
 level = 1
 object = "google_sql_database_instance"
+tags = ["soc2", "availability"]
 
   [[rules.conditions]]
   property = "settings.0.availability_type"
   condition = "EQUAL"
   value = "REGIONAL"
 
+# --- Maintenance Window ---
+
 [[rules]]
-name = "gcp-sql-private-network"
-description = "Ensure Cloud SQL instances use private networking"
-level = 2
+name = "gcp-sql-maintenance-window"
+description = "Ensure Cloud SQL instances have a maintenance window configured"
+level = 0
 object = "google_sql_database_instance"
+tags = ["soc2", "availability", "forseti"]
 
   [[rules.conditions]]
-  property = "settings.0.ip_configuration.0.private_network"
+  property = "settings.0.maintenance_window"
   condition = "DIFFERENT"
   value = ""
+
+# --- Deletion Protection ---
+
+[[rules]]
+name = "gcp-sql-deletion-protection"
+description = "Ensure Cloud SQL instances have deletion protection enabled"
+level = 2
+object = "google_sql_database_instance"
+tags = ["soc2", "data-protection"]
+
+  [[rules.conditions]]
+  property = "deletion_protection"
+  condition = "EQUAL"
+  value = true
+
+# --- Instance Type (Second Gen) ---
+
+[[rules]]
+name = "gcp-sql-second-gen"
+description = "Ensure Cloud SQL instances use Second Generation instance types"
+level = 1
+object = "google_sql_database_instance"
+tags = ["soc2", "lifecycle", "forseti"]
+
+  [[rules.conditions]]
+  property = "database_version"
+  condition = "NOT_STARTS_WITH"
+  value = "MYSQL_5_5"
+
+# --- Query Insights ---
+
+[[rules]]
+name = "gcp-sql-query-insights"
+description = "Ensure Cloud SQL instances have Query Insights enabled for performance monitoring"
+level = 0
+object = "google_sql_database_instance"
+tags = ["monitoring", "performance"]
+
+  [[rules.conditions]]
+  property = "settings.0.insights_config.0.query_insights_enabled"
+  condition = "EQUAL"
+  value = true

@@ -1,0 +1,142 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS Lambda security rules based on AWS Config managed rules"
+tags = ["aws", "lambda", "security", "serverless"]
+
+# --- Rule 1 ---
+[[rules]]
+name = "aws-lambda-function-public-access-prohibited"
+description = "Ensure Lambda functions are not publicly accessible - AWS Config: LAMBDA_FUNCTION_PUBLIC_ACCESS_PROHIBITED"
+level = 3
+object = "aws_lambda_function"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "publish"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 2 ---
+[[rules]]
+name = "aws-lambda-inside-vpc"
+description = "Ensure Lambda functions are deployed within a VPC - AWS Config: LAMBDA_INSIDE_VPC"
+level = 2
+object = "aws_lambda_function"
+tags = ["pci-dss", "soc2", "nist", "network-security"]
+
+  [[rules.conditions]]
+  property = "vpc_config.0.subnet_ids"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 3 ---
+[[rules]]
+name = "aws-lambda-dlq-check"
+description = "Ensure Lambda functions have a Dead Letter Queue configured - AWS Config: LAMBDA_DLQ_CHECK"
+level = 2
+object = "aws_lambda_function"
+tags = ["soc2", "aws-well-architected", "reliability"]
+
+  [[rules.conditions]]
+  property = "dead_letter_config.0.target_arn"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 4 ---
+[[rules]]
+name = "aws-lambda-function-xray-enabled"
+description = "Ensure Lambda functions have X-Ray tracing enabled - AWS Config: LAMBDA_FUNCTION_XRAY_ENABLED"
+level = 1
+object = "aws_lambda_function"
+tags = ["soc2", "aws-well-architected", "monitoring"]
+
+  [[rules.conditions]]
+  property = "tracing_config.0.mode"
+  condition = "EQUAL"
+  value = "Active"
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-lambda-concurrency-check"
+description = "Ensure Lambda functions have concurrency limits configured - AWS Config: LAMBDA_CONCURRENCY_CHECK"
+level = 1
+object = "aws_lambda_function"
+tags = ["aws-well-architected", "cost-optimization"]
+
+  [[rules.conditions]]
+  property = "reserved_concurrent_executions"
+  condition = "SUP"
+  value = 0
+
+# --- Rule 6 ---
+[[rules]]
+name = "aws-lambda-vpc-multi-az-check"
+description = "Ensure Lambda VPC configuration spans multiple Availability Zones - AWS Config: LAMBDA_VPC_MULTI_AZ_CHECK"
+level = 2
+object = "aws_lambda_function"
+tags = ["soc2", "aws-well-architected", "availability"]
+
+  [[rules.conditions]]
+  property = "vpc_config.0.subnet_ids"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 7 ---
+[[rules]]
+name = "aws-lambda-function-settings-check-runtime"
+description = "Ensure Lambda functions use supported runtimes - AWS Config: LAMBDA_FUNCTION_SETTINGS_CHECK"
+level = 2
+object = "aws_lambda_function"
+tags = ["soc2", "aws-well-architected", "patching"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "runtime", condition = "STARTS_WITH", value = "python3" },
+    { property = "runtime", condition = "STARTS_WITH", value = "nodejs2" },
+    { property = "runtime", condition = "STARTS_WITH", value = "nodejs1" },
+    { property = "runtime", condition = "STARTS_WITH", value = "java" },
+    { property = "runtime", condition = "STARTS_WITH", value = "dotnet" },
+    { property = "runtime", condition = "STARTS_WITH", value = "ruby" },
+    { property = "runtime", condition = "STARTS_WITH", value = "provided" },
+  ]
+
+# --- Rule 8 ---
+[[rules]]
+name = "aws-lambda-function-settings-check-timeout"
+description = "Ensure Lambda function timeout is configured (not default 3s) - AWS Config: LAMBDA_FUNCTION_SETTINGS_CHECK"
+level = 1
+object = "aws_lambda_function"
+tags = ["aws-well-architected"]
+
+  [[rules.conditions]]
+  property = "timeout"
+  condition = "SUP"
+  value = 3
+
+# --- Rule 9 ---
+[[rules]]
+name = "aws-lambda-function-settings-check-memory"
+description = "Ensure Lambda function has appropriate memory allocation (>128MB) - AWS Config: LAMBDA_FUNCTION_SETTINGS_CHECK"
+level = 0
+object = "aws_lambda_function"
+tags = ["aws-well-architected", "performance"]
+
+  [[rules.conditions]]
+  property = "memory_size"
+  condition = "SUP"
+  value = 128
+
+# --- Rule 10 ---
+[[rules]]
+name = "aws-lambda-permission-no-wildcard-principal"
+description = "Ensure Lambda resource-based policies do not use wildcard principals - AWS Config: LAMBDA_FUNCTION_PUBLIC_ACCESS_PROHIBITED"
+level = 3
+object = "aws_lambda_permission"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "principal"
+  condition = "DIFFERENT"
+  value = "*"

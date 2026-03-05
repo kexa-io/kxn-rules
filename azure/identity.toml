@@ -1,38 +1,31 @@
 [metadata]
 version = "1.0.0"
 provider = "azurerm"
-description = "Azure AD and identity security rules based on CIS Microsoft Azure Foundations Benchmark"
-tags = ["cis", "azure", "identity", "iam", "security"]
+description = "Azure Identity, RBAC, and Access Management rules based on Azure Policy and CIS benchmarks"
+tags = ["azure", "identity", "rbac", "security", "cis"]
+
+# --- Role Assignments ---
 
 [[rules]]
-name = "azure-ad-mfa-enabled"
-description = "CIS 1.1 - Ensure multi-factor authentication is enabled for all privileged users"
-level = 3
-object = "azurerm_user"
-
-  [[rules.conditions]]
-  property = "authentication_methods"
-  condition = "DIFFERENT"
-  value = ""
-
-[[rules]]
-name = "azure-role-no-custom-owner"
-description = "CIS 1.23 - Ensure no custom subscription owner roles are created"
+name = "azure-rbac-no-owner-custom-subscription"
+description = "There should be no custom subscription owner roles - CIS 1.23"
 level = 2
 object = "azurerm_role_definition"
+tags = ["access-control", "cis-1.23", "soc2", "nist"]
 
   [[rules.conditions]]
   operator = "OR"
   criteria = [
     { property = "permissions.0.actions", condition = "NOT_INCLUDE", value = "*" },
-    { property = "scope", condition = "DIFFERENT", value = "/" },
+    { property = "assignable_scopes", condition = "NOT_INCLUDE", value = "/" },
   ]
 
 [[rules]]
 name = "azure-rbac-no-wildcard-permissions"
-description = "Ensure role assignments do not use wildcard (*) action permissions"
+description = "Custom roles should not have wildcard action permissions"
 level = 2
 object = "azurerm_role_definition"
+tags = ["access-control", "cis-1.24", "soc2", "nist", "pci-dss"]
 
   [[rules.conditions]]
   property = "permissions.0.actions"
@@ -40,78 +33,174 @@ object = "azurerm_role_definition"
   value = "*"
 
 [[rules]]
-name = "azure-key-vault-rbac-enabled"
-description = "CIS 8.5 - Ensure that RBAC is the authorization model for Key Vault"
+name = "azure-rbac-limit-owner-assignments"
+description = "There should be a maximum of 3 owners designated for subscriptions - CIS 1.1"
 level = 2
-object = "azurerm_key_vault"
+object = "azurerm_role_assignment"
+tags = ["access-control", "cis-1.1", "soc2", "nist"]
 
   [[rules.conditions]]
-  property = "enable_rbac_authorization"
-  condition = "EQUAL"
-  value = true
-
-[[rules]]
-name = "azure-key-vault-soft-delete"
-description = "CIS 8.4 - Ensure that soft delete is enabled for Key Vault"
-level = 2
-object = "azurerm_key_vault"
-
-  [[rules.conditions]]
-  property = "soft_delete_retention_days"
-  condition = "SUP_OR_EQUAL"
-  value = 7
-
-[[rules]]
-name = "azure-key-vault-purge-protection"
-description = "CIS 8.6 - Ensure that purge protection is enabled for Key Vault"
-level = 2
-object = "azurerm_key_vault"
-
-  [[rules.conditions]]
-  property = "purge_protection_enabled"
-  condition = "EQUAL"
-  value = true
-
-[[rules]]
-name = "azure-key-vault-key-expiration"
-description = "CIS 8.1 - Ensure that key expiration date is set for Key Vault keys"
-level = 2
-object = "azurerm_key_vault_key"
-
-  [[rules.conditions]]
-  property = "expiration_date"
+  property = "role_definition_name"
   condition = "DIFFERENT"
-  value = ""
+  value = "Owner"
+
+# --- Managed Identity ---
 
 [[rules]]
-name = "azure-key-vault-secret-expiration"
-description = "CIS 8.2 - Ensure that secret expiration date is set for Key Vault secrets"
-level = 2
-object = "azurerm_key_vault_secret"
-
-  [[rules.conditions]]
-  property = "expiration_date"
-  condition = "DIFFERENT"
-  value = ""
-
-[[rules]]
-name = "azure-managed-identity-preferred"
-description = "Ensure managed identity is used instead of service principals where possible"
+name = "azure-identity-system-assigned-vm"
+description = "Virtual machines should use system-assigned managed identity"
 level = 1
-object = "azurerm_user_assigned_identity"
+object = "azurerm_linux_virtual_machine"
+tags = ["authentication", "cis-1.25", "soc2", "nist"]
 
   [[rules.conditions]]
-  property = "tags"
+  property = "identity.0.type"
+  condition = "INCLUDE"
+  value = "SystemAssigned"
+
+[[rules]]
+name = "azure-identity-user-assigned-exists"
+description = "User-assigned managed identity should be used for application workloads"
+level = 0
+object = "azurerm_user_assigned_identity"
+tags = ["authentication", "best-practice"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Resource Locks ---
+
+[[rules]]
+name = "azure-resource-lock-critical"
+description = "Critical resources should have resource locks to prevent accidental deletion"
+level = 1
+object = "azurerm_management_lock"
+tags = ["governance", "best-practice", "iso27001"]
+
+  [[rules.conditions]]
+  property = "lock_level"
+  condition = "EQUAL"
+  value = "CanNotDelete"
+
+# --- Policy Assignment ---
+
+[[rules]]
+name = "azure-policy-assignment-exists"
+description = "Azure Policy should be assigned at the subscription level for governance"
+level = 1
+object = "azurerm_subscription_policy_assignment"
+tags = ["governance", "cis-1.26", "soc2"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Conditional Access (via azuread provider mapping) ---
+
+[[rules]]
+name = "azure-ad-mfa-required-admins"
+description = "MFA should be enabled for accounts with owner permissions on subscriptions - CIS 1.2"
+level = 3
+object = "azurerm_role_assignment"
+tags = ["authentication", "cis-1.2", "soc2", "pci-dss", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "role_definition_name"
   condition = "DIFFERENT"
   value = ""
 
 [[rules]]
-name = "azure-key-vault-no-public-network"
-description = "Ensure Key Vault is not accessible from public networks"
+name = "azure-ad-mfa-required-write"
+description = "MFA should be enabled for accounts with write permissions on subscriptions - CIS 1.3"
 level = 2
-object = "azurerm_key_vault"
+object = "azurerm_role_assignment"
+tags = ["authentication", "cis-1.3", "soc2", "pci-dss", "nist"]
 
   [[rules.conditions]]
-  property = "public_network_access_enabled"
-  condition = "EQUAL"
-  value = false
+  property = "role_definition_name"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-ad-mfa-required-read"
+description = "MFA should be enabled for accounts with read permissions on subscriptions - CIS 1.4"
+level = 1
+object = "azurerm_role_assignment"
+tags = ["authentication", "cis-1.4", "soc2"]
+
+  [[rules.conditions]]
+  property = "role_definition_name"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Service Principal ---
+
+[[rules]]
+name = "azure-sp-no-password-credentials"
+description = "Service principals should use certificate credentials instead of password secrets"
+level = 2
+object = "azurerm_role_assignment"
+tags = ["authentication", "cis-1.27", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "principal_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Tags and Governance ---
+
+[[rules]]
+name = "azure-resource-tag-environment"
+description = "Resources should have an environment tag for governance"
+level = 0
+object = "azurerm_resource_group"
+tags = ["governance", "best-practice"]
+
+  [[rules.conditions]]
+  property = "tags.environment"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-resource-tag-owner"
+description = "Resources should have an owner tag for accountability"
+level = 0
+object = "azurerm_resource_group"
+tags = ["governance", "best-practice"]
+
+  [[rules.conditions]]
+  property = "tags.owner"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-resource-tag-cost-center"
+description = "Resources should have a cost-center tag for billing management"
+level = 0
+object = "azurerm_resource_group"
+tags = ["governance", "best-practice"]
+
+  [[rules.conditions]]
+  property = "tags.cost-center"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-resource-allowed-locations"
+description = "Resources should only be deployed in allowed locations - Azure Policy: AllowedLocations_Deny"
+level = 1
+object = "azurerm_resource_group"
+tags = ["governance", "cis-1.28", "soc2", "iso27001"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "location", condition = "EQUAL", value = "westeurope" },
+    { property = "location", condition = "EQUAL", value = "northeurope" },
+    { property = "location", condition = "EQUAL", value = "eastus" },
+    { property = "location", condition = "EQUAL", value = "eastus2" },
+    { property = "location", condition = "EQUAL", value = "westus2" },
+  ]

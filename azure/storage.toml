@@ -1,47 +1,15 @@
 [metadata]
 version = "1.0.0"
 provider = "azurerm"
-description = "Azure Storage account security rules based on CIS Microsoft Azure Foundations Benchmark"
-tags = ["cis", "azure", "storage", "security", "encryption"]
+description = "Azure Storage security rules based on Azure Policy built-in definitions"
+tags = ["azure", "storage", "security", "cis"]
 
 [[rules]]
-name = "azure-storage-https-only"
-description = "CIS 3.1 - Ensure that Secure transfer required is set to Enabled"
+name = "azure-storage-no-public-blob-access"
+description = "Storage account public access should be disallowed - Azure Policy: ASC_Storage_DisallowPublicBlobAccess_Audit"
 level = 3
 object = "azurerm_storage_account"
-
-  [[rules.conditions]]
-  property = "enable_https_traffic_only"
-  condition = "EQUAL"
-  value = true
-
-[[rules]]
-name = "azure-storage-encryption-enabled"
-description = "CIS 3.2 - Ensure that storage account encryption uses CMK"
-level = 2
-object = "azurerm_storage_account"
-
-  [[rules.conditions]]
-  property = "customer_managed_key"
-  condition = "DIFFERENT"
-  value = ""
-
-[[rules]]
-name = "azure-storage-logging-enabled"
-description = "CIS 3.3 - Ensure Storage logging is enabled for Blob service"
-level = 2
-object = "azurerm_storage_account"
-
-  [[rules.conditions]]
-  property = "blob_properties.0.delete_retention_policy.0.days"
-  condition = "SUP_OR_EQUAL"
-  value = 7
-
-[[rules]]
-name = "azure-storage-no-public-access"
-description = "CIS 3.5 - Ensure that public access is disabled for storage accounts"
-level = 3
-object = "azurerm_storage_account"
+tags = ["data-protection", "cis-3.7", "soc2", "pci-dss", "hipaa", "nist"]
 
   [[rules.conditions]]
   property = "allow_nested_items_to_be_public"
@@ -49,43 +17,23 @@ object = "azurerm_storage_account"
   value = false
 
 [[rules]]
-name = "azure-storage-default-deny"
-description = "CIS 3.6 - Ensure default network access rule for Storage Accounts is Deny"
+name = "azure-storage-secure-transfer"
+description = "Secure transfer to storage accounts should be enabled - Azure Policy: StorageAccountSecureTransfer_Audit"
 level = 2
 object = "azurerm_storage_account"
+tags = ["encryption", "cis-3.1", "soc2", "pci-dss", "hipaa", "nist"]
 
   [[rules.conditions]]
-  property = "network_rules.0.default_action"
+  property = "enable_https_traffic_only"
   condition = "EQUAL"
-  value = "Deny"
+  value = true
 
 [[rules]]
-name = "azure-storage-trusted-services"
-description = "CIS 3.7 - Ensure trusted Microsoft services are enabled for storage"
-level = 1
-object = "azurerm_storage_account"
-
-  [[rules.conditions]]
-  property = "network_rules.0.bypass"
-  condition = "INCLUDE"
-  value = "AzureServices"
-
-[[rules]]
-name = "azure-storage-soft-delete-enabled"
-description = "CIS 3.8 - Ensure soft delete is enabled for Azure Storage blobs"
+name = "azure-storage-minimum-tls-version"
+description = "Storage accounts should have minimum TLS version of 1.2 - Azure Policy: StorageMinimumTlsVersion_Audit"
 level = 2
 object = "azurerm_storage_account"
-
-  [[rules.conditions]]
-  property = "blob_properties.0.delete_retention_policy.0.days"
-  condition = "SUP_OR_EQUAL"
-  value = 7
-
-[[rules]]
-name = "azure-storage-min-tls-version"
-description = "CIS 3.9 - Ensure minimum TLS version is set to 1.2"
-level = 3
-object = "azurerm_storage_account"
+tags = ["encryption", "cis-3.12", "soc2", "pci-dss", "nist"]
 
   [[rules.conditions]]
   property = "min_tls_version"
@@ -93,28 +41,185 @@ object = "azurerm_storage_account"
   value = "TLS1_2"
 
 [[rules]]
-name = "azure-storage-private-endpoint"
-description = "Ensure storage accounts use private endpoints for secure connectivity"
+name = "azure-storage-network-default-deny"
+description = "Storage accounts should restrict network access using virtual network rules - Azure Policy: StorageAccountNetworkRules_Audit"
 level = 2
 object = "azurerm_storage_account"
+tags = ["network-security", "cis-3.8", "soc2", "pci-dss", "nist"]
 
   [[rules.conditions]]
   property = "network_rules.0.default_action"
   condition = "EQUAL"
   value = "Deny"
 
+[[rules]]
+name = "azure-storage-cmk-encryption"
+description = "Storage accounts should use customer-managed key for encryption - Azure Policy: StorageAccountEncryptionCMK_Audit"
+level = 2
+object = "azurerm_storage_account"
+tags = ["encryption", "cis-3.9", "soc2", "hipaa", "nist"]
+
   [[rules.conditions]]
-  property = "network_rules.0.private_link_access"
+  property = "customer_managed_key.0.key_vault_key_id"
   condition = "DIFFERENT"
   value = ""
 
 [[rules]]
-name = "azure-storage-infrastructure-encryption"
-description = "Ensure infrastructure encryption is enabled for double encryption"
+name = "azure-storage-geo-redundant"
+description = "Geo-redundant storage should be enabled for Storage Accounts - Azure Policy: GeoRedundant_StorageAccounts_Audit"
 level = 1
 object = "azurerm_storage_account"
+tags = ["reliability", "cis-3.2", "iso27001"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "account_replication_type", condition = "EQUAL", value = "GRS" },
+    { property = "account_replication_type", condition = "EQUAL", value = "RAGRS" },
+    { property = "account_replication_type", condition = "EQUAL", value = "GZRS" },
+    { property = "account_replication_type", condition = "EQUAL", value = "RAGZRS" },
+  ]
+
+[[rules]]
+name = "azure-storage-no-cross-tenant-replication"
+description = "Storage accounts should prevent cross tenant object replication - Azure Policy: StorageAccountAllowCrossTenantReplication_Audit"
+level = 2
+object = "azurerm_storage_account"
+tags = ["data-protection", "cis-3.10", "soc2"]
+
+  [[rules.conditions]]
+  property = "cross_tenant_replication_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-storage-trusted-microsoft-services"
+description = "Storage accounts should allow access from trusted Microsoft services - Azure Policy: StorageAccess_TrustedMicrosoftServices_Audit"
+level = 1
+object = "azurerm_storage_account"
+tags = ["best-practice", "soc2"]
+
+  [[rules.conditions]]
+  property = "network_rules.0.bypass"
+  condition = "INCLUDE"
+  value = "AzureServices"
+
+[[rules]]
+name = "azure-storage-no-shared-key-access"
+description = "Storage accounts should prevent shared key access and use Azure AD - Azure Policy: StorageAccountAllowSharedKeyAccess_Audit"
+level = 1
+object = "azurerm_storage_account"
+tags = ["authentication", "cis-3.11", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "shared_access_key_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-storage-sas-expiration-policy"
+description = "Storage accounts should have SAS expiration policy configured - Azure Policy: EnforceStorageSasMaxExpiration7Days_Deny"
+level = 1
+object = "azurerm_storage_account"
+tags = ["data-protection", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "sas_policy.0.expiration_period"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-storage-blob-soft-delete"
+description = "Storage accounts should have blob soft delete enabled for data recovery"
+level = 2
+object = "azurerm_storage_account"
+tags = ["data-protection", "cis-3.3", "soc2", "iso27001"]
+
+  [[rules.conditions]]
+  property = "blob_properties.0.delete_retention_policy.0.days"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+[[rules]]
+name = "azure-storage-container-soft-delete"
+description = "Storage accounts should have container soft delete enabled for data recovery"
+level = 2
+object = "azurerm_storage_account"
+tags = ["data-protection", "cis-3.4", "soc2"]
+
+  [[rules.conditions]]
+  property = "blob_properties.0.container_delete_retention_policy.0.days"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+[[rules]]
+name = "azure-storage-blob-versioning"
+description = "Storage accounts should have blob versioning enabled"
+level = 1
+object = "azurerm_storage_account"
+tags = ["data-protection", "cis-3.5", "soc2"]
+
+  [[rules.conditions]]
+  property = "blob_properties.0.versioning_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-storage-private-endpoint"
+description = "Storage accounts should use private link for secure connectivity"
+level = 2
+object = "azurerm_storage_account"
+tags = ["network-security", "cis-3.6", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-storage-infrastructure-encryption"
+description = "Storage accounts should have infrastructure encryption enabled for double encryption at rest"
+level = 1
+object = "azurerm_storage_account"
+tags = ["encryption", "soc2", "hipaa"]
 
   [[rules.conditions]]
   property = "infrastructure_encryption_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-storage-no-classic"
+description = "Classic storage accounts should not be used - migrate to Azure Resource Manager"
+level = 1
+object = "azurerm_storage_account"
+tags = ["best-practice", "cis-3.13"]
+
+  [[rules.conditions]]
+  property = "account_kind"
+  condition = "DIFFERENT"
+  value = "Storage"
+
+[[rules]]
+name = "azure-storage-blob-public-access-disabled"
+description = "Storage account blob containers should not allow anonymous public read access"
+level = 3
+object = "azurerm_storage_container"
+tags = ["data-protection", "cis-3.14", "soc2", "pci-dss", "hipaa"]
+
+  [[rules.conditions]]
+  property = "container_access_type"
+  condition = "EQUAL"
+  value = "private"
+
+[[rules]]
+name = "azure-storage-queue-logging"
+description = "Storage account queue services should have diagnostic logging enabled"
+level = 1
+object = "azurerm_storage_account"
+tags = ["monitoring", "cis-3.15", "soc2"]
+
+  [[rules.conditions]]
+  property = "queue_properties.0.logging.0.read"
   condition = "EQUAL"
   value = true

@@ -1,0 +1,221 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure Key Vault security rules based on Azure Policy built-in definitions"
+tags = ["azure", "keyvault", "security", "cis"]
+
+# --- Key Vault Configuration ---
+
+[[rules]]
+name = "azure-keyvault-firewall-enabled"
+description = "Key Vault should have firewall enabled - Azure Policy: FirewallEnabled_Audit"
+level = 2
+object = "azurerm_key_vault"
+tags = ["network-security", "cis-8.6", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "network_acls.0.default_action"
+  condition = "EQUAL"
+  value = "Deny"
+
+[[rules]]
+name = "azure-keyvault-purge-protection"
+description = "Key Vault should have purge protection enabled - Azure Policy: ManagedHsm_PurgeProtection_Audit"
+level = 3
+object = "azurerm_key_vault"
+tags = ["data-protection", "cis-8.1", "soc2", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "purge_protection_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-keyvault-soft-delete"
+description = "Key Vault should have soft delete enabled - Azure Policy: SoftDelete_Audit"
+level = 3
+object = "azurerm_key_vault"
+tags = ["data-protection", "cis-8.2", "soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "soft_delete_retention_days"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+[[rules]]
+name = "azure-keyvault-rbac-authorization"
+description = "Key Vault should use RBAC for authorization instead of access policies"
+level = 1
+object = "azurerm_key_vault"
+tags = ["access-control", "cis-8.3", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "enable_rbac_authorization"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-keyvault-private-endpoint"
+description = "Key Vault should use a private link connection - Azure Policy: PrivateEndpoint_Audit"
+level = 2
+object = "azurerm_key_vault"
+tags = ["network-security", "cis-8.4", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-keyvault-diagnostic-logs"
+description = "Diagnostic logs in Key Vault should be enabled - Azure Policy: AuditDiagnosticLog_Audit"
+level = 2
+object = "azurerm_key_vault"
+tags = ["monitoring", "cis-8.5", "soc2", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Keys ---
+
+[[rules]]
+name = "azure-keyvault-key-expiration-set"
+description = "Key Vault keys should have an expiration date set - Azure Policy: Keys_ExpirationSet"
+level = 2
+object = "azurerm_key_vault_key"
+tags = ["key-management", "cis-8.7", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "expiration_date"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-keyvault-key-rsa-minimum-size"
+description = "Key Vault RSA keys should have a minimum key size of 2048 bits - Azure Policy: Keys_RSA_MinimumKeySize"
+level = 2
+object = "azurerm_key_vault_key"
+tags = ["encryption", "cis-8.8", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "key_size"
+  condition = "SUP_OR_EQUAL"
+  value = 2048
+
+[[rules]]
+name = "azure-keyvault-key-rsa-type"
+description = "Key Vault keys should use RSA or RSA-HSM key type for strong encryption"
+level = 1
+object = "azurerm_key_vault_key"
+tags = ["encryption", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "key_type", condition = "EQUAL", value = "RSA" },
+    { property = "key_type", condition = "EQUAL", value = "RSA-HSM" },
+    { property = "key_type", condition = "EQUAL", value = "EC" },
+    { property = "key_type", condition = "EQUAL", value = "EC-HSM" },
+  ]
+
+[[rules]]
+name = "azure-keyvault-key-rotation-policy"
+description = "Key Vault keys should have a rotation policy configured"
+level = 1
+object = "azurerm_key_vault_key"
+tags = ["key-management", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "rotation_policy.0.automatic.0.time_before_expiry"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Secrets ---
+
+[[rules]]
+name = "azure-keyvault-secret-expiration-set"
+description = "Key Vault secrets should have an expiration date set - Azure Policy: Secrets_ExpirationSet"
+level = 2
+object = "azurerm_key_vault_secret"
+tags = ["secret-management", "cis-8.9", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "expiration_date"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-keyvault-secret-content-type"
+description = "Key Vault secrets should have content type set for identification"
+level = 1
+object = "azurerm_key_vault_secret"
+tags = ["best-practice", "soc2"]
+
+  [[rules.conditions]]
+  property = "content_type"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Certificates ---
+
+[[rules]]
+name = "azure-keyvault-cert-rsa-minimum-size"
+description = "Key Vault certificates using RSA should have minimum key size of 2048 - Azure Policy: Certificates_RSA_MinimumKeySize"
+level = 2
+object = "azurerm_key_vault_certificate"
+tags = ["encryption", "cis-8.10", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "certificate_policy.0.key_properties.0.key_size"
+  condition = "SUP_OR_EQUAL"
+  value = 2048
+
+[[rules]]
+name = "azure-keyvault-cert-validity-period"
+description = "Key Vault certificates should have a maximum validity period - Azure Policy: Certificates_ValidityPeriod"
+level = 1
+object = "azurerm_key_vault_certificate"
+tags = ["certificate-management", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "certificate_policy.0.x509_certificate_properties.0.validity_in_months"
+  condition = "INF_OR_EQUAL"
+  value = 12
+
+[[rules]]
+name = "azure-keyvault-cert-lifetime-action"
+description = "Key Vault certificates should have lifetime action triggers configured - Azure Policy: Certificates_LifetimeAction"
+level = 1
+object = "azurerm_key_vault_certificate"
+tags = ["certificate-management", "soc2"]
+
+  [[rules.conditions]]
+  property = "certificate_policy.0.lifetime_action.0.action.0.action_type"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-keyvault-cert-exportable-key"
+description = "Key Vault certificates should have non-exportable keys where possible"
+level = 0
+object = "azurerm_key_vault_certificate"
+tags = ["security", "best-practice"]
+
+  [[rules.conditions]]
+  property = "certificate_policy.0.key_properties.0.exportable"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-keyvault-managed-hsm"
+description = "Key Vault Managed HSM should have purge protection enabled - Azure Policy: ManagedHsm_PurgeProtection_Audit"
+level = 3
+object = "azurerm_key_vault_managed_hardware_security_module"
+tags = ["data-protection", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "purge_protection_enabled"
+  condition = "EQUAL"
+  value = true

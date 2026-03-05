@@ -1,0 +1,109 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS ElastiCache security rules based on AWS Config managed rules"
+tags = ["aws", "elasticache", "redis", "security"]
+
+# --- Rule 1 ---
+[[rules]]
+name = "aws-elasticache-repl-grp-encrypted-at-rest"
+description = "Ensure ElastiCache replication groups are encrypted at rest - AWS Config: ELASTICACHE_REPL_GRP_ENCRYPTED_AT_REST"
+level = 3
+object = "aws_elasticache_replication_group"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "at_rest_encryption_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 2 ---
+[[rules]]
+name = "aws-elasticache-repl-grp-encrypted-in-transit"
+description = "Ensure ElastiCache replication groups are encrypted in transit - AWS Config: ELASTICACHE_REPL_GRP_ENCRYPTED_IN_TRANSIT"
+level = 3
+object = "aws_elasticache_replication_group"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "transit_encryption_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 3 ---
+[[rules]]
+name = "aws-elasticache-repl-grp-redis-auth-enabled"
+description = "Ensure ElastiCache Redis AUTH is enabled - AWS Config: ELASTICACHE_REPL_GRP_REDIS_AUTH_ENABLED"
+level = 2
+object = "aws_elasticache_replication_group"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "auth_token"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 4 ---
+[[rules]]
+name = "aws-elasticache-repl-grp-auto-failover-enabled"
+description = "Ensure ElastiCache Multi-AZ automatic failover is enabled - AWS Config: ELASTICACHE_REPL_GRP_AUTO_FAILOVER_ENABLED"
+level = 2
+object = "aws_elasticache_replication_group"
+tags = ["soc2", "aws-well-architected", "availability"]
+
+  [[rules.conditions]]
+  property = "automatic_failover_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-elasticache-automatic-backup-check"
+description = "Ensure ElastiCache clusters have automatic backups enabled with retention >= 15 days - AWS Config: ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK"
+level = 2
+object = "aws_elasticache_replication_group"
+tags = ["soc2", "hipaa", "backup"]
+
+  [[rules.conditions]]
+  property = "snapshot_retention_limit"
+  condition = "SUP_OR_EQUAL"
+  value = 15
+
+# --- Rule 6 ---
+[[rules]]
+name = "aws-elasticache-auto-minor-version-upgrade"
+description = "Ensure ElastiCache auto minor version upgrade is enabled - AWS Config: ELASTICACHE_AUTO_MINOR_VERSION_UPGRADE_CHECK"
+level = 1
+object = "aws_elasticache_cluster"
+tags = ["soc2", "aws-well-architected", "patching"]
+
+  [[rules.conditions]]
+  property = "auto_minor_version_upgrade"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 7 ---
+[[rules]]
+name = "aws-elasticache-subnet-group-check"
+description = "Ensure ElastiCache clusters use a custom subnet group (not default) - AWS Config: ELASTICACHE_SUBNET_GROUP_CHECK"
+level = 2
+object = "aws_elasticache_cluster"
+tags = ["soc2", "network-security"]
+
+  [[rules.conditions]]
+  property = "subnet_group_name"
+  condition = "DIFFERENT"
+  value = "default"
+
+# --- Rule 8 ---
+[[rules]]
+name = "aws-elasticache-rbac-auth-enabled"
+description = "Ensure ElastiCache uses RBAC authentication for fine-grained access control - AWS Config: ELASTICACHE_RBAC_AUTH_ENABLED"
+level = 2
+object = "aws_elasticache_replication_group"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "user_group_ids"
+  condition = "DIFFERENT"
+  value = ""

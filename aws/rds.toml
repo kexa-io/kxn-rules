@@ -1,178 +1,204 @@
 [metadata]
 version = "1.0.0"
 provider = "aws"
-description = "AWS CIS Foundations Benchmark - RDS Security Rules"
-tags = ["cis", "aws", "rds", "security", "database"]
+description = "AWS RDS database security rules based on AWS Config managed rules and CIS AWS Foundations Benchmark"
+tags = ["aws", "rds", "security", "database"]
 
-# RDS instances must be encrypted at rest
+# --- Rule 1 ---
 [[rules]]
-name = "aws-rds-encryption-at-rest"
-description = "CIS 2.3.1 - Ensure RDS instances have encryption at rest enabled"
-level = 2
-object = "aws_db_instance"
-tags = ["cis-2.3.1", "soc2", "hipaa", "pci-dss", "encryption"]
-
-  [[rules.conditions]]
-  property = "storage_encrypted"
-  condition = "EQUAL"
-  value = true
-
-# RDS instances should not be publicly accessible
-[[rules]]
-name = "aws-rds-no-public-access"
-description = "CIS 2.3.2 - Ensure RDS instances are not publicly accessible"
+name = "aws-rds-instance-public-access-check"
+description = "Ensure RDS instances are not publicly accessible - AWS Config: RDS_INSTANCE_PUBLIC_ACCESS_CHECK"
 level = 3
 object = "aws_db_instance"
-tags = ["cis-2.3.2", "soc2", "hipaa", "pci-dss", "network"]
+tags = ["cis-2.3.1", "pci-dss", "hipaa", "soc2", "nist"]
 
   [[rules.conditions]]
   property = "publicly_accessible"
   condition = "EQUAL"
   value = false
 
-# RDS automated backups enabled with sufficient retention
+# --- Rule 2 ---
 [[rules]]
-name = "aws-rds-backup-retention"
-description = "Ensure RDS automated backup retention period is at least 7 days"
-level = 2
+name = "aws-rds-storage-encrypted"
+description = "Ensure RDS instances have storage encryption enabled - AWS Config: RDS_STORAGE_ENCRYPTED"
+level = 3
 object = "aws_db_instance"
-tags = ["soc2", "backup", "reliability"]
+tags = ["cis-2.3.1", "pci-dss", "hipaa", "soc2", "nist"]
 
   [[rules.conditions]]
-  property = "backup_retention_period"
-  condition = "SUP_OR_EQUAL"
-  value = 7
+  property = "storage_encrypted"
+  condition = "EQUAL"
+  value = true
 
-# RDS multi-AZ deployment
+# --- Rule 3 ---
 [[rules]]
-name = "aws-rds-multi-az"
-description = "Ensure RDS instances have Multi-AZ deployment enabled for high availability"
-level = 1
+name = "aws-rds-multi-az-support"
+description = "Ensure RDS instances are configured for Multi-AZ deployment - AWS Config: RDS_MULTI_AZ_SUPPORT"
+level = 2
 object = "aws_db_instance"
-tags = ["reliability", "best-practice"]
+tags = ["soc2", "aws-well-architected", "availability"]
 
   [[rules.conditions]]
   property = "multi_az"
   condition = "EQUAL"
   value = true
 
-# RDS minor version auto-upgrade
+# --- Rule 4 ---
 [[rules]]
-name = "aws-rds-auto-minor-upgrade"
-description = "Ensure RDS instances have auto minor version upgrade enabled"
-level = 1
-object = "aws_db_instance"
-tags = ["patching", "best-practice"]
-
-  [[rules.conditions]]
-  property = "auto_minor_version_upgrade"
-  condition = "EQUAL"
-  value = true
-
-# RDS should use modern engine versions
-[[rules]]
-name = "aws-rds-no-deprecated-engine"
-description = "Ensure RDS instances are not running deprecated database engine versions"
+name = "aws-rds-instance-backup-enabled"
+description = "Ensure RDS automated backups are enabled with sufficient retention - AWS Config: DB_INSTANCE_BACKUP_ENABLED"
 level = 2
 object = "aws_db_instance"
-tags = ["patching", "security"]
+tags = ["cis-2.3.1", "soc2", "hipaa", "backup"]
 
   [[rules.conditions]]
-  property = "engine_version_deprecated"
-  condition = "EQUAL"
-  value = false
+  property = "backup_retention_period"
+  condition = "SUP_OR_EQUAL"
+  value = 7
 
-# RDS deletion protection
+# --- Rule 5 ---
 [[rules]]
-name = "aws-rds-deletion-protection"
-description = "Ensure RDS instances have deletion protection enabled"
-level = 1
+name = "aws-rds-instance-deletion-protection-enabled"
+description = "Ensure RDS instance has deletion protection enabled - AWS Config: RDS_INSTANCE_DELETION_PROTECTION_ENABLED"
+level = 2
 object = "aws_db_instance"
-tags = ["reliability", "best-practice"]
+tags = ["soc2", "aws-well-architected"]
 
   [[rules.conditions]]
   property = "deletion_protection"
   condition = "EQUAL"
   value = true
 
-# RDS enhanced monitoring enabled
+# --- Rule 6 ---
 [[rules]]
-name = "aws-rds-enhanced-monitoring"
-description = "Ensure RDS instances have enhanced monitoring enabled"
-level = 0
+name = "aws-rds-instance-iam-authentication-enabled"
+description = "Ensure RDS instance has IAM database authentication enabled - AWS Config: RDS_INSTANCE_IAM_AUTHENTICATION_ENABLED"
+level = 2
 object = "aws_db_instance"
-tags = ["monitoring", "best-practice"]
-
-  [[rules.conditions]]
-  property = "monitoring_interval"
-  condition = "SUP"
-  value = 0
-
-# RDS should use KMS CMK encryption
-[[rules]]
-name = "aws-rds-kms-encryption"
-description = "Ensure RDS instances are encrypted with a customer-managed KMS key"
-level = 1
-object = "aws_db_instance"
-tags = ["encryption", "best-practice"]
-
-  [[rules.conditions]]
-  property = "kms_key_id"
-  condition = "DIFFERENT"
-  value = ""
-
-# RDS IAM authentication enabled
-[[rules]]
-name = "aws-rds-iam-auth-enabled"
-description = "Ensure RDS instances have IAM database authentication enabled"
-level = 1
-object = "aws_db_instance"
-tags = ["soc2", "authentication", "best-practice"]
+tags = ["soc2", "nist", "aws-well-architected"]
 
   [[rules.conditions]]
   property = "iam_database_authentication_enabled"
   condition = "EQUAL"
   value = true
 
-# RDS Performance Insights enabled
+# --- Rule 7 ---
 [[rules]]
-name = "aws-rds-performance-insights"
-description = "Ensure RDS instances have Performance Insights enabled"
-level = 0
+name = "aws-rds-automatic-minor-version-upgrade-enabled"
+description = "Ensure RDS automatic minor version upgrade is enabled - AWS Config: RDS_AUTOMATIC_MINOR_VERSION_UPGRADE_ENABLED"
+level = 1
 object = "aws_db_instance"
-tags = ["monitoring", "best-practice"]
+tags = ["soc2", "aws-well-architected", "patching"]
 
   [[rules.conditions]]
-  property = "performance_insights_enabled"
+  property = "auto_minor_version_upgrade"
   condition = "EQUAL"
   value = true
 
-# RDS should not use default port
+# --- Rule 8 ---
 [[rules]]
-name = "aws-rds-no-default-port"
-description = "Ensure RDS instances do not use default database ports (security through obscurity)"
-level = 0
+name = "aws-rds-instance-default-admin-check"
+description = "Ensure RDS instance does not use default admin username - AWS Config: RDS_INSTANCE_DEFAULT_ADMIN_CHECK"
+level = 2
 object = "aws_db_instance"
-tags = ["best-practice"]
+tags = ["pci-dss", "soc2"]
 
   [[rules.conditions]]
   operator = "AND"
   criteria = [
-    { property = "port", condition = "DIFFERENT", value = 3306 },
-    { property = "port", condition = "DIFFERENT", value = 5432 },
-    { property = "port", condition = "DIFFERENT", value = 1433 },
-    { property = "port", condition = "DIFFERENT", value = 1521 },
+    { property = "username", condition = "DIFFERENT", value = "admin" },
+    { property = "username", condition = "DIFFERENT", value = "postgres" },
+    { property = "username", condition = "DIFFERENT", value = "root" },
+    { property = "username", condition = "DIFFERENT", value = "master" },
   ]
 
-# RDS copy tags to snapshots
+# --- Rule 9 ---
 [[rules]]
-name = "aws-rds-copy-tags-to-snapshots"
-description = "Ensure RDS instances copy tags to snapshots for tracking"
-level = 0
-object = "aws_db_instance"
-tags = ["governance", "best-practice"]
+name = "aws-rds-snapshots-public-prohibited"
+description = "Ensure RDS snapshots are not publicly accessible - AWS Config: RDS_SNAPSHOTS_PUBLIC_PROHIBITED"
+level = 3
+object = "aws_db_snapshot"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
 
   [[rules.conditions]]
-  property = "copy_tags_to_snapshot"
+  property = "shared_accounts"
+  condition = "NOT_INCLUDE"
+  value = "all"
+
+# --- Rule 10 ---
+[[rules]]
+name = "aws-rds-logging-enabled"
+description = "Ensure RDS instance has logging enabled - AWS Config: RDS_LOGGING_ENABLED"
+level = 2
+object = "aws_db_instance"
+tags = ["soc2", "nist", "monitoring"]
+
+  [[rules.conditions]]
+  property = "enabled_cloudwatch_logs_exports"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 11 ---
+[[rules]]
+name = "aws-rds-enhanced-monitoring-enabled"
+description = "Ensure RDS enhanced monitoring is enabled - AWS Config: RDS_ENHANCED_MONITORING_ENABLED"
+level = 1
+object = "aws_db_instance"
+tags = ["soc2", "aws-well-architected", "monitoring"]
+
+  [[rules.conditions]]
+  property = "monitoring_interval"
+  condition = "SUP"
+  value = 0
+
+# --- Rule 12 ---
+[[rules]]
+name = "aws-rds-cluster-deletion-protection-enabled"
+description = "Ensure RDS Aurora cluster has deletion protection enabled - AWS Config: RDS_CLUSTER_DELETION_PROTECTION_ENABLED"
+level = 2
+object = "aws_rds_cluster"
+tags = ["soc2", "aws-well-architected"]
+
+  [[rules.conditions]]
+  property = "deletion_protection"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 13 ---
+[[rules]]
+name = "aws-rds-cluster-encrypted-at-rest"
+description = "Ensure RDS Aurora cluster is encrypted at rest - AWS Config: RDS_CLUSTER_ENCRYPTED_AT_REST"
+level = 3
+object = "aws_rds_cluster"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "storage_encrypted"
+  condition = "EQUAL"
+  value = true
+
+# --- Rule 14 ---
+[[rules]]
+name = "aws-rds-cluster-multi-az-enabled"
+description = "Ensure RDS Aurora cluster is deployed across multiple AZs - AWS Config: RDS_CLUSTER_MULTI_AZ_ENABLED"
+level = 2
+object = "aws_rds_cluster"
+tags = ["soc2", "aws-well-architected", "availability"]
+
+  [[rules.conditions]]
+  property = "availability_zones"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 15 ---
+[[rules]]
+name = "aws-rds-snapshot-encrypted"
+description = "Ensure RDS snapshots are encrypted - AWS Config: RDS_SNAPSHOT_ENCRYPTED"
+level = 2
+object = "aws_db_snapshot"
+tags = ["pci-dss", "hipaa", "soc2"]
+
+  [[rules.conditions]]
+  property = "encrypted"
   condition = "EQUAL"
   value = true

@@ -1,16 +1,98 @@
 [metadata]
 version = "1.0.0"
 provider = "aws"
-description = "AWS CIS Foundations Benchmark - VPC, Security Group, and Network Rules"
-tags = ["cis", "aws", "vpc", "security-group", "network", "security"]
+description = "AWS VPC, Security Groups, and NACL security rules based on AWS Config managed rules and CIS AWS Foundations Benchmark"
+tags = ["aws", "vpc", "network", "security", "cis"]
 
-# CIS 5.1 - Ensure no network ACLs allow ingress from 0.0.0.0/0 to admin ports
+# --- Rule 1 ---
 [[rules]]
-name = "aws-nacl-no-unrestricted-admin"
-description = "CIS 5.1 - Ensure no NACL allows unrestricted ingress to remote admin ports"
+name = "aws-vpc-default-security-group-closed"
+description = "Ensure the default security group of every VPC restricts all traffic - AWS Config: VPC_DEFAULT_SECURITY_GROUP_CLOSED"
+level = 3
+object = "aws_default_security_group"
+tags = ["cis-5.4", "pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "ingress", condition = "EQUAL", value = "" },
+    { property = "egress", condition = "EQUAL", value = "" },
+  ]
+
+# --- Rule 2 ---
+[[rules]]
+name = "aws-vpc-flow-logs-enabled"
+description = "Ensure VPC Flow Logs are enabled for all VPCs - AWS Config: VPC_FLOW_LOGS_ENABLED"
+level = 3
+object = "aws_flow_log"
+tags = ["cis-3.9", "pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "vpc_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 3 ---
+[[rules]]
+name = "aws-restricted-ssh"
+description = "Ensure no security group allows unrestricted SSH access (0.0.0.0/0:22) - AWS Config: INCOMING_SSH_DISABLED"
+level = 3
+object = "aws_security_group"
+tags = ["cis-5.2", "pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "ingress"
+  condition = "NOT_INCLUDE"
+  value = "0.0.0.0/0"
+
+# --- Rule 4 ---
+[[rules]]
+name = "aws-restricted-rdp"
+description = "Ensure no security group allows unrestricted RDP access (0.0.0.0/0:3389) - AWS Config: RESTRICTED_INCOMING_TRAFFIC"
+level = 3
+object = "aws_security_group_rule"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "from_port", condition = "DIFFERENT", value = 3389 },
+    { property = "cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
+  ]
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-vpc-sg-open-only-to-authorized-ports"
+description = "Ensure security groups only allow traffic on authorized ports - AWS Config: VPC_SG_OPEN_ONLY_TO_AUTHORIZED_PORTS"
+level = 2
+object = "aws_security_group_rule"
+tags = ["pci-dss", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "cidr_blocks"
+  condition = "NOT_INCLUDE"
+  value = "0.0.0.0/0"
+
+# --- Rule 6 ---
+[[rules]]
+name = "aws-subnet-auto-assign-public-ip-disabled"
+description = "Ensure VPC subnets do not auto-assign public IP addresses - AWS Config: SUBNET_AUTO_ASSIGN_PUBLIC_IP_DISABLED"
+level = 2
+object = "aws_subnet"
+tags = ["cis-5.1", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "map_public_ip_on_launch"
+  condition = "EQUAL"
+  value = false
+
+# --- Rule 7 ---
+[[rules]]
+name = "aws-nacl-no-unrestricted-ssh-rdp"
+description = "Ensure NACLs do not allow unrestricted SSH or RDP ingress - AWS Config: NACL_NO_UNRESTRICTED_SSH_RDP"
 level = 3
 object = "aws_network_acl_rule"
-tags = ["cis-5.1", "soc2", "pci-dss", "network"]
+tags = ["pci-dss", "soc2", "nist"]
 
   [[rules.conditions]]
   operator = "OR"
@@ -19,162 +101,104 @@ tags = ["cis-5.1", "soc2", "pci-dss", "network"]
     { property = "rule_action", condition = "EQUAL", value = "deny" },
   ]
 
-# CIS 5.2 - Ensure no security groups allow ingress from 0.0.0.0/0 to port 22
+# --- Rule 8 ---
 [[rules]]
-name = "aws-sg-no-unrestricted-ssh"
-description = "CIS 5.2 - Ensure no security group allows unrestricted ingress to port 22 (SSH)"
-level = 3
-object = "aws_security_group_rule"
-tags = ["cis-5.2", "soc2", "hipaa", "pci-dss"]
-
-  [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
-    { property = "from_port", condition = "DIFFERENT", value = 22 },
-  ]
-
-# CIS 5.3 - Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389
-[[rules]]
-name = "aws-sg-no-unrestricted-rdp"
-description = "CIS 5.3 - Ensure no security group allows unrestricted ingress to port 3389 (RDP)"
-level = 3
-object = "aws_security_group_rule"
-tags = ["cis-5.3", "soc2", "hipaa", "pci-dss"]
-
-  [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
-    { property = "from_port", condition = "DIFFERENT", value = 3389 },
-  ]
-
-# CIS 5.4 - Ensure default security group restricts all traffic
-[[rules]]
-name = "aws-sg-default-restricts-all"
-description = "CIS 5.4 - Ensure the default security group of every VPC restricts all traffic"
-level = 2
-object = "aws_default_security_group"
-tags = ["cis-5.4", "soc2", "pci-dss"]
-
-  [[rules.conditions]]
-  property = "ingress_count"
-  condition = "EQUAL"
-  value = 0
-
-  [[rules.conditions]]
-  property = "egress_count"
-  condition = "EQUAL"
-  value = 0
-
-# VPC flow logs enabled
-[[rules]]
-name = "aws-vpc-flow-logs-enabled"
-description = "CIS 3.9 - Ensure VPC flow logging is enabled in all VPCs"
-level = 2
-object = "aws_vpc"
-tags = ["cis-3.9", "soc2", "hipaa", "logging"]
-
-  [[rules.conditions]]
-  property = "flow_logs_enabled"
-  condition = "EQUAL"
-  value = true
-
-# Security groups should have descriptions
-[[rules]]
-name = "aws-sg-has-description"
-description = "Ensure all security groups have a meaningful description"
+name = "aws-vpc-network-acl-unused-check"
+description = "Ensure all NACLs are associated with at least one subnet - AWS Config: VPC_NETWORK_ACL_UNUSED_CHECK"
 level = 0
-object = "aws_security_group"
-tags = ["governance", "best-practice"]
+object = "aws_network_acl"
+tags = ["aws-well-architected", "hygiene"]
 
   [[rules.conditions]]
-  property = "description"
+  property = "subnet_ids"
   condition = "DIFFERENT"
   value = ""
 
+# --- Rule 9 ---
+[[rules]]
+name = "aws-internet-gateway-authorized-vpc-only"
+description = "Ensure internet gateways are attached only to authorized VPCs - AWS Config: INTERNET_GATEWAY_AUTHORIZED_VPC_ONLY"
+level = 2
+object = "aws_internet_gateway"
+tags = ["soc2", "nist", "network-security"]
+
   [[rules.conditions]]
-  property = "description"
+  property = "vpc_id"
   condition = "DIFFERENT"
-  value = "Managed by Terraform"
+  value = ""
 
-# No security groups with unrestricted egress to all ports
+# --- Rule 10 ---
 [[rules]]
-name = "aws-sg-no-unrestricted-egress"
-description = "Ensure security groups do not allow unrestricted outbound traffic to all ports"
-level = 1
+name = "aws-no-unrestricted-route-to-igw"
+description = "Ensure route tables do not have unrestricted routes to internet gateways - AWS Config: NO_UNRESTRICTED_ROUTE_TO_IGW"
+level = 2
+object = "aws_route"
+tags = ["soc2", "nist", "network-security"]
+
+  [[rules.conditions]]
+  property = "destination_cidr_block"
+  condition = "DIFFERENT"
+  value = "0.0.0.0/0"
+
+# --- Rule 11 ---
+[[rules]]
+name = "aws-vpc-vpn-2-tunnels-up"
+description = "Ensure VPN connections have both tunnels active for redundancy - AWS Config: VPC_VPN_2_TUNNELS_UP"
+level = 2
+object = "aws_vpn_connection"
+tags = ["aws-well-architected", "availability"]
+
+  [[rules.conditions]]
+  property = "tunnel1_address"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Rule 12 ---
+[[rules]]
+name = "aws-ec2-security-group-attached-to-eni"
+description = "Ensure all security groups are attached to at least one ENI - AWS Config: EC2_SECURITY_GROUP_ATTACHED_TO_ENI"
+level = 0
 object = "aws_security_group"
-tags = ["soc2", "network"]
+tags = ["aws-well-architected", "hygiene"]
 
   [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "egress.0.cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
-    { property = "egress.0.from_port", condition = "DIFFERENT", value = 0 },
-  ]
+  property = "vpc_id"
+  condition = "DIFFERENT"
+  value = ""
 
-# No inbound rules referencing 0.0.0.0/0 with all ports
+# --- Rule 13 ---
 [[rules]]
-name = "aws-sg-no-all-ports-open"
-description = "Ensure no security group allows all ports open to 0.0.0.0/0"
-level = 3
-object = "aws_security_group_rule"
-tags = ["soc2", "hipaa", "pci-dss"]
-
-  [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
-    { property = "from_port", condition = "DIFFERENT", value = 0 },
-    { property = "to_port", condition = "DIFFERENT", value = 65535 },
-  ]
-
-# Subnet should not auto-assign public IPs
-[[rules]]
-name = "aws-subnet-no-auto-public-ip"
-description = "Ensure VPC subnets do not automatically assign public IP addresses"
+name = "aws-vpc-endpoint-enabled"
+description = "Ensure VPC endpoints are used for AWS services to avoid internet transit - AWS Config: SERVICE_VPC_ENDPOINT_ENABLED"
 level = 1
-object = "aws_subnet"
-tags = ["soc2", "network", "best-practice"]
+object = "aws_vpc_endpoint"
+tags = ["soc2", "nist", "aws-well-architected"]
 
   [[rules.conditions]]
-  property = "map_public_ip_on_launch"
-  condition = "EQUAL"
-  value = false
+  property = "service_name"
+  condition = "DIFFERENT"
+  value = ""
 
-# VPC peering connections should not allow cross-account DNS resolution
+# --- Rule 14 ---
 [[rules]]
-name = "aws-vpc-peering-dns-restricted"
-description = "Ensure VPC peering connections restrict DNS resolution from accepter VPC"
+name = "aws-vpc-peering-dns-resolution-check"
+description = "Ensure VPC peering connections have DNS resolution enabled - AWS Config: VPC_PEERING_DNS_RESOLUTION_CHECK"
 level = 1
 object = "aws_vpc_peering_connection"
-tags = ["network", "best-practice"]
+tags = ["aws-well-architected", "network-security"]
 
   [[rules.conditions]]
-  property = "accepter.0.allow_remote_vpc_dns_resolution"
+  property = "requester.0.allow_remote_vpc_dns_resolution"
   condition = "EQUAL"
-  value = false
+  value = true
 
-# NAT Gateway should be used for private subnet internet access
+# --- Rule 15 ---
 [[rules]]
-name = "aws-vpc-nat-gateway-exists"
-description = "Ensure VPC uses NAT gateway for private subnet internet access"
-level = 1
-object = "aws_nat_gateway"
-tags = ["network", "best-practice"]
-
-  [[rules.conditions]]
-  property = "state"
-  condition = "EQUAL"
-  value = "available"
-
-# Transit Gateway should have auto-accept disabled
-[[rules]]
-name = "aws-tgw-no-auto-accept"
-description = "Ensure Transit Gateway does not auto-accept cross-account attachments"
+name = "aws-ec2-transit-gateway-auto-vpc-attach-disabled"
+description = "Ensure Transit Gateway does not auto-accept VPC attachments - AWS Config: EC2_TRANSIT_GATEWAY_AUTO_VPC_ATTACH_DISABLED"
 level = 2
 object = "aws_ec2_transit_gateway"
-tags = ["network", "security"]
+tags = ["soc2", "nist", "network-security"]
 
   [[rules.conditions]]
   property = "auto_accept_shared_attachments"

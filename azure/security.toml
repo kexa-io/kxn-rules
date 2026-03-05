@@ -1,0 +1,231 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure Security Center and Defender rules based on Azure Policy built-in definitions"
+tags = ["azure", "security", "defender", "cis"]
+
+# --- Microsoft Defender for Cloud ---
+
+[[rules]]
+name = "azure-defender-servers-enabled"
+description = "Azure Defender for servers should be enabled - Azure Policy: ASC_EnableATPForServers_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.1", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "VirtualMachines" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-app-service-enabled"
+description = "Azure Defender for App Service should be enabled - Azure Policy: ASC_EnableATPForAppServices_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.2", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "AppServices" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-sql-enabled"
+description = "Azure Defender for Azure SQL Database servers should be enabled - Azure Policy: ASC_EnableATPForSQLServers_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.3", "soc2", "pci-dss", "hipaa"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "SqlServers" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-storage-enabled"
+description = "Azure Defender for Storage should be enabled - Azure Policy: ASC_EnableATPForStorage_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.4", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "StorageAccounts" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-keyvault-enabled"
+description = "Azure Defender for Key Vault should be enabled - Azure Policy: ASC_EnableATPForKeyVaults_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.5", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "KeyVaults" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-kubernetes-enabled"
+description = "Azure Defender for Kubernetes should be enabled - Azure Policy: ASC_EnableATPForKubernetes_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.6", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "KubernetesService" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-container-registry-enabled"
+description = "Azure Defender for container registries should be enabled - Azure Policy: ASC_EnableATPForContainerRegistry_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.7", "soc2"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "ContainerRegistry" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-dns-enabled"
+description = "Azure Defender for DNS should be enabled - Azure Policy: ASC_EnableATPForDNS_Audit"
+level = 1
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.8", "soc2"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "Dns" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+[[rules]]
+name = "azure-defender-arm-enabled"
+description = "Azure Defender for Resource Manager should be enabled - Azure Policy: ASC_EnableATPForARM_Audit"
+level = 2
+object = "azurerm_security_center_subscription_pricing"
+tags = ["security", "cis-2.1.9", "soc2", "nist"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "resource_type", condition = "EQUAL", value = "Arm" },
+    { property = "tier", condition = "EQUAL", value = "Standard" },
+  ]
+
+# --- Security Center Configuration ---
+
+[[rules]]
+name = "azure-security-contact-email"
+description = "Security Center should have a security contact email configured - Azure Policy: ASC_Security_contact_email"
+level = 2
+object = "azurerm_security_center_contact"
+tags = ["monitoring", "cis-2.2.1", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "email"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-security-contact-phone"
+description = "Security Center should have a security contact phone configured"
+level = 1
+object = "azurerm_security_center_contact"
+tags = ["monitoring", "cis-2.2.2", "soc2"]
+
+  [[rules.conditions]]
+  property = "phone"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-security-alert-notifications"
+description = "Security Center should send alert notifications to subscription owner - Azure Policy: ASC_Security_contact_notification"
+level = 2
+object = "azurerm_security_center_contact"
+tags = ["monitoring", "cis-2.2.3", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "alert_notifications"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-security-alerts-to-admins"
+description = "Security Center should send alerts to admins - Azure Policy: ASC_Security_contact_send_to_admins"
+level = 2
+object = "azurerm_security_center_contact"
+tags = ["monitoring", "cis-2.2.4", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "alerts_to_admins"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-security-auto-provisioning"
+description = "Auto provisioning of the Log Analytics agent should be enabled - Azure Policy: ASC_Automatic_provisioning_log_analytics_monitoring_agent"
+level = 2
+object = "azurerm_security_center_auto_provisioning"
+tags = ["monitoring", "cis-2.2.5", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "auto_provision"
+  condition = "EQUAL"
+  value = "On"
+
+[[rules]]
+name = "azure-security-adaptive-application-controls"
+description = "Adaptive application controls should be enabled - Azure Policy: ASC_AdaptiveApplicationControls_Audit"
+level = 1
+object = "azurerm_security_center_setting"
+tags = ["security", "cis-2.3", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-security-adaptive-network-hardening"
+description = "Adaptive network hardening recommendations should be applied - Azure Policy: ASC_AdaptiveNetworkHardenings_Audit"
+level = 1
+object = "azurerm_security_center_setting"
+tags = ["network-security", "cis-2.4", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-security-jit-access"
+description = "Management ports of virtual machines should be protected with just-in-time access - Azure Policy: ASC_JITNetworkAccess_Audit"
+level = 2
+object = "azurerm_security_center_setting"
+tags = ["network-security", "cis-2.5", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true

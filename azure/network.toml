@@ -1,113 +1,175 @@
 [metadata]
 version = "1.0.0"
 provider = "azurerm"
-description = "Azure Network security rules based on CIS Microsoft Azure Foundations Benchmark"
-tags = ["cis", "azure", "network", "nsg", "security"]
+description = "Azure Network security rules based on Azure Policy built-in definitions"
+tags = ["azure", "network", "security", "cis"]
+
+# --- Network Security Groups ---
 
 [[rules]]
-name = "azure-nsg-no-inbound-all"
-description = "CIS 6.1 - Ensure that NSG does not allow inbound traffic from 0.0.0.0/0 to any port"
+name = "azure-nsg-no-inbound-ssh-internet"
+description = "SSH access from the Internet should be blocked - Azure Policy: NetworkWatcherFlowLog_Enabled_Audit"
 level = 3
 object = "azurerm_network_security_rule"
-
-  [[rules.conditions]]
-  operator = "AND"
-  criteria = [
-    { property = "direction", condition = "EQUAL", value = "Inbound" },
-    { property = "access", condition = "EQUAL", value = "Allow" },
-    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
-  ]
-
-[[rules]]
-name = "azure-nsg-no-ssh-from-internet"
-description = "CIS 6.2 - Ensure that SSH access is restricted from the internet"
-level = 3
-object = "azurerm_network_security_rule"
+tags = ["network-security", "cis-6.1", "soc2", "pci-dss", "nist"]
 
   [[rules.conditions]]
   operator = "OR"
   criteria = [
+    { property = "direction", condition = "EQUAL", value = "Outbound" },
+    { property = "access", condition = "EQUAL", value = "Deny" },
     { property = "destination_port_range", condition = "DIFFERENT", value = "22" },
     { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
-    { property = "access", condition = "EQUAL", value = "Deny" },
   ]
 
 [[rules]]
-name = "azure-nsg-no-rdp-from-internet"
-description = "CIS 6.3 - Ensure that RDP access is restricted from the internet"
+name = "azure-nsg-no-inbound-rdp-internet"
+description = "RDP access from the Internet should be blocked - Azure Policy: Deny_RDP_From_Internet"
 level = 3
 object = "azurerm_network_security_rule"
+tags = ["network-security", "cis-6.2", "soc2", "pci-dss", "nist"]
 
   [[rules.conditions]]
   operator = "OR"
   criteria = [
+    { property = "direction", condition = "EQUAL", value = "Outbound" },
+    { property = "access", condition = "EQUAL", value = "Deny" },
     { property = "destination_port_range", condition = "DIFFERENT", value = "3389" },
     { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
-    { property = "access", condition = "EQUAL", value = "Deny" },
   ]
-
-[[rules]]
-name = "azure-nsg-no-udp-from-internet"
-description = "CIS 6.4 - Ensure that UDP access is restricted from the internet"
-level = 2
-object = "azurerm_network_security_rule"
-
-  [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "protocol", condition = "DIFFERENT", value = "Udp" },
-    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
-    { property = "access", condition = "EQUAL", value = "Deny" },
-  ]
-
-[[rules]]
-name = "azure-public-ip-has-ddos-protection"
-description = "Ensure DDoS protection is associated with public IP addresses"
-level = 2
-object = "azurerm_public_ip"
-
-  [[rules.conditions]]
-  property = "ddos_protection_mode"
-  condition = "EQUAL"
-  value = "Enabled"
-
-[[rules]]
-name = "azure-network-watcher-enabled"
-description = "CIS 6.5 - Ensure that Network Watcher is enabled"
-level = 2
-object = "azurerm_network_watcher"
-
-  [[rules.conditions]]
-  property = "id"
-  condition = "DIFFERENT"
-  value = ""
 
 [[rules]]
 name = "azure-nsg-flow-logs-enabled"
-description = "CIS 6.6 - Ensure that NSG Flow Logs are enabled"
+description = "Network Security Group flow logs should be enabled - Azure Policy: NetworkWatcher_FlowLogs_Audit"
 level = 2
 object = "azurerm_network_watcher_flow_log"
+tags = ["monitoring", "cis-6.4", "soc2", "nist", "iso27001"]
 
   [[rules.conditions]]
   property = "enabled"
   condition = "EQUAL"
   value = true
 
-  [[rules.conditions]]
-  property = "retention_policy.0.enabled"
-  condition = "EQUAL"
-  value = true
+[[rules]]
+name = "azure-nsg-flow-log-retention"
+description = "NSG flow log retention should be greater than 90 days - Azure Policy: NetworkWatcherFlowLogRetention90Days_Audit"
+level = 2
+object = "azurerm_network_watcher_flow_log"
+tags = ["monitoring", "cis-6.5", "soc2", "nist"]
 
   [[rules.conditions]]
   property = "retention_policy.0.days"
   condition = "SUP_OR_EQUAL"
   value = 90
 
+# --- Azure Firewall ---
+
 [[rules]]
-name = "azure-vnet-has-nsg"
-description = "Ensure all subnets have an associated Network Security Group"
+name = "azure-firewall-threat-intelligence"
+description = "Azure Firewall policy should have threat intelligence enabled - Azure Policy: AzureFirewallPolicy_EnableThreatIntelligence_Audit"
+level = 2
+object = "azurerm_firewall_policy"
+tags = ["security", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "threat_intelligence_mode"
+  condition = "DIFFERENT"
+  value = "Off"
+
+[[rules]]
+name = "azure-firewall-availability-zones"
+description = "Azure Firewall should be deployed with multiple availability zones - Azure Policy: AzureFirewall_DeployWithMultipleAvailabilityZones_Audit"
+level = 1
+object = "azurerm_firewall"
+tags = ["reliability", "best-practice"]
+
+  [[rules.conditions]]
+  property = "zones"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-firewall-dns-proxy"
+description = "Azure Firewall should have DNS proxy enabled - Azure Policy: AzureFirewall_EnableDNSProxy_Audit"
+level = 1
+object = "azurerm_firewall"
+tags = ["best-practice", "network-security"]
+
+  [[rules.conditions]]
+  property = "dns_servers"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-firewall-idps-enabled"
+description = "Azure Firewall policy should have IDPS enabled - Azure Policy: ACAT_FirewallPolicy_EnableIDPS_Audit"
+level = 2
+object = "azurerm_firewall_policy"
+tags = ["security", "soc2", "nist", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "intrusion_detection.0.mode"
+  condition = "DIFFERENT"
+  value = "Off"
+
+# --- Application Gateway / WAF ---
+
+[[rules]]
+name = "azure-appgw-waf-enabled"
+description = "Application Gateway should be deployed with WAF - Azure Policy: AzureAppGWShouldBeDeployedWithWAF_Audit"
+level = 2
+object = "azurerm_application_gateway"
+tags = ["security", "cis-6.6", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "waf_configuration.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-waf-prevention-mode"
+description = "WAF should use prevention mode rather than detection mode"
+level = 2
+object = "azurerm_web_application_firewall_policy"
+tags = ["security", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "policy_settings.0.mode"
+  condition = "EQUAL"
+  value = "Prevention"
+
+[[rules]]
+name = "azure-waf-request-body-inspection"
+description = "WAF on Application Gateway should have request body inspection enabled - Azure Policy: AzureWAFonAPPGWShouldHaveRequestBodyInspectionEnabled"
+level = 2
+object = "azurerm_web_application_firewall_policy"
+tags = ["security", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "policy_settings.0.request_body_check"
+  condition = "EQUAL"
+  value = true
+
+# --- Virtual Network ---
+
+[[rules]]
+name = "azure-vnet-ddos-protection"
+description = "Virtual networks should have DDoS protection plan associated - Azure Policy: VNet_DDoS_Protection_Audit"
+level = 2
+object = "azurerm_virtual_network"
+tags = ["security", "cis-6.7", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "ddos_protection_plan.0.enable"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-subnet-nsg-associated"
+description = "Subnets should be associated with a Network Security Group - Azure Policy: Subnet_NSG_Audit"
 level = 2
 object = "azurerm_subnet"
+tags = ["network-security", "cis-6.8", "soc2", "nist"]
 
   [[rules.conditions]]
   property = "network_security_group_id"
@@ -115,26 +177,79 @@ object = "azurerm_subnet"
   value = ""
 
 [[rules]]
-name = "azure-public-ip-has-tags"
-description = "Ensure public IP addresses are tagged for inventory and cost management"
+name = "azure-subnet-no-default-route-internet"
+description = "Subnets should have a route table with no default route to internet"
 level = 1
-object = "azurerm_public_ip"
+object = "azurerm_subnet"
+tags = ["network-security", "soc2"]
 
   [[rules.conditions]]
-  property = "tags"
+  property = "route_table_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Public IP ---
+
+[[rules]]
+name = "azure-public-ip-ddos-protection"
+description = "Public IP addresses should have DDoS protection enabled"
+level = 1
+object = "azurerm_public_ip"
+tags = ["security", "best-practice"]
+
+  [[rules.conditions]]
+  property = "ddos_protection_mode"
+  condition = "EQUAL"
+  value = "Enabled"
+
+[[rules]]
+name = "azure-public-ip-standard-sku"
+description = "Public IP addresses should use Standard SKU for zone redundancy"
+level = 1
+object = "azurerm_public_ip"
+tags = ["reliability", "best-practice"]
+
+  [[rules.conditions]]
+  property = "sku"
+  condition = "EQUAL"
+  value = "Standard"
+
+# --- Network Watcher ---
+
+[[rules]]
+name = "azure-network-watcher-enabled"
+description = "Network Watcher should be enabled in all regions - Azure Policy: NetworkWatcher_Deploy"
+level = 1
+object = "azurerm_network_watcher"
+tags = ["monitoring", "cis-6.9", "soc2"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Private Link / Private Endpoint ---
+
+[[rules]]
+name = "azure-private-endpoint-dns-configured"
+description = "Private endpoints should have DNS records configured for private link resources"
+level = 1
+object = "azurerm_private_endpoint"
+tags = ["network-security", "best-practice"]
+
+  [[rules.conditions]]
+  property = "private_dns_zone_group.0.name"
   condition = "DIFFERENT"
   value = ""
 
 [[rules]]
-name = "azure-nsg-no-sql-from-internet"
-description = "Ensure SQL Server port 1433 is not exposed to the internet"
-level = 3
-object = "azurerm_network_security_rule"
+name = "azure-lb-standard-sku"
+description = "Load balancers should use Standard SKU for production workloads"
+level = 1
+object = "azurerm_lb"
+tags = ["reliability", "best-practice"]
 
   [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "destination_port_range", condition = "DIFFERENT", value = "1433" },
-    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
-    { property = "access", condition = "EQUAL", value = "Deny" },
-  ]
+  property = "sku"
+  condition = "EQUAL"
+  value = "Standard"

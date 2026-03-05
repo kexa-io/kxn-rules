@@ -1,120 +1,225 @@
 [metadata]
 version = "1.0.0"
 provider = "google"
-description = "GCP Cloud Storage bucket security rules based on CIS Google Cloud Platform Benchmark"
-tags = ["cis", "gcp", "storage", "bucket", "security"]
+description = "GCP Cloud Storage security rules based on CIS GCP Foundations Benchmark and Forseti policies"
+tags = ["gcp", "storage", "security", "cis"]
+
+# --- CIS 5.1 - No Public Access ---
 
 [[rules]]
 name = "gcp-storage-no-public-access"
-description = "CIS 5.1 - Ensure that Cloud Storage bucket is not publicly accessible"
+description = "CIS 5.1 - Ensure Cloud Storage bucket is not anonymously or publicly accessible"
 level = 3
 object = "google_storage_bucket_iam_member"
+tags = ["cis-5.1", "soc2", "pci-dss", "public-access", "forseti"]
 
   [[rules.conditions]]
-  property = "member"
-  condition = "DIFFERENT"
-  value = "allUsers"
+  operator = "AND"
+  criteria = [
+    { property = "member", condition = "DIFFERENT", value = "allUsers" },
+    { property = "member", condition = "DIFFERENT", value = "allAuthenticatedUsers" },
+  ]
 
-  [[rules.conditions]]
-  property = "member"
-  condition = "DIFFERENT"
-  value = "allAuthenticatedUsers"
+# --- CIS 5.2 - Uniform Bucket-Level Access ---
 
 [[rules]]
-name = "gcp-storage-uniform-access"
-description = "CIS 5.2 - Ensure that Cloud Storage buckets have uniform bucket-level access enabled"
+name = "gcp-storage-uniform-bucket-access"
+description = "CIS 5.2 - Ensure Cloud Storage buckets have uniform bucket-level access enabled"
 level = 2
 object = "google_storage_bucket"
+tags = ["cis-5.2", "soc2", "access-control", "forseti"]
 
   [[rules.conditions]]
   property = "uniform_bucket_level_access"
   condition = "EQUAL"
   value = true
 
+# --- Forseti: Bucket Versioning ---
+
 [[rules]]
 name = "gcp-storage-versioning-enabled"
-description = "Ensure Cloud Storage buckets have versioning enabled for data protection"
-level = 2
+description = "Ensure Cloud Storage buckets have object versioning enabled for data protection"
+level = 1
 object = "google_storage_bucket"
+tags = ["soc2", "data-protection", "backup"]
 
   [[rules.conditions]]
   property = "versioning.0.enabled"
   condition = "EQUAL"
   value = true
 
+# --- Forseti: Bucket Logging ---
+
 [[rules]]
 name = "gcp-storage-logging-enabled"
 description = "Ensure Cloud Storage buckets have access logging enabled"
-level = 2
+level = 1
 object = "google_storage_bucket"
+tags = ["soc2", "pci-dss", "audit", "forseti"]
 
   [[rules.conditions]]
   property = "logging.0.log_bucket"
   condition = "DIFFERENT"
   value = ""
 
+# --- Forseti: CMEK Encryption ---
+
 [[rules]]
 name = "gcp-storage-cmek-encryption"
-description = "CIS 5.3 - Ensure Cloud Storage buckets are encrypted with CMEK"
-level = 2
+description = "Ensure Cloud Storage buckets are encrypted with Customer-Managed Encryption Keys"
+level = 1
 object = "google_storage_bucket"
+tags = ["soc2", "pci-dss", "hipaa", "encryption", "forseti"]
 
   [[rules.conditions]]
   property = "encryption.0.default_kms_key_name"
   condition = "DIFFERENT"
   value = ""
 
-[[rules]]
-name = "gcp-storage-lifecycle-policy"
-description = "Ensure Cloud Storage buckets have lifecycle management policies configured"
-level = 1
-object = "google_storage_bucket"
-
-  [[rules.conditions]]
-  property = "lifecycle_rule"
-  condition = "DIFFERENT"
-  value = ""
+# --- Forseti: Retention Policy ---
 
 [[rules]]
 name = "gcp-storage-retention-policy"
-description = "Ensure Cloud Storage buckets have retention policies for compliance"
+description = "Ensure Cloud Storage buckets have a retention policy configured"
 level = 1
 object = "google_storage_bucket"
+tags = ["soc2", "pci-dss", "data-retention", "forseti"]
 
   [[rules.conditions]]
   property = "retention_policy.0.retention_period"
   condition = "SUP"
   value = 0
 
+# --- Retention Policy Locked ---
+
 [[rules]]
-name = "gcp-storage-labels-applied"
-description = "Ensure Cloud Storage buckets have labels for resource management"
+name = "gcp-storage-retention-policy-locked"
+description = "Ensure retention policy is locked for compliance-critical buckets"
 level = 1
 object = "google_storage_bucket"
+tags = ["pci-dss", "hipaa", "data-retention"]
 
   [[rules.conditions]]
-  property = "labels"
-  condition = "DIFFERENT"
-  value = ""
-
-[[rules]]
-name = "gcp-storage-no-legacy-acl"
-description = "Ensure buckets do not use legacy ACLs when uniform access is available"
-level = 2
-object = "google_storage_bucket"
-
-  [[rules.conditions]]
-  property = "uniform_bucket_level_access"
+  property = "retention_policy.0.is_locked"
   condition = "EQUAL"
   value = true
 
+# --- No Legacy Bucket ACLs ---
+
 [[rules]]
-name = "gcp-storage-public-prevention"
-description = "Ensure public access prevention is enforced on buckets"
+name = "gcp-storage-no-legacy-acl"
+description = "Ensure buckets do not use legacy ACLs (use IAM instead)"
+level = 1
+object = "google_storage_bucket_acl"
+tags = ["soc2", "access-control"]
+
+  [[rules.conditions]]
+  property = "predefined_acl"
+  condition = "DIFFERENT"
+  value = "publicRead"
+
+# --- No Public Read ACL ---
+
+[[rules]]
+name = "gcp-storage-no-public-read-acl"
+description = "Ensure buckets do not have publicReadWrite ACL"
+level = 3
+object = "google_storage_bucket_acl"
+tags = ["soc2", "pci-dss", "public-access"]
+
+  [[rules.conditions]]
+  property = "predefined_acl"
+  condition = "DIFFERENT"
+  value = "publicReadWrite"
+
+# --- Lifecycle Rules Configured ---
+
+[[rules]]
+name = "gcp-storage-lifecycle-rules"
+description = "Ensure Cloud Storage buckets have lifecycle management rules configured"
+level = 0
+object = "google_storage_bucket"
+tags = ["soc2", "cost", "lifecycle"]
+
+  [[rules.conditions]]
+  property = "lifecycle_rule"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Bucket Location ---
+
+[[rules]]
+name = "gcp-storage-bucket-location-restricted"
+description = "Ensure Cloud Storage buckets are in approved regions for data residency"
+level = 1
+object = "google_storage_bucket"
+tags = ["soc2", "hipaa", "data-residency", "forseti"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "location", condition = "EQUAL", value = "US" },
+    { property = "location", condition = "EQUAL", value = "EU" },
+    { property = "location", condition = "STARTS_WITH", value = "us-" },
+    { property = "location", condition = "STARTS_WITH", value = "europe-" },
+  ]
+
+# --- Force Destroy Disabled ---
+
+[[rules]]
+name = "gcp-storage-no-force-destroy"
+description = "Ensure Cloud Storage buckets do not have force_destroy enabled in production"
 level = 2
 object = "google_storage_bucket"
+tags = ["soc2", "data-protection"]
+
+  [[rules.conditions]]
+  property = "force_destroy"
+  condition = "EQUAL"
+  value = false
+
+# --- Public Access Prevention ---
+
+[[rules]]
+name = "gcp-storage-public-access-prevention"
+description = "Ensure Cloud Storage buckets have public access prevention enforced"
+level = 2
+object = "google_storage_bucket"
+tags = ["soc2", "pci-dss", "public-access"]
 
   [[rules.conditions]]
   property = "public_access_prevention"
   condition = "EQUAL"
   value = "enforced"
+
+# --- Requester Pays ---
+
+[[rules]]
+name = "gcp-storage-requester-pays-check"
+description = "Detect buckets with requester pays enabled for cost awareness"
+level = 0
+object = "google_storage_bucket"
+tags = ["cost", "governance"]
+
+  [[rules.conditions]]
+  property = "requester_pays"
+  condition = "EQUAL"
+  value = false
+
+# --- Storage Class ---
+
+[[rules]]
+name = "gcp-storage-standard-or-nearline"
+description = "Ensure buckets use appropriate storage class for their access patterns"
+level = 0
+object = "google_storage_bucket"
+tags = ["cost", "governance"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "storage_class", condition = "EQUAL", value = "STANDARD" },
+    { property = "storage_class", condition = "EQUAL", value = "NEARLINE" },
+    { property = "storage_class", condition = "EQUAL", value = "COLDLINE" },
+    { property = "storage_class", condition = "EQUAL", value = "ARCHIVE" },
+  ]

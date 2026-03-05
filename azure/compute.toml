@@ -1,52 +1,127 @@
 [metadata]
 version = "1.0.0"
 provider = "azurerm"
-description = "Azure Compute VM security rules based on CIS Microsoft Azure Foundations Benchmark"
-tags = ["cis", "azure", "compute", "security", "vm"]
+description = "Azure Compute security rules based on Azure Policy built-in definitions"
+tags = ["azure", "compute", "security", "cis"]
+
+# --- Virtual Machines ---
 
 [[rules]]
-name = "azure-vm-disk-encryption-enabled"
-description = "CIS 7.1 - Ensure Virtual Machines utilize Managed Disks with encryption"
+name = "azure-vm-managed-disks"
+description = "Audit VMs that do not use managed disks - Azure Policy: Audit VMs that do not use managed disks"
 level = 2
 object = "azurerm_virtual_machine"
+tags = ["best-practice", "cis-7.1", "soc2"]
 
   [[rules.conditions]]
-  property = "storage_os_disk.0.managed_disk_type"
-  condition = "DIFFERENT"
-  value = ""
-
-  [[rules.conditions]]
-  property = "storage_os_disk.0.disk_encryption_set_id"
+  property = "storage_os_disk.0.managed_disk_id"
   condition = "DIFFERENT"
   value = ""
 
 [[rules]]
-name = "azure-vm-no-basic-sku"
-description = "Ensure VMs do not use Basic tier SKU which lacks security features"
+name = "azure-vm-os-disk-cmk-encryption"
+description = "OS and data disks should be encrypted with a customer-managed key - Azure Policy: OSAndDataDiskCMKRequired"
+level = 2
+object = "azurerm_managed_disk"
+tags = ["encryption", "cis-7.2", "soc2", "hipaa", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "encryption_settings.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-vm-double-encryption"
+description = "Managed disks should be double encrypted with platform and customer-managed keys - Azure Policy: DoubleEncryptionRequired_Deny"
+level = 2
+object = "azurerm_managed_disk"
+tags = ["encryption", "cis-7.2", "soc2", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "encryption_type"
+  condition = "EQUAL"
+  value = "EncryptionAtRestWithPlatformAndCustomerKeys"
+
+[[rules]]
+name = "azure-vm-host-encryption"
+description = "Virtual machines should have encryption at host enabled - Azure Policy: HostBasedEncryptionRequired_Deny"
+level = 2
+object = "azurerm_linux_virtual_machine"
+tags = ["encryption", "cis-7.3", "soc2", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "encryption_at_host_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-vm-windows-host-encryption"
+description = "Windows virtual machines should have encryption at host enabled - Azure Policy: HostBasedEncryptionRequired_Deny"
+level = 2
+object = "azurerm_windows_virtual_machine"
+tags = ["encryption", "cis-7.3", "soc2", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "encryption_at_host_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-vm-no-classic-compute"
+description = "Virtual machines should be migrated to new Azure Resource Manager resources - Azure Policy: ClassicCompute_Audit"
 level = 1
 object = "azurerm_virtual_machine"
+tags = ["best-practice", "cis-7.4", "nist"]
 
   [[rules.conditions]]
-  property = "vm_size"
+  property = "id"
   condition = "NOT_INCLUDE"
-  value = "Basic"
+  value = "Microsoft.ClassicCompute"
 
 [[rules]]
-name = "azure-vm-extensions-installed"
-description = "CIS 7.4 - Ensure only approved VM extensions are installed"
+name = "azure-disk-private-access"
+description = "Managed disks should disable public network access - Azure Policy: Disks_ExportLimitNetworkAccess_Audit"
 level = 2
-object = "azurerm_virtual_machine_extension"
+object = "azurerm_managed_disk"
+tags = ["network-security", "cis-7.5", "soc2", "nist"]
 
   [[rules.conditions]]
-  property = "type"
-  condition = "IN"
-  value = ["MicrosoftMonitoringAgent", "OmsAgentForLinux", "AzureMonitorWindowsAgent", "AzureMonitorLinuxAgent", "DependencyAgentWindows", "DependencyAgentLinux"]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
 
 [[rules]]
-name = "azure-vm-automatic-os-upgrades"
-description = "CIS 7.3 - Ensure that automatic OS patching is enabled on Virtual Machine Scale Sets"
+name = "azure-disk-access-private-link"
+description = "Disk access resources should use private link - Azure Policy: DiskAccesses_PrivateEndpoints_Audit"
 level = 2
+object = "azurerm_disk_access"
+tags = ["network-security", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-vm-disaster-recovery"
+description = "Virtual machines should have disaster recovery configured - Azure Policy: RecoveryServices_DisasterRecovery_Audit"
+level = 1
+object = "azurerm_site_recovery_replicated_vm"
+tags = ["reliability", "business-continuity", "iso27001"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Virtual Machine Scale Sets ---
+
+[[rules]]
+name = "azure-vmss-os-upgrade-health-check"
+description = "VMSS should have OS upgrade health check enabled - Azure Policy: VMSSOSUpgradeHealthCheck_Deny"
+level = 1
 object = "azurerm_linux_virtual_machine_scale_set"
+tags = ["best-practice", "reliability"]
 
   [[rules.conditions]]
   property = "automatic_os_upgrade_policy.0.enable_automatic_os_upgrade"
@@ -54,32 +129,97 @@ object = "azurerm_linux_virtual_machine_scale_set"
   value = true
 
 [[rules]]
-name = "azure-vm-managed-identity"
-description = "Ensure VMs use managed identity for Azure resource access instead of credentials"
-level = 2
-object = "azurerm_linux_virtual_machine"
+name = "azure-vmss-diagnostics"
+description = "VMSS should have diagnostics extension installed - Azure Policy: ServiceFabric_and_VMSS_AuditVMSSDiagnostics"
+level = 1
+object = "azurerm_linux_virtual_machine_scale_set"
+tags = ["monitoring", "best-practice"]
 
   [[rules.conditions]]
-  property = "identity.0.type"
+  property = "extension.0.name"
   condition = "DIFFERENT"
   value = ""
 
 [[rules]]
-name = "azure-vm-boot-diagnostics"
-description = "Ensure boot diagnostics is enabled for VM troubleshooting and security monitoring"
-level = 1
-object = "azurerm_linux_virtual_machine"
+name = "azure-vm-antimalware-extension"
+description = "Antimalware extension should be deployed on virtual machines - Azure Policy: VMAntimalwareExtension_DINE"
+level = 2
+object = "azurerm_virtual_machine_extension"
+tags = ["security", "cis-7.6", "soc2", "hipaa"]
 
   [[rules.conditions]]
-  property = "boot_diagnostics"
+  property = "type"
+  condition = "EQUAL"
+  value = "IaaSAntimalware"
+
+[[rules]]
+name = "azure-unattached-disk-encryption"
+description = "Unattached disks should be encrypted - Azure Policy: UnattachedDisk_Encryption_Audit"
+level = 1
+object = "azurerm_managed_disk"
+tags = ["encryption", "cis-7.7", "soc2"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "disk_state", condition = "DIFFERENT", value = "Unattached" },
+    { property = "encryption_settings.0.enabled", condition = "EQUAL", value = "true" },
+  ]
+
+[[rules]]
+name = "azure-vm-linux-no-password-auth"
+description = "Linux VMs should disable password authentication and use SSH keys - CIS Azure 7.10"
+level = 2
+object = "azurerm_linux_virtual_machine"
+tags = ["authentication", "cis-7.10", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "disable_password_authentication"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-vm-linux-ssh-key-required"
+description = "Linux VMs should use SSH key authentication"
+level = 2
+object = "azurerm_linux_virtual_machine"
+tags = ["authentication", "cis-7.10", "soc2"]
+
+  [[rules.conditions]]
+  property = "admin_ssh_key.0.public_key"
   condition = "DIFFERENT"
   value = ""
+
+[[rules]]
+name = "azure-vm-trusted-launch"
+description = "Virtual machines should have Trusted Launch enabled for enhanced security"
+level = 1
+object = "azurerm_linux_virtual_machine"
+tags = ["security", "best-practice", "nist"]
+
+  [[rules.conditions]]
+  property = "secure_boot_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-vm-automatic-updates"
+description = "Windows VMs should enable automatic Windows Updates"
+level = 1
+object = "azurerm_windows_virtual_machine"
+tags = ["patching", "cis-7.8", "soc2"]
+
+  [[rules.conditions]]
+  property = "enable_automatic_updates"
+  condition = "EQUAL"
+  value = true
 
 [[rules]]
 name = "azure-vm-no-public-ip"
-description = "Ensure VMs do not have direct public IP addresses assigned"
+description = "Virtual machines should not have public IP addresses for reduced attack surface"
 level = 2
 object = "azurerm_linux_virtual_machine"
+tags = ["network-security", "cis-7.11", "soc2", "pci-dss"]
 
   [[rules.conditions]]
   property = "network_interface_ids"
@@ -87,37 +227,13 @@ object = "azurerm_linux_virtual_machine"
   value = ""
 
 [[rules]]
-name = "azure-vm-endpoint-protection"
-description = "CIS 7.5 - Ensure that endpoint protection is installed on VMs"
-level = 3
-object = "azurerm_virtual_machine_extension"
-
-  [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "type", condition = "EQUAL", value = "IaaSAntimalware" },
-    { property = "type", condition = "EQUAL", value = "EndpointSecurity" },
-    { property = "type", condition = "EQUAL", value = "MDE.Linux" },
-  ]
-
-[[rules]]
-name = "azure-vm-accelerated-networking"
-description = "Ensure accelerated networking is enabled for improved network performance and security"
+name = "azure-vm-boot-diagnostics"
+description = "Virtual machines should have boot diagnostics enabled for troubleshooting"
 level = 0
-object = "azurerm_network_interface"
-
-  [[rules.conditions]]
-  property = "enable_accelerated_networking"
-  condition = "EQUAL"
-  value = true
-
-[[rules]]
-name = "azure-vm-ssh-key-auth"
-description = "Ensure Linux VMs use SSH key authentication instead of password"
-level = 2
 object = "azurerm_linux_virtual_machine"
+tags = ["monitoring", "best-practice"]
 
   [[rules.conditions]]
-  property = "disable_password_authentication"
-  condition = "EQUAL"
-  value = true
+  property = "boot_diagnostics.0.storage_account_uri"
+  condition = "DIFFERENT"
+  value = ""

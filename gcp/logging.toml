@@ -1,0 +1,173 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP Cloud Audit Logging and Monitoring rules based on CIS GCP Foundations Benchmark"
+tags = ["gcp", "logging", "monitoring", "audit", "security", "cis"]
+
+# --- CIS 2.1 - Cloud Audit Logging for All Services ---
+
+[[rules]]
+name = "gcp-logging-audit-all-services"
+description = "CIS 2.1 - Ensure Cloud Audit Logging is configured for all services and all users"
+level = 2
+object = "google_project_iam_audit_config"
+tags = ["cis-2.1", "soc2", "pci-dss", "audit", "forseti"]
+
+  [[rules.conditions]]
+  property = "service"
+  condition = "EQUAL"
+  value = "allServices"
+
+# --- CIS 2.2 - Log Sinks Configured ---
+
+[[rules]]
+name = "gcp-logging-sink-configured"
+description = "CIS 2.2 - Ensure log sinks are configured for all log entries"
+level = 2
+object = "google_logging_project_sink"
+tags = ["cis-2.2", "soc2", "pci-dss", "audit"]
+
+  [[rules.conditions]]
+  property = "destination"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- CIS 2.3 - Retention Policy on Log Buckets ---
+
+[[rules]]
+name = "gcp-logging-retention-configured"
+description = "CIS 2.3 - Ensure log bucket retention policy is configured with lock"
+level = 1
+object = "google_logging_project_bucket_config"
+tags = ["cis-2.3", "soc2", "pci-dss", "data-retention"]
+
+  [[rules.conditions]]
+  property = "retention_days"
+  condition = "SUP_OR_EQUAL"
+  value = 365
+
+# --- CIS 2.4 - Project Ownership Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-project-ownership"
+description = "CIS 2.4 - Ensure log metric filter and alert for project ownership assignments/changes"
+level = 2
+object = "google_logging_metric"
+tags = ["cis-2.4", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "protoPayload.serviceName=\"cloudresourcemanager.googleapis.com\""
+
+# --- CIS 2.5 - Audit Config Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-audit-config-changes"
+description = "CIS 2.5 - Ensure log metric filter and alert for audit configuration changes"
+level = 2
+object = "google_logging_metric"
+tags = ["cis-2.5", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "protoPayload.methodName=\"SetIamPolicy\""
+
+# --- CIS 2.6 - Custom Role Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-custom-role-changes"
+description = "CIS 2.6 - Ensure log metric filter and alert for custom role changes"
+level = 1
+object = "google_logging_metric"
+tags = ["cis-2.6", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "resource.type=\"iam_role\""
+
+# --- CIS 2.7 - Firewall Rule Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-firewall-changes"
+description = "CIS 2.7 - Ensure log metric filter and alert for VPC firewall rule changes"
+level = 2
+object = "google_logging_metric"
+tags = ["cis-2.7", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "resource.type=\"gce_firewall_rule\""
+
+# --- CIS 2.8 - Route Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-route-changes"
+description = "CIS 2.8 - Ensure log metric filter and alert for VPC network route changes"
+level = 1
+object = "google_logging_metric"
+tags = ["cis-2.8", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "resource.type=\"gce_route\""
+
+# --- CIS 2.9 - Network Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-network-changes"
+description = "CIS 2.9 - Ensure log metric filter and alert for VPC network changes"
+level = 2
+object = "google_logging_metric"
+tags = ["cis-2.9", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "resource.type=\"gce_network\""
+
+# --- CIS 2.10 - SQL Instance Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-sql-config-changes"
+description = "CIS 2.10 - Ensure log metric filter and alert for Cloud SQL instance configuration changes"
+level = 1
+object = "google_logging_metric"
+tags = ["cis-2.10", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "protoPayload.methodName=\"cloudsql.instances.update\""
+
+# --- CIS 2.11 - Storage IAM Changes Alert ---
+
+[[rules]]
+name = "gcp-logging-metric-storage-iam-changes"
+description = "CIS 2.11 - Ensure log metric filter and alert for Cloud Storage IAM permission changes"
+level = 2
+object = "google_logging_metric"
+tags = ["cis-2.11", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "filter"
+  condition = "INCLUDE"
+  value = "resource.type=\"gcs_bucket\""
+
+# --- Monitoring Alert Policy Enabled ---
+
+[[rules]]
+name = "gcp-monitoring-alert-policy-enabled"
+description = "Ensure monitoring alert policies are enabled and not silenced"
+level = 1
+object = "google_monitoring_alert_policy"
+tags = ["soc2", "monitoring"]
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true

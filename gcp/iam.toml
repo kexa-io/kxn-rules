@@ -1,14 +1,17 @@
 [metadata]
 version = "1.0.0"
 provider = "google"
-description = "GCP IAM and service account security rules based on CIS Google Cloud Platform Benchmark"
-tags = ["cis", "gcp", "iam", "identity", "security"]
+description = "GCP IAM security rules based on CIS GCP Foundations Benchmark and Forseti policies"
+tags = ["gcp", "iam", "security", "cis"]
+
+# --- CIS 1.1 - No Primitive Roles on Org ---
 
 [[rules]]
-name = "gcp-iam-no-primitive-roles"
-description = "CIS 1.1 - Ensure that corporate login credentials are used instead of primitive roles"
+name = "gcp-iam-no-primitive-roles-org"
+description = "CIS 1.1 - Ensure corporate login credentials are used instead of primitive roles at organization level"
 level = 2
-object = "google_project_iam_member"
+object = "google_organization_iam_binding"
+tags = ["cis-1.1", "soc2", "least-privilege", "forseti"]
 
   [[rules.conditions]]
   operator = "AND"
@@ -18,109 +21,277 @@ object = "google_project_iam_member"
     { property = "role", condition = "DIFFERENT", value = "roles/viewer" },
   ]
 
+# --- CIS 1.4 - Service Account Admin Separation ---
+
 [[rules]]
-name = "gcp-sa-no-user-managed-keys"
-description = "CIS 1.4 - Ensure that service account has no user-managed keys"
+name = "gcp-iam-sa-admin-separation"
+description = "CIS 1.4 - Ensure that Service Account has no admin privileges"
 level = 2
-object = "google_service_account_key"
-
-  [[rules.conditions]]
-  property = "key_algorithm"
-  condition = "EQUAL"
-  value = ""
-
-[[rules]]
-name = "gcp-sa-no-admin-privileges"
-description = "CIS 1.5 - Ensure that service accounts do not have admin privileges"
-level = 3
-object = "google_project_iam_member"
+object = "google_project_iam_binding"
+tags = ["cis-1.4", "soc2", "least-privilege"]
 
   [[rules.conditions]]
   operator = "AND"
   criteria = [
-    { property = "member", condition = "NOT_STARTS_WITH", value = "serviceAccount:" },
+    { property = "role", condition = "DIFFERENT", value = "roles/owner" },
+    { property = "role", condition = "DIFFERENT", value = "roles/editor" },
   ]
 
-[[rules]]
-name = "gcp-iam-no-alluser-bindings"
-description = "CIS 1.12 - Ensure that IAM bindings do not include allUsers or allAuthenticatedUsers"
-level = 3
-object = "google_project_iam_binding"
-
-  [[rules.conditions]]
-  property = "members"
-  condition = "NOT_INCLUDE"
-  value = "allUsers"
-
-  [[rules.conditions]]
-  property = "members"
-  condition = "NOT_INCLUDE"
-  value = "allAuthenticatedUsers"
+# --- CIS 1.5 - No User-Managed SA Keys ---
 
 [[rules]]
-name = "gcp-sa-key-rotation"
-description = "CIS 1.7 - Ensure user-managed service account keys are rotated within 90 days"
+name = "gcp-iam-no-user-managed-sa-keys"
+description = "CIS 1.5 - Ensure that Service Account Keys are managed and rotated"
 level = 2
 object = "google_service_account_key"
+tags = ["cis-1.5", "soc2", "pci-dss", "key-management", "forseti"]
+
+  [[rules.conditions]]
+  property = "key_type"
+  condition = "DIFFERENT"
+  value = "USER_MANAGED"
+
+# --- CIS 1.6 - SA Key Rotation ---
+
+[[rules]]
+name = "gcp-iam-sa-key-rotation-90-days"
+description = "CIS 1.6 - Ensure user-managed service account keys are rotated within 90 days"
+level = 2
+object = "google_service_account_key"
+tags = ["cis-1.6", "soc2", "pci-dss", "key-management", "forseti"]
 
   [[rules.conditions]]
   property = "valid_after"
   condition = "DATE_SUP"
   value = "-90d"
 
+# --- CIS 1.7 - No SA Impersonation ---
+
 [[rules]]
-name = "gcp-iam-separation-of-duties"
-description = "CIS 1.8 - Ensure that Separation of Duties is enforced for service accounts"
+name = "gcp-iam-no-sa-token-creator-on-project"
+description = "CIS 1.7 - Ensure Service Account Token Creator role is not granted at project level"
+level = 2
+object = "google_project_iam_binding"
+tags = ["cis-1.7", "soc2", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "role"
+  condition = "DIFFERENT"
+  value = "roles/iam.serviceAccountTokenCreator"
+
+# --- CIS 1.8 - No SA User Role at Project Level ---
+
+[[rules]]
+name = "gcp-iam-no-sa-user-on-project"
+description = "CIS 1.8 - Ensure Service Account User role is not granted at project level"
+level = 2
+object = "google_project_iam_binding"
+tags = ["cis-1.8", "soc2", "least-privilege"]
+
+  [[rules.conditions]]
+  property = "role"
+  condition = "DIFFERENT"
+  value = "roles/iam.serviceAccountUser"
+
+# --- CIS 1.9 - No External Members ---
+
+[[rules]]
+name = "gcp-iam-no-external-gmail-members"
+description = "CIS 1.9 - Ensure IAM policies do not grant access to gmail.com accounts"
 level = 2
 object = "google_project_iam_member"
+tags = ["cis-1.9", "soc2", "access-control", "forseti"]
+
+  [[rules.conditions]]
+  property = "member"
+  condition = "NOT_ENDS_WITH"
+  value = "@gmail.com"
+
+# --- Forseti: No allUsers ---
+
+[[rules]]
+name = "gcp-iam-no-public-access-allusers"
+description = "Ensure IAM policies do not grant access to allUsers"
+level = 3
+object = "google_project_iam_member"
+tags = ["soc2", "pci-dss", "public-access", "forseti"]
+
+  [[rules.conditions]]
+  property = "member"
+  condition = "DIFFERENT"
+  value = "allUsers"
+
+# --- Forseti: No allAuthenticatedUsers ---
+
+[[rules]]
+name = "gcp-iam-no-public-access-all-authenticated"
+description = "Ensure IAM policies do not grant access to allAuthenticatedUsers"
+level = 3
+object = "google_project_iam_member"
+tags = ["soc2", "pci-dss", "public-access", "forseti"]
+
+  [[rules.conditions]]
+  property = "member"
+  condition = "DIFFERENT"
+  value = "allAuthenticatedUsers"
+
+# --- Forseti: Ban Owner Role ---
+
+[[rules]]
+name = "gcp-iam-ban-owner-role"
+description = "Ensure the Owner role is not assigned broadly"
+level = 2
+object = "google_project_iam_binding"
+tags = ["soc2", "least-privilege", "forseti"]
+
+  [[rules.conditions]]
+  property = "role"
+  condition = "DIFFERENT"
+  value = "roles/owner"
+
+# --- CIS 1.10 - API Keys Restriction ---
+
+[[rules]]
+name = "gcp-iam-api-key-restricted"
+description = "CIS 1.10 - Ensure API keys are restricted to specific APIs"
+level = 2
+object = "google_apikeys_key"
+tags = ["cis-1.10", "soc2", "access-control"]
+
+  [[rules.conditions]]
+  property = "restrictions.0.api_targets"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- CIS 1.11 - API Keys App Restriction ---
+
+[[rules]]
+name = "gcp-iam-api-key-app-restricted"
+description = "CIS 1.11 - Ensure API keys are restricted to specific hosts and apps"
+level = 1
+object = "google_apikeys_key"
+tags = ["cis-1.11", "soc2", "access-control"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "restrictions.0.browser_key_restrictions", condition = "DIFFERENT", value = "" },
+    { property = "restrictions.0.server_key_restrictions", condition = "DIFFERENT", value = "" },
+    { property = "restrictions.0.android_key_restrictions", condition = "DIFFERENT", value = "" },
+    { property = "restrictions.0.ios_key_restrictions", condition = "DIFFERENT", value = "" },
+  ]
+
+# --- Forseti: Restrict SA Creation ---
+
+[[rules]]
+name = "gcp-iam-restrict-sa-creation"
+description = "Ensure service account creation is restricted to authorized personnel"
+level = 1
+object = "google_project_iam_binding"
+tags = ["soc2", "least-privilege", "forseti"]
+
+  [[rules.conditions]]
+  property = "role"
+  condition = "DIFFERENT"
+  value = "roles/iam.serviceAccountAdmin"
+
+# --- Custom Role Permissions ---
+
+[[rules]]
+name = "gcp-iam-custom-role-no-admin-permissions"
+description = "Ensure custom IAM roles do not contain overly permissive admin privileges"
+level = 2
+object = "google_project_iam_custom_role"
+tags = ["soc2", "nist", "least-privilege", "forseti"]
 
   [[rules.conditions]]
   operator = "AND"
   criteria = [
-    { property = "role", condition = "DIFFERENT", value = "roles/iam.serviceAccountAdmin" },
-    { property = "role", condition = "DIFFERENT", value = "roles/iam.serviceAccountUser" },
+    { property = "permissions", condition = "NOT_INCLUDE", value = "iam.serviceAccounts.actAs" },
+    { property = "permissions", condition = "NOT_INCLUDE", value = "iam.serviceAccountKeys.create" },
+    { property = "permissions", condition = "NOT_INCLUDE", value = "resourcemanager.projects.setIamPolicy" },
   ]
 
+# --- SA Display Name ---
+
 [[rules]]
-name = "gcp-iam-no-domain-wide-delegation"
-description = "Ensure service accounts do not have domain-wide delegation enabled"
-level = 3
+name = "gcp-iam-sa-has-display-name"
+description = "Ensure service accounts have a descriptive display name"
+level = 0
 object = "google_service_account"
+tags = ["soc2", "governance"]
 
   [[rules.conditions]]
-  property = "domain_wide_delegation_enabled"
-  condition = "EQUAL"
-  value = false
+  property = "display_name"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- SA Description ---
 
 [[rules]]
-name = "gcp-iam-audit-logging"
-description = "CIS 2.1 - Ensure that Cloud Audit Logging is configured properly"
-level = 2
-object = "google_project_iam_audit_config"
-
-  [[rules.conditions]]
-  property = "service"
-  condition = "EQUAL"
-  value = "allServices"
-
-[[rules]]
-name = "gcp-sa-description-set"
-description = "Ensure service accounts have descriptions for accountability"
-level = 1
+name = "gcp-iam-sa-has-description"
+description = "Ensure service accounts have a description documenting their purpose"
+level = 0
 object = "google_service_account"
+tags = ["soc2", "governance"]
 
   [[rules.conditions]]
   property = "description"
   condition = "DIFFERENT"
   value = ""
 
+# --- SA Disabled Check ---
+
 [[rules]]
-name = "gcp-sa-disabled-unused"
-description = "Ensure unused service accounts are disabled"
-level = 1
+name = "gcp-iam-sa-not-disabled"
+description = "Detect disabled service accounts that may need cleanup"
+level = 0
 object = "google_service_account"
+tags = ["governance", "lifecycle"]
 
   [[rules.conditions]]
   property = "disabled"
   condition = "EQUAL"
   value = false
+
+# --- No Editor Role ---
+
+[[rules]]
+name = "gcp-iam-no-editor-role"
+description = "Ensure the broad Editor role is not assigned at project level"
+level = 2
+object = "google_project_iam_binding"
+tags = ["soc2", "nist", "least-privilege", "forseti"]
+
+  [[rules.conditions]]
+  property = "role"
+  condition = "DIFFERENT"
+  value = "roles/editor"
+
+# --- Workload Identity Federation ---
+
+[[rules]]
+name = "gcp-iam-workload-identity-pool-configured"
+description = "Ensure Workload Identity Federation is configured for external workloads"
+level = 1
+object = "google_iam_workload_identity_pool"
+tags = ["soc2", "identity", "zero-trust"]
+
+  [[rules.conditions]]
+  property = "disabled"
+  condition = "EQUAL"
+  value = false
+
+# --- Audit Config Enabled ---
+
+[[rules]]
+name = "gcp-iam-audit-config-enabled"
+description = "CIS 2.1 - Ensure Cloud Audit Logging is configured properly for all services"
+level = 2
+object = "google_project_iam_audit_config"
+tags = ["cis-2.1", "soc2", "pci-dss", "audit", "forseti"]
+
+  [[rules.conditions]]
+  property = "service"
+  condition = "EQUAL"
+  value = "allServices"

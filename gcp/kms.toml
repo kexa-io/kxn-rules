@@ -1,0 +1,126 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP Cloud KMS key management security rules based on CIS GCP Foundations Benchmark and Forseti policies"
+tags = ["gcp", "kms", "encryption", "security", "cis"]
+
+# --- CIS 1.12 - KMS Key Rotation ---
+
+[[rules]]
+name = "gcp-kms-key-rotation-90-days"
+description = "CIS 1.12 - Ensure KMS encryption keys are rotated within 90 days"
+level = 2
+object = "google_kms_crypto_key"
+tags = ["cis-1.12", "soc2", "pci-dss", "key-management", "forseti"]
+
+  [[rules.conditions]]
+  property = "rotation_period"
+  condition = "INF_OR_EQUAL"
+  value = "7776000s"
+
+# --- KMS Key Not Publicly Accessible ---
+
+[[rules]]
+name = "gcp-kms-no-public-access"
+description = "Ensure KMS keys are not accessible to allUsers or allAuthenticatedUsers"
+level = 3
+object = "google_kms_crypto_key_iam_member"
+tags = ["soc2", "pci-dss", "access-control"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "member", condition = "DIFFERENT", value = "allUsers" },
+    { property = "member", condition = "DIFFERENT", value = "allAuthenticatedUsers" },
+  ]
+
+# --- KMS Key Ring Location ---
+
+[[rules]]
+name = "gcp-kms-keyring-approved-location"
+description = "Ensure KMS key rings are in approved locations for data residency requirements"
+level = 1
+object = "google_kms_key_ring"
+tags = ["soc2", "hipaa", "data-residency"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "location", condition = "EQUAL", value = "global" },
+    { property = "location", condition = "STARTS_WITH", value = "us-" },
+    { property = "location", condition = "STARTS_WITH", value = "europe-" },
+  ]
+
+# --- KMS Key Purpose ---
+
+[[rules]]
+name = "gcp-kms-key-purpose-encrypt-decrypt"
+description = "Ensure KMS keys have appropriate purpose defined (ENCRYPT_DECRYPT for symmetric)"
+level = 1
+object = "google_kms_crypto_key"
+tags = ["soc2", "encryption"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "purpose", condition = "EQUAL", value = "ENCRYPT_DECRYPT" },
+    { property = "purpose", condition = "EQUAL", value = "ASYMMETRIC_SIGN" },
+    { property = "purpose", condition = "EQUAL", value = "ASYMMETRIC_DECRYPT" },
+    { property = "purpose", condition = "EQUAL", value = "MAC" },
+  ]
+
+# --- KMS Key Algorithm ---
+
+[[rules]]
+name = "gcp-kms-key-strong-algorithm"
+description = "Ensure KMS keys use strong encryption algorithms"
+level = 2
+object = "google_kms_crypto_key"
+tags = ["soc2", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "version_template.0.algorithm"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- KMS Key Destroy Scheduled Duration ---
+
+[[rules]]
+name = "gcp-kms-key-destroy-duration"
+description = "Ensure KMS keys have sufficient destroy scheduled duration (at least 24 hours)"
+level = 1
+object = "google_kms_crypto_key"
+tags = ["soc2", "data-protection"]
+
+  [[rules.conditions]]
+  property = "destroy_scheduled_duration"
+  condition = "SUP_OR_EQUAL"
+  value = "86400s"
+
+# --- KMS Key Import Only ---
+
+[[rules]]
+name = "gcp-kms-key-import-only"
+description = "Detect KMS keys configured for import only (BYOK) for compliance awareness"
+level = 0
+object = "google_kms_crypto_key"
+tags = ["compliance", "key-management"]
+
+  [[rules.conditions]]
+  property = "import_only"
+  condition = "EQUAL"
+  value = false
+
+# --- KMS Key Labels ---
+
+[[rules]]
+name = "gcp-kms-key-has-labels"
+description = "Ensure KMS keys have labels for governance and cost tracking"
+level = 0
+object = "google_kms_crypto_key"
+tags = ["governance", "tagging"]
+
+  [[rules.conditions]]
+  property = "labels"
+  condition = "DIFFERENT"
+  value = ""

@@ -1,0 +1,139 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS ECS/EKS container security rules based on AWS Config managed rules"
+tags = ["aws", "ecs", "eks", "containers", "security"]
+
+# --- Rule 1 ---
+[[rules]]
+name = "aws-ecs-containers-nonprivileged"
+description = "Ensure ECS task definitions do not run privileged containers - AWS Config: ECS_CONTAINERS_NONPRIVILEGED"
+level = 3
+object = "aws_ecs_task_definition"
+tags = ["pci-dss", "soc2", "nist", "container-security"]
+
+  [[rules.conditions]]
+  property = "container_definitions"
+  condition = "NOT_INCLUDE"
+  value = "\"privileged\":true"
+
+# --- Rule 2 ---
+[[rules]]
+name = "aws-ecs-containers-readonly-access"
+description = "Ensure ECS containers use read-only root filesystems - AWS Config: ECS_CONTAINERS_READONLY_ACCESS"
+level = 2
+object = "aws_ecs_task_definition"
+tags = ["soc2", "nist", "container-security"]
+
+  [[rules.conditions]]
+  property = "container_definitions"
+  condition = "INCLUDE"
+  value = "\"readonlyRootFilesystem\":true"
+
+# --- Rule 3 ---
+[[rules]]
+name = "aws-ecs-no-environment-secrets"
+description = "Ensure ECS task definitions do not pass secrets as environment variables - AWS Config: ECS_NO_ENVIRONMENT_SECRETS"
+level = 3
+object = "aws_ecs_task_definition"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "container_definitions", condition = "NOT_INCLUDE", value = "AWS_ACCESS_KEY_ID" },
+    { property = "container_definitions", condition = "NOT_INCLUDE", value = "AWS_SECRET_ACCESS_KEY" },
+    { property = "container_definitions", condition = "NOT_INCLUDE", value = "PASSWORD" },
+    { property = "container_definitions", condition = "NOT_INCLUDE", value = "DATABASE_URL" },
+  ]
+
+# --- Rule 4 ---
+[[rules]]
+name = "aws-ecs-task-definition-log-configuration"
+description = "Ensure ECS task definitions have logging configuration - AWS Config: ECS_TASK_DEFINITION_LOG_CONFIGURATION"
+level = 2
+object = "aws_ecs_task_definition"
+tags = ["soc2", "nist", "monitoring"]
+
+  [[rules.conditions]]
+  property = "container_definitions"
+  condition = "INCLUDE"
+  value = "\"logConfiguration\""
+
+# --- Rule 5 ---
+[[rules]]
+name = "aws-ecs-task-definition-nonroot-user"
+description = "Ensure ECS task definitions specify a non-root user - AWS Config: ECS_TASK_DEFINITION_NONROOT_USER"
+level = 2
+object = "aws_ecs_task_definition"
+tags = ["soc2", "nist", "container-security"]
+
+  [[rules.conditions]]
+  property = "container_definitions"
+  condition = "NOT_INCLUDE"
+  value = "\"user\":\"root\""
+
+# --- Rule 6 ---
+[[rules]]
+name = "aws-ecs-task-definition-memory-hard-limit"
+description = "Ensure ECS task definitions have memory hard limits set - AWS Config: ECS_TASK_DEFINITION_MEMORY_HARD_LIMIT"
+level = 1
+object = "aws_ecs_task_definition"
+tags = ["aws-well-architected", "reliability"]
+
+  [[rules.conditions]]
+  property = "container_definitions"
+  condition = "INCLUDE"
+  value = "\"memory\""
+
+# --- Rule 7 ---
+[[rules]]
+name = "aws-ecs-awsvpc-networking-enabled"
+description = "Ensure ECS services use awsvpc networking mode - AWS Config: ECS_AWSVPC_NETWORKING_ENABLED"
+level = 2
+object = "aws_ecs_task_definition"
+tags = ["soc2", "network-security"]
+
+  [[rules.conditions]]
+  property = "network_mode"
+  condition = "EQUAL"
+  value = "awsvpc"
+
+# --- Rule 8 ---
+[[rules]]
+name = "aws-ecs-task-definition-pid-mode-check"
+description = "Ensure ECS task definitions do not share the host PID namespace - AWS Config: ECS_TASK_DEFINITION_PID_MODE_CHECK"
+level = 2
+object = "aws_ecs_task_definition"
+tags = ["soc2", "nist", "container-security"]
+
+  [[rules.conditions]]
+  property = "pid_mode"
+  condition = "DIFFERENT"
+  value = "host"
+
+# --- Rule 9 ---
+[[rules]]
+name = "aws-eks-cluster-secrets-encrypted"
+description = "Ensure EKS cluster secrets are encrypted with KMS - AWS Config: EKS_CLUSTER_SECRETS_ENCRYPTED"
+level = 3
+object = "aws_eks_cluster"
+tags = ["pci-dss", "hipaa", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "encryption_config.0.resources"
+  condition = "INCLUDE"
+  value = "secrets"
+
+# --- Rule 10 ---
+[[rules]]
+name = "aws-eks-endpoint-no-public-access"
+description = "Ensure EKS cluster API endpoint is not publicly accessible - AWS Config: EKS_ENDPOINT_NO_PUBLIC_ACCESS"
+level = 3
+object = "aws_eks_cluster"
+tags = ["pci-dss", "soc2", "nist", "network-security"]
+
+  [[rules.conditions]]
+  property = "vpc_config.0.endpoint_public_access"
+  condition = "EQUAL"
+  value = false

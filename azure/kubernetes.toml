@@ -1,0 +1,235 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure Kubernetes Service (AKS) security rules based on Azure Policy built-in definitions"
+tags = ["azure", "kubernetes", "aks", "security", "cis"]
+
+# --- AKS Cluster Configuration ---
+
+[[rules]]
+name = "azure-aks-rbac-enabled"
+description = "AKS clusters should have RBAC enabled - Azure Policy: AKS_RBAC_Audit"
+level = 3
+object = "azurerm_kubernetes_cluster"
+tags = ["access-control", "cis-8.5.1", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "role_based_access_control_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-aks-azure-ad-integration"
+description = "AKS clusters should have Azure AD integration enabled - Azure Policy: AKS_AAD_Integration_Audit"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["authentication", "cis-8.5.2", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "azure_active_directory_role_based_access_control.0.managed"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-aks-azure-policy-addon"
+description = "AKS clusters should have Azure Policy add-on enabled - Azure Policy: AKS_AzurePolicyAddOn_Audit"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["governance", "cis-8.5.3", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "azure_policy_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-aks-network-policy"
+description = "AKS clusters should have network policy configured - Azure Policy: AKS_NetworkPolicy_Audit"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["network-security", "cis-8.5.4", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "network_profile.0.network_policy"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-private-cluster"
+description = "AKS clusters should have private cluster enabled - Azure Policy: AKS_PrivateCluster_Audit"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["network-security", "cis-8.5.5", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "private_cluster_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-aks-disable-local-accounts"
+description = "AKS clusters should disable local accounts - Azure Policy: AKS_DisableLocalAccounts_Deny"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["authentication", "cis-8.5.6", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "local_account_disabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-aks-cmk-encryption"
+description = "AKS clusters should use customer-managed keys for disk encryption - Azure Policy: AKS_CMK_Deny"
+level = 1
+object = "azurerm_kubernetes_cluster"
+tags = ["encryption", "soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "disk_encryption_set_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-encryption-at-host"
+description = "AKS clusters should have encryption at host enabled - Azure Policy: AKS_EncryptionAtHost_Deny"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["encryption", "cis-8.5.7", "soc2", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "default_node_pool.0.enable_host_encryption"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-aks-auto-upgrade"
+description = "AKS clusters should have auto-upgrade channel configured - Azure Policy: AKS_Autoupgrade_Cluster_Audit"
+level = 1
+object = "azurerm_kubernetes_cluster"
+tags = ["patching", "cis-8.5.8", "soc2"]
+
+  [[rules.conditions]]
+  property = "automatic_upgrade_channel"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-node-os-auto-upgrade"
+description = "AKS clusters should have node OS auto-upgrade configured - Azure Policy: AKS_Autoupgrade_NodeOS_Audit"
+level = 1
+object = "azurerm_kubernetes_cluster"
+tags = ["patching", "cis-8.5.9", "soc2"]
+
+  [[rules.conditions]]
+  property = "node_os_upgrade_channel"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-disable-ssh"
+description = "AKS clusters should disable SSH access to nodes - Azure Policy: AKS_DisableSSH_Audit"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["network-security", "cis-8.5.10", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "default_node_pool.0.temporary_name_for_rotation"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-disable-run-command"
+description = "AKS clusters should disable run command - Azure Policy: AKS_DisableRunCommand_Audit"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["security", "cis-8.5.11", "soc2"]
+
+  [[rules.conditions]]
+  property = "run_command_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-aks-image-cleaner"
+description = "AKS clusters should have Image Cleaner enabled - Azure Policy: AKS_ImageCleaner_Audit"
+level = 1
+object = "azurerm_kubernetes_cluster"
+tags = ["security", "best-practice"]
+
+  [[rules.conditions]]
+  property = "image_cleaner_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-aks-cni-network"
+description = "AKS clusters should use Azure CNI networking - Azure Policy: AKS_EnableCNI"
+level = 1
+object = "azurerm_kubernetes_cluster"
+tags = ["network-security", "best-practice"]
+
+  [[rules.conditions]]
+  property = "network_profile.0.network_plugin"
+  condition = "EQUAL"
+  value = "azure"
+
+[[rules]]
+name = "azure-aks-kms-enabled"
+description = "AKS clusters should have Key Management Service enabled - Azure Policy: AKS_EnableKMS"
+level = 1
+object = "azurerm_kubernetes_cluster"
+tags = ["encryption", "soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "key_management_service.0.key_vault_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-defender-enabled"
+description = "AKS clusters should have Microsoft Defender profile enabled"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["security", "cis-8.5.12", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "microsoft_defender.0.log_analytics_workspace_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-oms-agent"
+description = "AKS clusters should have monitoring add-on enabled for container insights"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["monitoring", "cis-8.5.13", "soc2"]
+
+  [[rules.conditions]]
+  property = "oms_agent.0.log_analytics_workspace_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-authorized-ip-ranges"
+description = "AKS clusters should have authorized IP ranges configured for API server"
+level = 2
+object = "azurerm_kubernetes_cluster"
+tags = ["network-security", "cis-8.5.14", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "api_server_access_profile.0.authorized_ip_ranges"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-aks-secret-store-csi"
+description = "AKS clusters should have Secret Store CSI driver enabled - Azure Policy: AKS_CSI"
+level = 1
+object = "azurerm_kubernetes_cluster"
+tags = ["security", "best-practice"]
+
+  [[rules.conditions]]
+  property = "key_vault_secrets_provider.0.secret_rotation_enabled"
+  condition = "EQUAL"
+  value = true

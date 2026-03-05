@@ -1,0 +1,175 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP GKE cluster security rules based on CIS GKE Benchmark and Forseti policies"
+tags = ["gcp", "gke", "kubernetes", "security", "cis"]
+
+# --- CIS GKE 6.2 - Legacy ABAC Disabled ---
+
+[[rules]]
+name = "gcp-gke-no-legacy-abac"
+description = "CIS GKE 6.2 - Ensure Legacy Authorization (ABAC) is disabled"
+level = 2
+object = "google_container_cluster"
+tags = ["cis-gke-6.2", "soc2", "access-control", "forseti"]
+
+  [[rules.conditions]]
+  property = "enable_legacy_abac"
+  condition = "EQUAL"
+  value = false
+
+# --- CIS GKE 6.4 - Kubernetes Dashboard Disabled ---
+
+[[rules]]
+name = "gcp-gke-no-kubernetes-dashboard"
+description = "CIS GKE 6.4 - Ensure the Kubernetes Dashboard is disabled"
+level = 2
+object = "google_container_cluster"
+tags = ["cis-gke-6.4", "soc2", "access-control", "forseti"]
+
+  [[rules.conditions]]
+  property = "addons_config.0.kubernetes_dashboard.0.disabled"
+  condition = "EQUAL"
+  value = true
+
+# --- CIS GKE 6.5 - Network Policy Enabled ---
+
+[[rules]]
+name = "gcp-gke-network-policy-enabled"
+description = "CIS GKE 6.5 - Ensure Network Policy is enabled on Kubernetes Engine clusters"
+level = 2
+object = "google_container_cluster"
+tags = ["cis-gke-6.5", "soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "network_policy.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- CIS GKE 6.6 - Client Certificate Auth Disabled ---
+
+[[rules]]
+name = "gcp-gke-no-client-cert-auth"
+description = "CIS GKE 6.6 - Ensure client certificate authentication is not used"
+level = 2
+object = "google_container_cluster"
+tags = ["cis-gke-6.6", "soc2", "access-control", "forseti"]
+
+  [[rules.conditions]]
+  property = "master_auth.0.client_certificate_config.0.issue_client_certificate"
+  condition = "EQUAL"
+  value = false
+
+# --- Private Cluster ---
+
+[[rules]]
+name = "gcp-gke-private-cluster"
+description = "Ensure GKE clusters are private clusters with private nodes"
+level = 2
+object = "google_container_cluster"
+tags = ["soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "private_cluster_config.0.enable_private_nodes", condition = "EQUAL", value = true },
+    { property = "private_cluster_config.0.enable_private_endpoint", condition = "EQUAL", value = true },
+  ]
+
+# --- Master Authorized Networks ---
+
+[[rules]]
+name = "gcp-gke-master-authorized-networks"
+description = "Ensure Master Authorized Networks is enabled to restrict API server access"
+level = 2
+object = "google_container_cluster"
+tags = ["soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "master_authorized_networks_config.0.cidr_blocks"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Workload Identity ---
+
+[[rules]]
+name = "gcp-gke-workload-identity"
+description = "Ensure Workload Identity is enabled for pod-level IAM"
+level = 2
+object = "google_container_cluster"
+tags = ["soc2", "identity", "forseti"]
+
+  [[rules.conditions]]
+  property = "workload_identity_config.0.workload_pool"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Binary Authorization ---
+
+[[rules]]
+name = "gcp-gke-binary-authorization"
+description = "Ensure Binary Authorization is enabled for container image validation"
+level = 1
+object = "google_container_cluster"
+tags = ["soc2", "supply-chain", "forseti"]
+
+  [[rules.conditions]]
+  property = "enable_binary_authorization"
+  condition = "EQUAL"
+  value = true
+
+# --- Shielded GKE Nodes ---
+
+[[rules]]
+name = "gcp-gke-shielded-nodes"
+description = "Ensure Shielded GKE Nodes are enabled"
+level = 1
+object = "google_container_cluster"
+tags = ["soc2", "integrity", "forseti"]
+
+  [[rules.conditions]]
+  property = "enable_shielded_nodes"
+  condition = "EQUAL"
+  value = true
+
+# --- Node Auto-Upgrade ---
+
+[[rules]]
+name = "gcp-gke-node-auto-upgrade"
+description = "Ensure automatic node upgrade is enabled for GKE node pools"
+level = 1
+object = "google_container_node_pool"
+tags = ["soc2", "patching", "forseti"]
+
+  [[rules.conditions]]
+  property = "management.0.auto_upgrade"
+  condition = "EQUAL"
+  value = true
+
+# --- Node Auto-Repair ---
+
+[[rules]]
+name = "gcp-gke-node-auto-repair"
+description = "Ensure automatic node repair is enabled for GKE node pools"
+level = 1
+object = "google_container_node_pool"
+tags = ["soc2", "availability", "forseti"]
+
+  [[rules.conditions]]
+  property = "management.0.auto_repair"
+  condition = "EQUAL"
+  value = true
+
+# --- Alias IP Ranges (VPC-native) ---
+
+[[rules]]
+name = "gcp-gke-vpc-native-cluster"
+description = "Ensure VPC-native clusters with alias IP ranges are used"
+level = 2
+object = "google_container_cluster"
+tags = ["soc2", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "ip_allocation_policy"
+  condition = "DIFFERENT"
+  value = ""

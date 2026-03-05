@@ -1,0 +1,243 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure SQL and Database security rules based on Azure Policy built-in definitions"
+tags = ["azure", "sql", "database", "security", "cis"]
+
+# --- SQL Server ---
+
+[[rules]]
+name = "azure-sql-auditing-enabled"
+description = "Auditing on SQL server should be enabled - Azure Policy: SqlServer_AuditingSettings_Audit"
+level = 2
+object = "azurerm_mssql_server"
+tags = ["monitoring", "cis-4.1.1", "soc2", "pci-dss", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-sql-auditing-retention-90days"
+description = "SQL Server auditing retention should be at least 90 days - Azure Policy: SqlServer_AuditingRetention90Days_Audit"
+level = 2
+object = "azurerm_mssql_server_extended_auditing_policy"
+tags = ["monitoring", "cis-4.1.2", "soc2", "pci-dss", "hipaa"]
+
+  [[rules.conditions]]
+  property = "retention_in_days"
+  condition = "SUP_OR_EQUAL"
+  value = 90
+
+[[rules]]
+name = "azure-sql-tde-enabled"
+description = "Transparent Data Encryption on SQL databases should be enabled - Azure Policy: SqlServer_TransparentDataEncryption_Audit"
+level = 3
+object = "azurerm_mssql_database"
+tags = ["encryption", "cis-4.1.3", "soc2", "pci-dss", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "transparent_data_encryption_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-sql-tde-cmk"
+description = "SQL servers should use customer-managed keys for TDE - Azure Policy: SqlServer_TDEByok_Audit"
+level = 2
+object = "azurerm_mssql_server_transparent_data_encryption"
+tags = ["encryption", "cis-4.1.4", "soc2", "hipaa", "nist"]
+
+  [[rules.conditions]]
+  property = "key_vault_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-sql-ad-admin-configured"
+description = "An Azure AD administrator should be provisioned for SQL servers - Azure Policy: SqlServer_ADOnlyEnabled_Audit"
+level = 2
+object = "azurerm_mssql_server"
+tags = ["authentication", "cis-4.1.5", "soc2", "nist"]
+
+  [[rules.conditions]]
+  property = "azuread_administrator.0.login_username"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-sql-no-public-network"
+description = "Public network access on SQL servers should be disabled - Azure Policy: SqlServer_DisablePublicNetworkAccess_Audit"
+level = 2
+object = "azurerm_mssql_server"
+tags = ["network-security", "cis-4.1.6", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-sql-private-endpoint"
+description = "SQL Server should use a private endpoint connection - Azure Policy: SqlServer_PrivateEndpoint_Audit"
+level = 2
+object = "azurerm_mssql_server"
+tags = ["network-security", "cis-4.1.7", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-sql-minimum-tls-version"
+description = "SQL Server should use minimum TLS version 1.2"
+level = 2
+object = "azurerm_mssql_server"
+tags = ["encryption", "cis-4.1.8", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "minimum_tls_version"
+  condition = "EQUAL"
+  value = "1.2"
+
+[[rules]]
+name = "azure-sql-vulnerability-assessment"
+description = "Vulnerability assessment should be enabled on SQL servers - Azure Policy: SQL_DB_VulnerabilityAssessment_Audit"
+level = 2
+object = "azurerm_mssql_server_vulnerability_assessment"
+tags = ["security", "cis-4.1.9", "soc2", "pci-dss", "hipaa"]
+
+  [[rules.conditions]]
+  property = "storage_container_path"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-sql-geo-redundant-backup"
+description = "Geo-redundant backup should be enabled for SQL Database - Azure Policy: GeoRedundant_SQLDatabase_AINE"
+level = 1
+object = "azurerm_mssql_database"
+tags = ["reliability", "cis-4.1.10", "iso27001"]
+
+  [[rules.conditions]]
+  property = "geo_backup_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- SQL Database ---
+
+[[rules]]
+name = "azure-sql-db-zone-redundant"
+description = "SQL Database should be zone redundant for high availability"
+level = 1
+object = "azurerm_mssql_database"
+tags = ["reliability", "best-practice"]
+
+  [[rules.conditions]]
+  property = "zone_redundant"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-sql-firewall-no-all-azure"
+description = "SQL Server firewall should not allow access from all Azure services (0.0.0.0)"
+level = 2
+object = "azurerm_mssql_firewall_rule"
+tags = ["network-security", "cis-4.1.11", "soc2"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "start_ip_address", condition = "DIFFERENT", value = "0.0.0.0" },
+    { property = "end_ip_address", condition = "DIFFERENT", value = "0.0.0.0" },
+  ]
+
+# --- PostgreSQL ---
+
+[[rules]]
+name = "azure-postgresql-ssl-enforcement"
+description = "Enforce SSL connection should be enabled for PostgreSQL - Azure Policy: PostgreSQL_EnableSSL_Audit"
+level = 2
+object = "azurerm_postgresql_server"
+tags = ["encryption", "cis-4.3.1", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "ssl_enforcement_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-postgresql-no-public-access"
+description = "Public network access should be disabled for PostgreSQL - Azure Policy: PostgreSQL_DisablePublicNetworkAccess_Audit"
+level = 2
+object = "azurerm_postgresql_server"
+tags = ["network-security", "cis-4.3.2", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-postgresql-geo-redundant-backup"
+description = "Geo-redundant backup should be enabled for PostgreSQL - Azure Policy: GeoRedundant_DBForPostgreSQL_Audit"
+level = 1
+object = "azurerm_postgresql_server"
+tags = ["reliability", "cis-4.3.3", "iso27001"]
+
+  [[rules.conditions]]
+  property = "geo_redundant_backup_enabled"
+  condition = "EQUAL"
+  value = true
+
+# --- MySQL ---
+
+[[rules]]
+name = "azure-mysql-ssl-enforcement"
+description = "Enforce SSL connection should be enabled for MySQL - Azure Policy: MySQL_EnableSSL_Audit"
+level = 2
+object = "azurerm_mysql_server"
+tags = ["encryption", "cis-4.4.1", "soc2", "pci-dss", "nist"]
+
+  [[rules.conditions]]
+  property = "ssl_enforcement_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-mysql-no-public-access"
+description = "Public network access should be disabled for MySQL - Azure Policy: MySQL_DisablePublicNetworkAccess_Audit"
+level = 2
+object = "azurerm_mysql_server"
+tags = ["network-security", "cis-4.4.2", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-mysql-cmk-encryption"
+description = "MySQL servers should use customer-managed key for encryption - Azure Policy: MySQL_EnableByok_Audit"
+level = 1
+object = "azurerm_mysql_server"
+tags = ["encryption", "cis-4.4.3", "soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-mysql-geo-redundant-backup"
+description = "Geo-redundant backup should be enabled for MySQL - Azure Policy: GeoRedundant_DBForMySQL_Audit"
+level = 1
+object = "azurerm_mysql_server"
+tags = ["reliability", "cis-4.4.4", "iso27001"]
+
+  [[rules.conditions]]
+  property = "geo_redundant_backup_enabled"
+  condition = "EQUAL"
+  value = true

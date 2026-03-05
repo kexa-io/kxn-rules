@@ -1,127 +1,287 @@
 [metadata]
 version = "1.0.0"
 provider = "google"
-description = "GCP Compute Engine security rules based on CIS Google Cloud Platform Benchmark"
-tags = ["cis", "gcp", "compute", "security", "vm"]
+description = "GCP Compute Engine security rules based on CIS GCP Foundations Benchmark and Forseti policies"
+tags = ["gcp", "compute", "security", "cis"]
+
+# --- CIS 4.1 - Default Service Account ---
 
 [[rules]]
 name = "gcp-vm-no-default-service-account"
-description = "CIS 4.1 - Ensure that instances are not configured to use default service accounts"
+description = "CIS 4.1 - Ensure instances are not configured to use default service account"
 level = 2
 object = "google_compute_instance"
+tags = ["cis-4.1", "soc2", "identity"]
 
   [[rules.conditions]]
   property = "service_account.0.email"
   condition = "NOT_ENDS_WITH"
   value = "-compute@developer.gserviceaccount.com"
 
+# --- CIS 4.2 - Full API Access Scope ---
+
 [[rules]]
 name = "gcp-vm-no-full-api-access"
-description = "CIS 4.2 - Ensure that instances are not configured with full API access scopes"
+description = "CIS 4.2 - Ensure instances are not configured with default service account with full access to all Cloud APIs"
 level = 2
 object = "google_compute_instance"
+tags = ["cis-4.2", "soc2", "least-privilege"]
 
   [[rules.conditions]]
   property = "service_account.0.scopes"
   condition = "NOT_INCLUDE"
   value = "https://www.googleapis.com/auth/cloud-platform"
 
-[[rules]]
-name = "gcp-vm-no-public-ip"
-description = "CIS 4.9 - Ensure that Compute instances do not have public IP addresses"
-level = 2
-object = "google_compute_instance"
-
-  [[rules.conditions]]
-  property = "network_interface.0.access_config"
-  condition = "EQUAL"
-  value = ""
+# --- CIS 4.3 - Block Project-wide SSH Keys ---
 
 [[rules]]
-name = "gcp-vm-shielded-enabled"
-description = "CIS 4.8 - Ensure Compute instances are launched with Shielded VM enabled"
-level = 2
+name = "gcp-vm-block-project-ssh-keys"
+description = "CIS 4.3 - Ensure 'Block Project-wide SSH keys' is enabled for VM instances"
+level = 1
 object = "google_compute_instance"
+tags = ["cis-4.3", "soc2", "access-control", "forseti"]
 
   [[rules.conditions]]
-  property = "shielded_instance_config.0.enable_secure_boot"
+  property = "metadata.block-project-ssh-keys"
   condition = "EQUAL"
-  value = true
-
-  [[rules.conditions]]
-  property = "shielded_instance_config.0.enable_vtpm"
-  condition = "EQUAL"
-  value = true
-
-  [[rules.conditions]]
-  property = "shielded_instance_config.0.enable_integrity_monitoring"
-  condition = "EQUAL"
-  value = true
-
-[[rules]]
-name = "gcp-vm-no-serial-port"
-description = "CIS 4.5 - Ensure Enable connecting to serial ports is not enabled for VM Instance"
-level = 2
-object = "google_compute_instance"
-
-  [[rules.conditions]]
-  property = "metadata.serial-port-enable"
-  condition = "DIFFERENT"
   value = "true"
 
-[[rules]]
-name = "gcp-vm-disk-csek-encryption"
-description = "CIS 4.7 - Ensure VM disks are encrypted with CSEK or CMEK"
-level = 2
-object = "google_compute_disk"
-
-  [[rules.conditions]]
-  operator = "OR"
-  criteria = [
-    { property = "disk_encryption_key.0.raw_key", condition = "DIFFERENT", value = "" },
-    { property = "disk_encryption_key.0.kms_key_self_link", condition = "DIFFERENT", value = "" },
-  ]
+# --- CIS 4.4 - OS Login ---
 
 [[rules]]
-name = "gcp-vm-no-ip-forwarding"
-description = "CIS 4.6 - Ensure that IP forwarding is not enabled on Instances"
-level = 2
-object = "google_compute_instance"
-
-  [[rules.conditions]]
-  property = "can_ip_forward"
-  condition = "EQUAL"
-  value = false
-
-[[rules]]
-name = "gcp-vm-os-login-enabled"
+name = "gcp-vm-enable-oslogin"
 description = "CIS 4.4 - Ensure OS Login is enabled for a project"
-level = 2
+level = 1
 object = "google_compute_project_metadata"
+tags = ["cis-4.4", "soc2", "access-control", "forseti"]
 
   [[rules.conditions]]
   property = "metadata.enable-oslogin"
   condition = "EQUAL"
   value = "TRUE"
 
+# --- CIS 4.5 - Serial Port Disabled ---
+
 [[rules]]
-name = "gcp-vm-labels-applied"
-description = "Ensure Compute instances have labels for resource management"
-level = 1
+name = "gcp-vm-disable-serial-port"
+description = "CIS 4.5 - Ensure 'Enable connecting to serial ports' is not enabled for VM instance"
+level = 2
 object = "google_compute_instance"
+tags = ["cis-4.5", "soc2", "access-control"]
 
   [[rules.conditions]]
-  property = "labels"
+  property = "metadata.serial-port-enable"
   condition = "DIFFERENT"
-  value = ""
+  value = "true"
+
+# --- CIS 4.6 - IP Forwarding ---
+
+[[rules]]
+name = "gcp-vm-no-ip-forwarding"
+description = "CIS 4.6 - Ensure that IP forwarding is not enabled on instances"
+level = 2
+object = "google_compute_instance"
+tags = ["cis-4.6", "soc2", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "can_ip_forward"
+  condition = "EQUAL"
+  value = false
+
+# --- CIS 4.7 - Shielded VM ---
+
+[[rules]]
+name = "gcp-vm-shielded-vm-enabled"
+description = "CIS 4.7 - Ensure Shielded VM is enabled with vTPM and Integrity Monitoring"
+level = 1
+object = "google_compute_instance"
+tags = ["cis-4.7", "soc2", "integrity"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "shielded_instance_config.0.enable_vtpm", condition = "EQUAL", value = true },
+    { property = "shielded_instance_config.0.enable_integrity_monitoring", condition = "EQUAL", value = true },
+  ]
+
+# --- CIS 4.8 - Confidential Computing ---
 
 [[rules]]
 name = "gcp-vm-confidential-computing"
-description = "Ensure confidential computing is enabled for sensitive workloads"
-level = 0
+description = "CIS 4.8 - Ensure Confidential Computing is enabled for VMs handling sensitive data"
+level = 1
 object = "google_compute_instance"
+tags = ["cis-4.8", "hipaa", "pci-dss", "confidentiality"]
 
   [[rules.conditions]]
   property = "confidential_instance_config.0.enable_confidential_compute"
   condition = "EQUAL"
   value = true
+
+# --- CIS 4.9 - Public IP ---
+
+[[rules]]
+name = "gcp-vm-no-public-ip"
+description = "CIS 4.9 - Ensure VM instances do not have public IP addresses"
+level = 2
+object = "google_compute_instance"
+tags = ["cis-4.9", "soc2", "pci-dss", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "network_interface.0.access_config"
+  condition = "EQUAL"
+  value = ""
+
+# --- CIS 4.11 - Disk Encryption with CMEK ---
+
+[[rules]]
+name = "gcp-vm-disk-cmek-encryption"
+description = "CIS 4.11 - Ensure VM disks are encrypted with Customer-Managed Encryption Keys (CMEK)"
+level = 1
+object = "google_compute_disk"
+tags = ["cis-4.11", "soc2", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "disk_encryption_key.0.kms_key_self_link"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Forseti: Secure Boot ---
+
+[[rules]]
+name = "gcp-vm-secure-boot-enabled"
+description = "Ensure Secure Boot is enabled on Shielded VM instances"
+level = 1
+object = "google_compute_instance"
+tags = ["soc2", "integrity", "forseti"]
+
+  [[rules.conditions]]
+  property = "shielded_instance_config.0.enable_secure_boot"
+  condition = "EQUAL"
+  value = true
+
+# --- Forseti: Deletion Protection ---
+
+[[rules]]
+name = "gcp-vm-deletion-protection"
+description = "Ensure VM instances have deletion protection enabled for production workloads"
+level = 1
+object = "google_compute_instance"
+tags = ["soc2", "availability"]
+
+  [[rules.conditions]]
+  property = "deletion_protection"
+  condition = "EQUAL"
+  value = true
+
+# --- Forseti: No Default Network ---
+
+[[rules]]
+name = "gcp-vm-no-default-network"
+description = "Ensure VM instances are not deployed on the default network"
+level = 2
+object = "google_compute_instance"
+tags = ["cis-3.1", "soc2", "network", "forseti"]
+
+  [[rules.conditions]]
+  property = "network_interface.0.network"
+  condition = "NOT_ENDS_WITH"
+  value = "/default"
+
+# --- Disk Snapshot Encryption ---
+
+[[rules]]
+name = "gcp-disk-snapshot-cmek"
+description = "Ensure disk snapshots are encrypted with CMEK"
+level = 1
+object = "google_compute_snapshot"
+tags = ["soc2", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "snapshot_encryption_key.0.kms_key_self_link"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Disk Resource Policies (Backup) ---
+
+[[rules]]
+name = "gcp-disk-resource-policy-attached"
+description = "Ensure persistent disks have resource policies (snapshot schedules) attached"
+level = 1
+object = "google_compute_disk"
+tags = ["soc2", "backup", "forseti"]
+
+  [[rules.conditions]]
+  property = "resource_policies"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Image Not Deprecated ---
+
+[[rules]]
+name = "gcp-image-not-deprecated"
+description = "Ensure compute images are not using deprecated status"
+level = 1
+object = "google_compute_image"
+tags = ["soc2", "lifecycle"]
+
+  [[rules.conditions]]
+  property = "deprecated.0.state"
+  condition = "DIFFERENT"
+  value = "DEPRECATED"
+
+# --- Instance Template Uses CMEK ---
+
+[[rules]]
+name = "gcp-instance-template-cmek"
+description = "Ensure instance templates use CMEK for disk encryption"
+level = 1
+object = "google_compute_instance_template"
+tags = ["soc2", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "disk.0.disk_encryption_key.0.kms_key_self_link"
+  condition = "DIFFERENT"
+  value = ""
+
+# --- Preemptible VM Warning ---
+
+[[rules]]
+name = "gcp-vm-preemptible-check"
+description = "Detect preemptible/spot VM instances that may be interrupted"
+level = 0
+object = "google_compute_instance"
+tags = ["availability", "cost"]
+
+  [[rules.conditions]]
+  property = "scheduling.0.preemptible"
+  condition = "EQUAL"
+  value = false
+
+# --- Automatic Restart ---
+
+[[rules]]
+name = "gcp-vm-automatic-restart"
+description = "Ensure VM instances have automatic restart enabled for high availability"
+level = 1
+object = "google_compute_instance"
+tags = ["soc2", "availability"]
+
+  [[rules.conditions]]
+  property = "scheduling.0.automatic_restart"
+  condition = "EQUAL"
+  value = true
+
+# --- Container-Optimized OS for GKE Nodes ---
+
+[[rules]]
+name = "gcp-vm-container-optimized-os"
+description = "Ensure GKE node VMs use Container-Optimized OS (cos) image"
+level = 1
+object = "google_compute_instance"
+tags = ["soc2", "gke", "hardening", "forseti"]
+
+  [[rules.conditions]]
+  property = "boot_disk.0.initialize_params.0.image"
+  condition = "INCLUDE"
+  value = "cos-cloud"
