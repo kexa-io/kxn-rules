@@ -1,0 +1,117 @@
+[metadata]
+version = "1.0.0"
+provider = "datadog"
+description = "Datadog security monitoring and compliance rules"
+tags = ["datadog", "security", "cspm", "monitoring"]
+
+[[rules]]
+name = "dd-security-api-key-rotation"
+description = "Ensure API keys have been rotated within the last 90 days"
+level = 2
+object = "api_key"
+
+  [[rules.conditions]]
+  property = "created_at"
+  condition = "DATE_SUP"
+  value = "-90d"
+
+[[rules]]
+name = "dd-security-app-key-limited-scope"
+description = "Ensure application keys have scoped permissions"
+level = 1
+object = "application_key"
+
+  [[rules.conditions]]
+  property = "scopes"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "dd-security-user-mfa-enabled"
+description = "Ensure all users have MFA enabled"
+level = 2
+object = "user"
+
+  [[rules.conditions]]
+  property = "attributes.mfa_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dd-security-user-no-admin-excess"
+description = "Ensure users do not have unnecessary admin roles"
+level = 1
+object = "user"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "relationships.roles.type", condition = "DIFFERENT", value = "admin" },
+    { property = "attributes.service_account", condition = "EQUAL", value = true },
+  ]
+
+[[rules]]
+name = "dd-security-log-detection-rules-active"
+description = "Ensure security detection rules are active and not disabled"
+level = 2
+object = "security_monitoring_rule"
+
+  [[rules.conditions]]
+  property = "isEnabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dd-security-detection-has-notification"
+description = "Ensure security detection rules have notification targets"
+level = 1
+object = "security_monitoring_rule"
+
+  [[rules.conditions]]
+  property = "options.notification_targets"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "dd-security-sensitive-data-scanner"
+description = "Ensure Sensitive Data Scanner is enabled for log pipelines"
+level = 1
+object = "sensitive_data_scanner_group"
+
+  [[rules.conditions]]
+  property = "attributes.is_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dd-security-audit-trail-enabled"
+description = "Ensure Audit Trail is enabled for the organization"
+level = 2
+object = "organization_settings"
+
+  [[rules.conditions]]
+  property = "attributes.settings.security.audit_trail_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dd-security-cspm-enabled"
+description = "Ensure Cloud Security Posture Management findings are evaluated"
+level = 1
+object = "cspm_configuration"
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "dd-security-log-retention"
+description = "Ensure security logs are retained for at least 15 days"
+level = 1
+object = "log_index"
+
+  [[rules.conditions]]
+  property = "num_retention_days"
+  condition = "SUP_OR_EQUAL"
+  value = 15

@@ -1,0 +1,132 @@
+[metadata]
+version = "1.0.0"
+provider = "kubernetes"
+description = "CIS Kubernetes Benchmark - RBAC Authorization"
+tags = ["cis", "kubernetes", "security", "rbac"]
+
+# CIS 5.1.1 - Cluster-admin role should be used sparingly
+[[rules]]
+name = "k8s-rbac-no-wildcard-verbs"
+description = "CIS 5.1.1 - Ensure ClusterRole does not use wildcard verbs"
+level = 3
+object = "cluster_role"
+
+  [[rules.conditions]]
+  property = "rules.0.verbs"
+  condition = "NOT_INCLUDE"
+  value = "*"
+
+# CIS 5.1.1 - ClusterRole should not grant wildcard resources
+[[rules]]
+name = "k8s-rbac-no-wildcard-resources"
+description = "CIS 5.1.1 - Ensure ClusterRole does not grant access to all resources"
+level = 3
+object = "cluster_role"
+
+  [[rules.conditions]]
+  property = "rules.0.resources"
+  condition = "NOT_INCLUDE"
+  value = "*"
+
+# CIS 5.1.2 - Minimize access to secrets
+[[rules]]
+name = "k8s-rbac-restrict-secrets-access"
+description = "CIS 5.1.2 - Ensure ClusterRole does not grant broad secrets access"
+level = 2
+object = "cluster_role"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "rules.0.resources", condition = "NOT_INCLUDE", value = "secrets" },
+    { property = "rules.0.verbs", condition = "NOT_INCLUDE", value = "*" },
+  ]
+
+# CIS 5.1.3 - Minimize wildcard use in Roles
+[[rules]]
+name = "k8s-rbac-role-no-wildcard-verbs"
+description = "CIS 5.1.3 - Ensure Role does not use wildcard verbs"
+level = 2
+object = "role"
+
+  [[rules.conditions]]
+  property = "rules.0.verbs"
+  condition = "NOT_INCLUDE"
+  value = "*"
+
+# CIS 5.1.5 - Ensure default service accounts are not actively used
+[[rules]]
+name = "k8s-rbac-no-default-sa-binding"
+description = "CIS 5.1.5 - Ensure default ServiceAccount is not bound to ClusterRole"
+level = 2
+object = "cluster_role_binding"
+
+  [[rules.conditions]]
+  property = "subjects.0.name"
+  condition = "DIFFERENT"
+  value = "default"
+
+# CIS 5.1.6 - Service account tokens should not be auto-mounted
+[[rules]]
+name = "k8s-rbac-no-automount-sa-token"
+description = "CIS 5.1.6 - Ensure automountServiceAccountToken is false on default SA"
+level = 2
+object = "service_account"
+
+  [[rules.conditions]]
+  property = "automountServiceAccountToken"
+  condition = "EQUAL"
+  value = false
+
+# CIS 5.1.8 - Limit use of bind/escalate/impersonate permissions
+[[rules]]
+name = "k8s-rbac-no-bind-escalate"
+description = "CIS 5.1.8 - Ensure ClusterRole does not grant bind or escalate"
+level = 3
+object = "cluster_role"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "rules.0.verbs", condition = "NOT_INCLUDE", value = "bind" },
+    { property = "rules.0.verbs", condition = "NOT_INCLUDE", value = "escalate" },
+    { property = "rules.0.verbs", condition = "NOT_INCLUDE", value = "impersonate" },
+  ]
+
+# NSA - Minimize use of cluster-admin binding
+[[rules]]
+name = "k8s-rbac-no-cluster-admin-binding"
+description = "NSA Hardening - Ensure ClusterRoleBinding does not reference cluster-admin"
+level = 3
+object = "cluster_role_binding"
+
+  [[rules.conditions]]
+  property = "roleRef.name"
+  condition = "DIFFERENT"
+  value = "cluster-admin"
+
+# CIS 5.1.4 - Restrict Role to create pods
+[[rules]]
+name = "k8s-rbac-restrict-pod-create"
+description = "CIS 5.1.4 - Ensure Roles do not grant unrestricted pod creation"
+level = 2
+object = "role"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "rules.0.resources", condition = "NOT_INCLUDE", value = "pods" },
+    { property = "rules.0.verbs", condition = "NOT_INCLUDE", value = "create" },
+  ]
+
+# NSA - RoleBindings should reference specific service accounts
+[[rules]]
+name = "k8s-rbac-specific-sa-in-binding"
+description = "NSA Hardening - Ensure RoleBinding subjects use specific ServiceAccounts"
+level = 1
+object = "role_binding"
+
+  [[rules.conditions]]
+  property = "subjects.0.kind"
+  condition = "EQUAL"
+  value = "ServiceAccount"

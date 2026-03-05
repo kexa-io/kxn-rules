@@ -1,0 +1,115 @@
+[metadata]
+version = "1.0.0"
+provider = "kubernetes"
+description = "CIS Kubernetes Benchmark - Network Policies and Security"
+tags = ["cis", "kubernetes", "security", "network", "nsa-hardening"]
+
+# CIS 5.3.2 - Ensure all namespaces have NetworkPolicies defined
+[[rules]]
+name = "k8s-net-namespace-has-netpol"
+description = "CIS 5.3.2 - Ensure namespaces have at least one NetworkPolicy"
+level = 2
+object = "network_policy"
+
+  [[rules.conditions]]
+  property = "spec.podSelector"
+  condition = "DIFFERENT"
+  value = ""
+
+# CIS 5.3.1 - Ensure default deny ingress NetworkPolicy exists
+[[rules]]
+name = "k8s-net-default-deny-ingress"
+description = "CIS 5.3.1 - Ensure a default deny ingress NetworkPolicy is in place"
+level = 2
+object = "network_policy"
+
+  [[rules.conditions]]
+  property = "spec.policyTypes"
+  condition = "INCLUDE"
+  value = "Ingress"
+
+# NSA - Ensure default deny egress NetworkPolicy exists
+[[rules]]
+name = "k8s-net-default-deny-egress"
+description = "NSA Hardening - Ensure a default deny egress NetworkPolicy is in place"
+level = 2
+object = "network_policy"
+
+  [[rules.conditions]]
+  property = "spec.policyTypes"
+  condition = "INCLUDE"
+  value = "Egress"
+
+# NSA - Services should not expose NodePort externally
+[[rules]]
+name = "k8s-net-no-nodeport-services"
+description = "NSA Hardening - Ensure Services do not use NodePort type"
+level = 1
+object = "service"
+
+  [[rules.conditions]]
+  property = "spec.type"
+  condition = "DIFFERENT"
+  value = "NodePort"
+
+# NSA - Services should not use LoadBalancer without restriction
+[[rules]]
+name = "k8s-net-loadbalancer-annotation"
+description = "NSA Hardening - Ensure LoadBalancer services have source range restrictions"
+level = 1
+object = "service"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "spec.type", condition = "DIFFERENT", value = "LoadBalancer" },
+    { property = "spec.loadBalancerSourceRanges", condition = "DIFFERENT", value = "" },
+  ]
+
+# CIS - Ingress should enforce TLS
+[[rules]]
+name = "k8s-net-ingress-tls-required"
+description = "CIS - Ensure Ingress resources configure TLS"
+level = 2
+object = "ingress"
+
+  [[rules.conditions]]
+  property = "spec.tls"
+  condition = "DIFFERENT"
+  value = ""
+
+# NSA - Ingress should not use wildcard hosts
+[[rules]]
+name = "k8s-net-ingress-no-wildcard-host"
+description = "NSA Hardening - Ensure Ingress does not use wildcard host"
+level = 1
+object = "ingress"
+
+  [[rules.conditions]]
+  property = "spec.rules.0.host"
+  condition = "NOT_STARTS_WITH"
+  value = "*"
+
+# NSA - Pods should not use hostPort
+[[rules]]
+name = "k8s-net-pod-no-hostport"
+description = "NSA Hardening - Ensure pods do not bind to host ports"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.ports.0.hostPort"
+  condition = "EQUAL"
+  value = 0
+
+# CIS - External IPs should not be set on services
+[[rules]]
+name = "k8s-net-no-external-ips"
+description = "CIS - Ensure Services do not set externalIPs directly"
+level = 2
+object = "service"
+
+  [[rules.conditions]]
+  property = "spec.externalIPs"
+  condition = "EQUAL"
+  value = ""

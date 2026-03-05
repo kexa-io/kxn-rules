@@ -1,0 +1,117 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure AD and identity security rules based on CIS Microsoft Azure Foundations Benchmark"
+tags = ["cis", "azure", "identity", "iam", "security"]
+
+[[rules]]
+name = "azure-ad-mfa-enabled"
+description = "CIS 1.1 - Ensure multi-factor authentication is enabled for all privileged users"
+level = 3
+object = "azurerm_user"
+
+  [[rules.conditions]]
+  property = "authentication_methods"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-role-no-custom-owner"
+description = "CIS 1.23 - Ensure no custom subscription owner roles are created"
+level = 2
+object = "azurerm_role_definition"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "permissions.0.actions", condition = "NOT_INCLUDE", value = "*" },
+    { property = "scope", condition = "DIFFERENT", value = "/" },
+  ]
+
+[[rules]]
+name = "azure-rbac-no-wildcard-permissions"
+description = "Ensure role assignments do not use wildcard (*) action permissions"
+level = 2
+object = "azurerm_role_definition"
+
+  [[rules.conditions]]
+  property = "permissions.0.actions"
+  condition = "NOT_INCLUDE"
+  value = "*"
+
+[[rules]]
+name = "azure-key-vault-rbac-enabled"
+description = "CIS 8.5 - Ensure that RBAC is the authorization model for Key Vault"
+level = 2
+object = "azurerm_key_vault"
+
+  [[rules.conditions]]
+  property = "enable_rbac_authorization"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-key-vault-soft-delete"
+description = "CIS 8.4 - Ensure that soft delete is enabled for Key Vault"
+level = 2
+object = "azurerm_key_vault"
+
+  [[rules.conditions]]
+  property = "soft_delete_retention_days"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+[[rules]]
+name = "azure-key-vault-purge-protection"
+description = "CIS 8.6 - Ensure that purge protection is enabled for Key Vault"
+level = 2
+object = "azurerm_key_vault"
+
+  [[rules.conditions]]
+  property = "purge_protection_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-key-vault-key-expiration"
+description = "CIS 8.1 - Ensure that key expiration date is set for Key Vault keys"
+level = 2
+object = "azurerm_key_vault_key"
+
+  [[rules.conditions]]
+  property = "expiration_date"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-key-vault-secret-expiration"
+description = "CIS 8.2 - Ensure that secret expiration date is set for Key Vault secrets"
+level = 2
+object = "azurerm_key_vault_secret"
+
+  [[rules.conditions]]
+  property = "expiration_date"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-managed-identity-preferred"
+description = "Ensure managed identity is used instead of service principals where possible"
+level = 1
+object = "azurerm_user_assigned_identity"
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-key-vault-no-public-network"
+description = "Ensure Key Vault is not accessible from public networks"
+level = 2
+object = "azurerm_key_vault"
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false

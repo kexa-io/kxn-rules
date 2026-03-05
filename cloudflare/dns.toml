@@ -1,0 +1,126 @@
+[metadata]
+version = "1.0.0"
+provider = "cloudflare"
+description = "Cloudflare DNS and zone security rules"
+tags = ["cloudflare", "dns", "zone", "security"]
+
+[[rules]]
+name = "cf-zone-ssl-strict"
+description = "Ensure zone SSL mode is Full (Strict) to prevent MITM"
+level = 2
+object = "zone"
+
+  [[rules.conditions]]
+  property = "ssl.mode"
+  condition = "EQUAL"
+  value = "strict"
+
+[[rules]]
+name = "cf-zone-always-use-https"
+description = "Ensure Always Use HTTPS is enabled on the zone"
+level = 2
+object = "zone_settings"
+
+  [[rules.conditions]]
+  property = "always_use_https"
+  condition = "EQUAL"
+  value = "on"
+
+[[rules]]
+name = "cf-zone-tls-min-1.2"
+description = "Ensure minimum TLS version is 1.2 or higher"
+level = 2
+object = "zone_settings"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "min_tls_version", condition = "EQUAL", value = "1.2" },
+    { property = "min_tls_version", condition = "EQUAL", value = "1.3" },
+  ]
+
+[[rules]]
+name = "cf-zone-hsts-enabled"
+description = "Ensure HSTS is enabled on the zone with a sufficient max-age"
+level = 1
+object = "zone_settings"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "security_header.strict_transport_security.enabled", condition = "EQUAL", value = true },
+    { property = "security_header.strict_transport_security.max_age", condition = "SUP_OR_EQUAL", value = 15552000 },
+  ]
+
+[[rules]]
+name = "cf-zone-dnssec-active"
+description = "Ensure DNSSEC is active on the zone"
+level = 2
+object = "zone"
+
+  [[rules.conditions]]
+  property = "dnssec.status"
+  condition = "EQUAL"
+  value = "active"
+
+[[rules]]
+name = "cf-dns-no-wildcard-a-record"
+description = "Ensure no wildcard A record exists that could expose internal services"
+level = 1
+object = "dns_record"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "name", condition = "DIFFERENT", value = "*" },
+    { property = "type", condition = "DIFFERENT", value = "A" },
+  ]
+
+[[rules]]
+name = "cf-dns-proxied"
+description = "Ensure DNS A/AAAA records are proxied through Cloudflare (not DNS-only)"
+level = 0
+object = "dns_record"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "proxied", condition = "EQUAL", value = true },
+    { property = "type", condition = "DIFFERENT", value = "A" },
+  ]
+
+[[rules]]
+name = "cf-zone-bot-management"
+description = "Ensure Bot Fight Mode or Bot Management is enabled"
+level = 1
+object = "zone_settings"
+
+  [[rules.conditions]]
+  property = "bot_management.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "cf-zone-auto-minify-disabled"
+description = "Ensure auto-minify is not masking content integrity issues"
+level = 0
+object = "zone_settings"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "minify.js", condition = "EQUAL", value = "off" },
+    { property = "minify.css", condition = "EQUAL", value = "off" },
+    { property = "minify.html", condition = "EQUAL", value = "off" },
+  ]
+
+[[rules]]
+name = "cf-zone-opportunistic-encryption"
+description = "Ensure Opportunistic Encryption is enabled"
+level = 0
+object = "zone_settings"
+
+  [[rules.conditions]]
+  property = "opportunistic_encryption"
+  condition = "EQUAL"
+  value = "on"

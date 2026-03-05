@@ -1,0 +1,146 @@
+[metadata]
+version = "1.0.0"
+provider = "kubernetes"
+description = "CIS Kubernetes Benchmark - General Cluster Security"
+tags = ["cis", "kubernetes", "security", "cluster", "nsa-hardening"]
+
+# CIS 5.7.1 - Namespaces should not use default namespace
+[[rules]]
+name = "k8s-general-no-default-namespace"
+description = "CIS 5.7.1 - Ensure workloads are not deployed in the default namespace"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "metadata.namespace"
+  condition = "DIFFERENT"
+  value = "default"
+
+# CIS 5.7.4 - Ensure default namespace is not used for active workloads
+[[rules]]
+name = "k8s-general-no-default-namespace-deployment"
+description = "CIS 5.7.4 - Ensure deployments are not in the default namespace"
+level = 2
+object = "deployment"
+
+  [[rules.conditions]]
+  property = "metadata.namespace"
+  condition = "DIFFERENT"
+  value = "default"
+
+# NSA - Ensure images use specific tags, not latest
+[[rules]]
+name = "k8s-general-no-latest-tag"
+description = "NSA Hardening - Ensure container images do not use the latest tag"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.image"
+  condition = "NOT_ENDS_WITH"
+  value = ":latest"
+
+# NSA - Ensure images are from trusted registries
+[[rules]]
+name = "k8s-general-trusted-registry"
+description = "NSA Hardening - Ensure container images come from allowed registries"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "spec.containers.0.image", condition = "REGEX", value = "^[a-z0-9]+\\.gcr\\.io/" },
+    { property = "spec.containers.0.image", condition = "REGEX", value = "^[0-9]+\\.dkr\\.ecr\\." },
+    { property = "spec.containers.0.image", condition = "REGEX", value = "^[a-z0-9]+\\.azurecr\\.io/" },
+  ]
+
+# CIS 5.4.1 - Prefer using Secrets instead of environment variables
+[[rules]]
+name = "k8s-general-no-secret-env-vars"
+description = "CIS 5.4.1 - Ensure Secrets are not exposed via environment variables directly"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.env.0.valueFrom.secretKeyRef"
+  condition = "EQUAL"
+  value = ""
+
+# CIS 5.4.2 - Ensure Secrets are encrypted at rest
+[[rules]]
+name = "k8s-general-namespace-labels"
+description = "CIS - Ensure namespaces have required labels for governance"
+level = 1
+object = "namespace"
+
+  [[rules.conditions]]
+  property = "metadata.labels.environment"
+  condition = "DIFFERENT"
+  value = ""
+
+# NSA - Ensure imagePullPolicy is Always for non-digest images
+[[rules]]
+name = "k8s-general-image-pull-always"
+description = "NSA Hardening - Ensure imagePullPolicy is set to Always"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.imagePullPolicy"
+  condition = "EQUAL"
+  value = "Always"
+
+# CIS 5.7.2 - Ensure Seccomp profile is set
+[[rules]]
+name = "k8s-general-seccomp-profile"
+description = "CIS 5.7.2 - Ensure Seccomp profile is set to RuntimeDefault or Localhost"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "spec.securityContext.seccompProfile.type", condition = "EQUAL", value = "RuntimeDefault" },
+    { property = "spec.securityContext.seccompProfile.type", condition = "EQUAL", value = "Localhost" },
+  ]
+
+# CIS 5.7.3 - Apply AppArmor or SELinux profiles
+[[rules]]
+name = "k8s-general-apparmor-profile"
+description = "CIS 5.7.3 - Ensure AppArmor profile is set on containers"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  property = "metadata.annotations.container.apparmor.security.beta.kubernetes.io"
+  condition = "DIFFERENT"
+  value = ""
+
+# NSA - Ensure pods define a service account explicitly
+[[rules]]
+name = "k8s-general-explicit-sa"
+description = "NSA Hardening - Ensure pods specify a non-default service account"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "spec.serviceAccountName", condition = "DIFFERENT", value = "" },
+    { property = "spec.serviceAccountName", condition = "DIFFERENT", value = "default" },
+  ]
+
+# NSA - Ensure resource quotas are defined per namespace
+[[rules]]
+name = "k8s-general-resource-quota"
+description = "NSA Hardening - Ensure ResourceQuota exists with memory and CPU limits"
+level = 1
+object = "resource_quota"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "spec.hard.limits.memory", condition = "DIFFERENT", value = "" },
+    { property = "spec.hard.limits.cpu", condition = "DIFFERENT", value = "" },
+  ]

@@ -1,0 +1,202 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS CIS Foundations Benchmark - IAM Security Rules"
+tags = ["cis", "aws", "iam", "security", "identity"]
+
+# CIS 1.4 - Ensure no root account access key exists
+[[rules]]
+name = "aws-iam-no-root-access-key"
+description = "CIS 1.4 - Ensure no 'root' user account access key exists"
+level = 3
+object = "aws_iam_account_summary"
+tags = ["cis-1.4", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "account_access_keys_present"
+  condition = "EQUAL"
+  value = 0
+
+# CIS 1.5 - Ensure MFA is enabled for root account
+[[rules]]
+name = "aws-iam-root-mfa-enabled"
+description = "CIS 1.5 - Ensure MFA is enabled for the 'root' user account"
+level = 3
+object = "aws_iam_account_summary"
+tags = ["cis-1.5", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "account_mfa_enabled"
+  condition = "EQUAL"
+  value = 1
+
+# CIS 1.6 - Ensure hardware MFA for root
+[[rules]]
+name = "aws-iam-root-hardware-mfa"
+description = "CIS 1.6 - Ensure hardware MFA is enabled for the 'root' user account"
+level = 2
+object = "aws_iam_virtual_mfa_device"
+tags = ["cis-1.6", "soc2"]
+
+  [[rules.conditions]]
+  property = "serial_number"
+  condition = "NOT_INCLUDE"
+  value = "root-account-mfa-device"
+
+# CIS 1.8 - Ensure IAM password policy requires minimum length
+[[rules]]
+name = "aws-iam-password-min-length"
+description = "CIS 1.8 - Ensure IAM password policy requires minimum length of 14"
+level = 2
+object = "aws_iam_account_password_policy"
+tags = ["cis-1.8", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "minimum_password_length"
+  condition = "SUP_OR_EQUAL"
+  value = 14
+
+# CIS 1.9 - Ensure IAM password policy prevents password reuse
+[[rules]]
+name = "aws-iam-password-reuse-prevention"
+description = "CIS 1.9 - Ensure IAM password policy prevents password reuse (24 generations)"
+level = 2
+object = "aws_iam_account_password_policy"
+tags = ["cis-1.9", "soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "password_reuse_prevention"
+  condition = "SUP_OR_EQUAL"
+  value = 24
+
+# CIS 1.10 - Ensure MFA is enabled for all IAM users with console access
+[[rules]]
+name = "aws-iam-user-mfa-enabled"
+description = "CIS 1.10 - Ensure MFA is enabled for all IAM users that have a console password"
+level = 2
+object = "aws_iam_user"
+tags = ["cis-1.10", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "mfa_active", condition = "EQUAL", value = true },
+    { property = "password_enabled", condition = "EQUAL", value = false },
+  ]
+
+# CIS 1.12 - Ensure credentials unused for 45 days are disabled
+[[rules]]
+name = "aws-iam-credentials-unused-45-days"
+description = "CIS 1.12 - Ensure credentials unused for 45 days or greater are disabled"
+level = 2
+object = "aws_iam_credential_report"
+tags = ["cis-1.12", "soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "password_last_used_age_days"
+  condition = "INF"
+  value = 45
+
+# CIS 1.13 - Ensure only one active access key per user
+[[rules]]
+name = "aws-iam-single-active-access-key"
+description = "CIS 1.13 - Ensure there is only one active access key per IAM user"
+level = 1
+object = "aws_iam_access_keys"
+tags = ["cis-1.13", "soc2"]
+
+  [[rules.conditions]]
+  property = "active_keys_count"
+  condition = "INF_OR_EQUAL"
+  value = 1
+
+# CIS 1.14 - Ensure access keys are rotated within 90 days
+[[rules]]
+name = "aws-iam-access-key-rotation-90-days"
+description = "CIS 1.14 - Ensure access keys are rotated every 90 days or less"
+level = 2
+object = "aws_iam_access_keys"
+tags = ["cis-1.14", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "key_age_days"
+  condition = "INF"
+  value = 90
+
+# CIS 1.15 - Ensure IAM users receive permissions only through groups
+[[rules]]
+name = "aws-iam-no-inline-user-policies"
+description = "CIS 1.15 - Ensure IAM users receive permissions only through groups"
+level = 2
+object = "aws_iam_user"
+tags = ["cis-1.15", "soc2", "best-practice"]
+
+  [[rules.conditions]]
+  property = "attached_policy_count"
+  condition = "EQUAL"
+  value = 0
+
+# CIS 1.16 - Ensure no full admin policies attached
+[[rules]]
+name = "aws-iam-no-full-admin-policy"
+description = "CIS 1.16 - Ensure IAM policies with full '*:*' admin privileges are not attached"
+level = 3
+object = "aws_iam_policy"
+tags = ["cis-1.16", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "policy_document"
+  condition = "NOT_INCLUDE"
+  value = "\"Action\":\"*\",\"Resource\":\"*\""
+
+# CIS 1.17 - Ensure a support role has been created
+[[rules]]
+name = "aws-iam-support-role-exists"
+description = "CIS 1.17 - Ensure a support role has been created to manage incidents"
+level = 1
+object = "aws_iam_role"
+tags = ["cis-1.17", "soc2"]
+
+  [[rules.conditions]]
+  property = "attached_policies"
+  condition = "INCLUDE"
+  value = "AWSSupportAccess"
+
+# IAM password policy - require uppercase
+[[rules]]
+name = "aws-iam-password-uppercase"
+description = "Ensure IAM password policy requires at least one uppercase letter"
+level = 1
+object = "aws_iam_account_password_policy"
+tags = ["soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "require_uppercase_characters"
+  condition = "EQUAL"
+  value = true
+
+# IAM password policy - require symbols
+[[rules]]
+name = "aws-iam-password-symbols"
+description = "Ensure IAM password policy requires at least one symbol"
+level = 1
+object = "aws_iam_account_password_policy"
+tags = ["soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "require_symbols"
+  condition = "EQUAL"
+  value = true
+
+# IAM password policy - require numbers
+[[rules]]
+name = "aws-iam-password-numbers"
+description = "Ensure IAM password policy requires at least one number"
+level = 1
+object = "aws_iam_account_password_policy"
+tags = ["soc2", "hipaa"]
+
+  [[rules.conditions]]
+  property = "require_numbers"
+  condition = "EQUAL"
+  value = true

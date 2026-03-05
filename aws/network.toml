@@ -1,0 +1,182 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS CIS Foundations Benchmark - VPC, Security Group, and Network Rules"
+tags = ["cis", "aws", "vpc", "security-group", "network", "security"]
+
+# CIS 5.1 - Ensure no network ACLs allow ingress from 0.0.0.0/0 to admin ports
+[[rules]]
+name = "aws-nacl-no-unrestricted-admin"
+description = "CIS 5.1 - Ensure no NACL allows unrestricted ingress to remote admin ports"
+level = 3
+object = "aws_network_acl_rule"
+tags = ["cis-5.1", "soc2", "pci-dss", "network"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "cidr_block", condition = "DIFFERENT", value = "0.0.0.0/0" },
+    { property = "rule_action", condition = "EQUAL", value = "deny" },
+  ]
+
+# CIS 5.2 - Ensure no security groups allow ingress from 0.0.0.0/0 to port 22
+[[rules]]
+name = "aws-sg-no-unrestricted-ssh"
+description = "CIS 5.2 - Ensure no security group allows unrestricted ingress to port 22 (SSH)"
+level = 3
+object = "aws_security_group_rule"
+tags = ["cis-5.2", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
+    { property = "from_port", condition = "DIFFERENT", value = 22 },
+  ]
+
+# CIS 5.3 - Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389
+[[rules]]
+name = "aws-sg-no-unrestricted-rdp"
+description = "CIS 5.3 - Ensure no security group allows unrestricted ingress to port 3389 (RDP)"
+level = 3
+object = "aws_security_group_rule"
+tags = ["cis-5.3", "soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
+    { property = "from_port", condition = "DIFFERENT", value = 3389 },
+  ]
+
+# CIS 5.4 - Ensure default security group restricts all traffic
+[[rules]]
+name = "aws-sg-default-restricts-all"
+description = "CIS 5.4 - Ensure the default security group of every VPC restricts all traffic"
+level = 2
+object = "aws_default_security_group"
+tags = ["cis-5.4", "soc2", "pci-dss"]
+
+  [[rules.conditions]]
+  property = "ingress_count"
+  condition = "EQUAL"
+  value = 0
+
+  [[rules.conditions]]
+  property = "egress_count"
+  condition = "EQUAL"
+  value = 0
+
+# VPC flow logs enabled
+[[rules]]
+name = "aws-vpc-flow-logs-enabled"
+description = "CIS 3.9 - Ensure VPC flow logging is enabled in all VPCs"
+level = 2
+object = "aws_vpc"
+tags = ["cis-3.9", "soc2", "hipaa", "logging"]
+
+  [[rules.conditions]]
+  property = "flow_logs_enabled"
+  condition = "EQUAL"
+  value = true
+
+# Security groups should have descriptions
+[[rules]]
+name = "aws-sg-has-description"
+description = "Ensure all security groups have a meaningful description"
+level = 0
+object = "aws_security_group"
+tags = ["governance", "best-practice"]
+
+  [[rules.conditions]]
+  property = "description"
+  condition = "DIFFERENT"
+  value = ""
+
+  [[rules.conditions]]
+  property = "description"
+  condition = "DIFFERENT"
+  value = "Managed by Terraform"
+
+# No security groups with unrestricted egress to all ports
+[[rules]]
+name = "aws-sg-no-unrestricted-egress"
+description = "Ensure security groups do not allow unrestricted outbound traffic to all ports"
+level = 1
+object = "aws_security_group"
+tags = ["soc2", "network"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "egress.0.cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
+    { property = "egress.0.from_port", condition = "DIFFERENT", value = 0 },
+  ]
+
+# No inbound rules referencing 0.0.0.0/0 with all ports
+[[rules]]
+name = "aws-sg-no-all-ports-open"
+description = "Ensure no security group allows all ports open to 0.0.0.0/0"
+level = 3
+object = "aws_security_group_rule"
+tags = ["soc2", "hipaa", "pci-dss"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "cidr_blocks", condition = "NOT_INCLUDE", value = "0.0.0.0/0" },
+    { property = "from_port", condition = "DIFFERENT", value = 0 },
+    { property = "to_port", condition = "DIFFERENT", value = 65535 },
+  ]
+
+# Subnet should not auto-assign public IPs
+[[rules]]
+name = "aws-subnet-no-auto-public-ip"
+description = "Ensure VPC subnets do not automatically assign public IP addresses"
+level = 1
+object = "aws_subnet"
+tags = ["soc2", "network", "best-practice"]
+
+  [[rules.conditions]]
+  property = "map_public_ip_on_launch"
+  condition = "EQUAL"
+  value = false
+
+# VPC peering connections should not allow cross-account DNS resolution
+[[rules]]
+name = "aws-vpc-peering-dns-restricted"
+description = "Ensure VPC peering connections restrict DNS resolution from accepter VPC"
+level = 1
+object = "aws_vpc_peering_connection"
+tags = ["network", "best-practice"]
+
+  [[rules.conditions]]
+  property = "accepter.0.allow_remote_vpc_dns_resolution"
+  condition = "EQUAL"
+  value = false
+
+# NAT Gateway should be used for private subnet internet access
+[[rules]]
+name = "aws-vpc-nat-gateway-exists"
+description = "Ensure VPC uses NAT gateway for private subnet internet access"
+level = 1
+object = "aws_nat_gateway"
+tags = ["network", "best-practice"]
+
+  [[rules.conditions]]
+  property = "state"
+  condition = "EQUAL"
+  value = "available"
+
+# Transit Gateway should have auto-accept disabled
+[[rules]]
+name = "aws-tgw-no-auto-accept"
+description = "Ensure Transit Gateway does not auto-accept cross-account attachments"
+level = 2
+object = "aws_ec2_transit_gateway"
+tags = ["network", "security"]
+
+  [[rules.conditions]]
+  property = "auto_accept_shared_attachments"
+  condition = "EQUAL"
+  value = "disable"

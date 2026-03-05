@@ -1,0 +1,126 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP IAM and service account security rules based on CIS Google Cloud Platform Benchmark"
+tags = ["cis", "gcp", "iam", "identity", "security"]
+
+[[rules]]
+name = "gcp-iam-no-primitive-roles"
+description = "CIS 1.1 - Ensure that corporate login credentials are used instead of primitive roles"
+level = 2
+object = "google_project_iam_member"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "role", condition = "DIFFERENT", value = "roles/owner" },
+    { property = "role", condition = "DIFFERENT", value = "roles/editor" },
+    { property = "role", condition = "DIFFERENT", value = "roles/viewer" },
+  ]
+
+[[rules]]
+name = "gcp-sa-no-user-managed-keys"
+description = "CIS 1.4 - Ensure that service account has no user-managed keys"
+level = 2
+object = "google_service_account_key"
+
+  [[rules.conditions]]
+  property = "key_algorithm"
+  condition = "EQUAL"
+  value = ""
+
+[[rules]]
+name = "gcp-sa-no-admin-privileges"
+description = "CIS 1.5 - Ensure that service accounts do not have admin privileges"
+level = 3
+object = "google_project_iam_member"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "member", condition = "NOT_STARTS_WITH", value = "serviceAccount:" },
+  ]
+
+[[rules]]
+name = "gcp-iam-no-alluser-bindings"
+description = "CIS 1.12 - Ensure that IAM bindings do not include allUsers or allAuthenticatedUsers"
+level = 3
+object = "google_project_iam_binding"
+
+  [[rules.conditions]]
+  property = "members"
+  condition = "NOT_INCLUDE"
+  value = "allUsers"
+
+  [[rules.conditions]]
+  property = "members"
+  condition = "NOT_INCLUDE"
+  value = "allAuthenticatedUsers"
+
+[[rules]]
+name = "gcp-sa-key-rotation"
+description = "CIS 1.7 - Ensure user-managed service account keys are rotated within 90 days"
+level = 2
+object = "google_service_account_key"
+
+  [[rules.conditions]]
+  property = "valid_after"
+  condition = "DATE_SUP"
+  value = "-90d"
+
+[[rules]]
+name = "gcp-iam-separation-of-duties"
+description = "CIS 1.8 - Ensure that Separation of Duties is enforced for service accounts"
+level = 2
+object = "google_project_iam_member"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "role", condition = "DIFFERENT", value = "roles/iam.serviceAccountAdmin" },
+    { property = "role", condition = "DIFFERENT", value = "roles/iam.serviceAccountUser" },
+  ]
+
+[[rules]]
+name = "gcp-iam-no-domain-wide-delegation"
+description = "Ensure service accounts do not have domain-wide delegation enabled"
+level = 3
+object = "google_service_account"
+
+  [[rules.conditions]]
+  property = "domain_wide_delegation_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "gcp-iam-audit-logging"
+description = "CIS 2.1 - Ensure that Cloud Audit Logging is configured properly"
+level = 2
+object = "google_project_iam_audit_config"
+
+  [[rules.conditions]]
+  property = "service"
+  condition = "EQUAL"
+  value = "allServices"
+
+[[rules]]
+name = "gcp-sa-description-set"
+description = "Ensure service accounts have descriptions for accountability"
+level = 1
+object = "google_service_account"
+
+  [[rules.conditions]]
+  property = "description"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-sa-disabled-unused"
+description = "Ensure unused service accounts are disabled"
+level = 1
+object = "google_service_account"
+
+  [[rules.conditions]]
+  property = "disabled"
+  condition = "EQUAL"
+  value = false

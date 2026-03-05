@@ -1,0 +1,127 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP Compute Engine security rules based on CIS Google Cloud Platform Benchmark"
+tags = ["cis", "gcp", "compute", "security", "vm"]
+
+[[rules]]
+name = "gcp-vm-no-default-service-account"
+description = "CIS 4.1 - Ensure that instances are not configured to use default service accounts"
+level = 2
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "service_account.0.email"
+  condition = "NOT_ENDS_WITH"
+  value = "-compute@developer.gserviceaccount.com"
+
+[[rules]]
+name = "gcp-vm-no-full-api-access"
+description = "CIS 4.2 - Ensure that instances are not configured with full API access scopes"
+level = 2
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "service_account.0.scopes"
+  condition = "NOT_INCLUDE"
+  value = "https://www.googleapis.com/auth/cloud-platform"
+
+[[rules]]
+name = "gcp-vm-no-public-ip"
+description = "CIS 4.9 - Ensure that Compute instances do not have public IP addresses"
+level = 2
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "network_interface.0.access_config"
+  condition = "EQUAL"
+  value = ""
+
+[[rules]]
+name = "gcp-vm-shielded-enabled"
+description = "CIS 4.8 - Ensure Compute instances are launched with Shielded VM enabled"
+level = 2
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "shielded_instance_config.0.enable_secure_boot"
+  condition = "EQUAL"
+  value = true
+
+  [[rules.conditions]]
+  property = "shielded_instance_config.0.enable_vtpm"
+  condition = "EQUAL"
+  value = true
+
+  [[rules.conditions]]
+  property = "shielded_instance_config.0.enable_integrity_monitoring"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "gcp-vm-no-serial-port"
+description = "CIS 4.5 - Ensure Enable connecting to serial ports is not enabled for VM Instance"
+level = 2
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "metadata.serial-port-enable"
+  condition = "DIFFERENT"
+  value = "true"
+
+[[rules]]
+name = "gcp-vm-disk-csek-encryption"
+description = "CIS 4.7 - Ensure VM disks are encrypted with CSEK or CMEK"
+level = 2
+object = "google_compute_disk"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "disk_encryption_key.0.raw_key", condition = "DIFFERENT", value = "" },
+    { property = "disk_encryption_key.0.kms_key_self_link", condition = "DIFFERENT", value = "" },
+  ]
+
+[[rules]]
+name = "gcp-vm-no-ip-forwarding"
+description = "CIS 4.6 - Ensure that IP forwarding is not enabled on Instances"
+level = 2
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "can_ip_forward"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "gcp-vm-os-login-enabled"
+description = "CIS 4.4 - Ensure OS Login is enabled for a project"
+level = 2
+object = "google_compute_project_metadata"
+
+  [[rules.conditions]]
+  property = "metadata.enable-oslogin"
+  condition = "EQUAL"
+  value = "TRUE"
+
+[[rules]]
+name = "gcp-vm-labels-applied"
+description = "Ensure Compute instances have labels for resource management"
+level = 1
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "labels"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-vm-confidential-computing"
+description = "Ensure confidential computing is enabled for sensitive workloads"
+level = 0
+object = "google_compute_instance"
+
+  [[rules.conditions]]
+  property = "confidential_instance_config.0.enable_confidential_compute"
+  condition = "EQUAL"
+  value = true

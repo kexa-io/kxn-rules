@@ -1,0 +1,106 @@
+[metadata]
+version = "1.0.0"
+provider = "cloudflare"
+description = "Cloudflare Zero Trust access policy rules"
+tags = ["cloudflare", "zero-trust", "access", "security"]
+
+[[rules]]
+name = "cf-access-app-has-policy"
+description = "Ensure every Access application has at least one policy attached"
+level = 2
+object = "access_application"
+
+  [[rules.conditions]]
+  property = "policies_count"
+  condition = "SUP"
+  value = 0
+
+[[rules]]
+name = "cf-access-app-session-duration"
+description = "Ensure Access application session duration is 24 hours or less"
+level = 1
+object = "access_application"
+
+  [[rules.conditions]]
+  property = "session_duration"
+  condition = "REGEX"
+  value = "^(\\d+h|\\d+m)$"
+
+[[rules]]
+name = "cf-access-app-no-bypass"
+description = "Ensure no Access application has a Bypass policy as the only rule"
+level = 3
+object = "access_policy"
+
+  [[rules.conditions]]
+  property = "decision"
+  condition = "DIFFERENT"
+  value = "bypass"
+
+[[rules]]
+name = "cf-access-mfa-required"
+description = "Ensure Access policies require MFA for sensitive applications"
+level = 2
+object = "access_policy"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "require.auth_method", condition = "EQUAL", value = "mfa" },
+    { property = "decision", condition = "EQUAL", value = "non_identity" },
+  ]
+
+[[rules]]
+name = "cf-access-idp-configured"
+description = "Ensure at least one identity provider is configured"
+level = 2
+object = "access_identity_provider"
+
+  [[rules.conditions]]
+  property = "type"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cf-access-service-token-expiry"
+description = "Ensure service tokens have an expiration date set"
+level = 1
+object = "access_service_token"
+
+  [[rules.conditions]]
+  property = "expires_at"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "cf-access-app-cors-restricted"
+description = "Ensure CORS settings do not allow all origins"
+level = 1
+object = "access_application"
+
+  [[rules.conditions]]
+  property = "cors_headers.allow_all_origins"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "cf-access-app-http-only-cookie"
+description = "Ensure Access application uses HTTP-only cookies"
+level = 1
+object = "access_application"
+
+  [[rules.conditions]]
+  property = "http_only_cookie_attribute"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "cf-access-gateway-enabled"
+description = "Ensure Cloudflare Gateway is enabled for DNS filtering"
+level = 1
+object = "access_organization"
+
+  [[rules.conditions]]
+  property = "is_ui_read_only"
+  condition = "EQUAL"
+  value = false

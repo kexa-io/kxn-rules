@@ -1,0 +1,115 @@
+[metadata]
+version = "1.0.0"
+provider = "integrations/github"
+description = "GitHub repository security rules for branch protection, secrets, and visibility"
+tags = ["github", "repository", "security", "branch-protection"]
+
+[[rules]]
+name = "github-repo-branch-protection-enabled"
+description = "Ensure default branch has branch protection rules enabled"
+level = 3
+object = "github_branch_protection"
+
+  [[rules.conditions]]
+  property = "pattern"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "github-repo-require-pr-reviews"
+description = "Ensure branch protection requires pull request reviews before merging"
+level = 2
+object = "github_branch_protection"
+
+  [[rules.conditions]]
+  property = "required_pull_request_reviews.0.required_approving_review_count"
+  condition = "SUP_OR_EQUAL"
+  value = 1
+
+[[rules]]
+name = "github-repo-require-status-checks"
+description = "Ensure branch protection requires status checks to pass before merging"
+level = 2
+object = "github_branch_protection"
+
+  [[rules.conditions]]
+  property = "required_status_checks.0.strict"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-repo-no-force-push"
+description = "Ensure force pushes are not allowed on protected branches"
+level = 3
+object = "github_branch_protection"
+
+  [[rules.conditions]]
+  property = "allows_force_pushes"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "github-repo-no-deletion"
+description = "Ensure protected branches cannot be deleted"
+level = 3
+object = "github_branch_protection"
+
+  [[rules.conditions]]
+  property = "allows_deletions"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "github-repo-private-by-default"
+description = "Ensure repositories are not public unless explicitly intended"
+level = 2
+object = "github_repository"
+
+  [[rules.conditions]]
+  property = "visibility"
+  condition = "DIFFERENT"
+  value = "public"
+
+[[rules]]
+name = "github-repo-vulnerability-alerts"
+description = "Ensure vulnerability alerts (Dependabot) are enabled"
+level = 2
+object = "github_repository"
+
+  [[rules.conditions]]
+  property = "vulnerability_alerts"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-repo-delete-branch-on-merge"
+description = "Ensure head branches are automatically deleted after merge"
+level = 1
+object = "github_repository"
+
+  [[rules.conditions]]
+  property = "delete_branch_on_merge"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-repo-require-signed-commits"
+description = "Ensure branch protection requires signed commits"
+level = 1
+object = "github_branch_protection"
+
+  [[rules.conditions]]
+  property = "require_signed_commits"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-repo-require-code-owner-review"
+description = "Ensure branch protection requires code owner review"
+level = 2
+object = "github_branch_protection"
+
+  [[rules.conditions]]
+  property = "required_pull_request_reviews.0.require_code_owner_reviews"
+  condition = "EQUAL"
+  value = true

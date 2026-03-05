@@ -1,0 +1,178 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS CIS Foundations Benchmark - RDS Security Rules"
+tags = ["cis", "aws", "rds", "security", "database"]
+
+# RDS instances must be encrypted at rest
+[[rules]]
+name = "aws-rds-encryption-at-rest"
+description = "CIS 2.3.1 - Ensure RDS instances have encryption at rest enabled"
+level = 2
+object = "aws_db_instance"
+tags = ["cis-2.3.1", "soc2", "hipaa", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "storage_encrypted"
+  condition = "EQUAL"
+  value = true
+
+# RDS instances should not be publicly accessible
+[[rules]]
+name = "aws-rds-no-public-access"
+description = "CIS 2.3.2 - Ensure RDS instances are not publicly accessible"
+level = 3
+object = "aws_db_instance"
+tags = ["cis-2.3.2", "soc2", "hipaa", "pci-dss", "network"]
+
+  [[rules.conditions]]
+  property = "publicly_accessible"
+  condition = "EQUAL"
+  value = false
+
+# RDS automated backups enabled with sufficient retention
+[[rules]]
+name = "aws-rds-backup-retention"
+description = "Ensure RDS automated backup retention period is at least 7 days"
+level = 2
+object = "aws_db_instance"
+tags = ["soc2", "backup", "reliability"]
+
+  [[rules.conditions]]
+  property = "backup_retention_period"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+# RDS multi-AZ deployment
+[[rules]]
+name = "aws-rds-multi-az"
+description = "Ensure RDS instances have Multi-AZ deployment enabled for high availability"
+level = 1
+object = "aws_db_instance"
+tags = ["reliability", "best-practice"]
+
+  [[rules.conditions]]
+  property = "multi_az"
+  condition = "EQUAL"
+  value = true
+
+# RDS minor version auto-upgrade
+[[rules]]
+name = "aws-rds-auto-minor-upgrade"
+description = "Ensure RDS instances have auto minor version upgrade enabled"
+level = 1
+object = "aws_db_instance"
+tags = ["patching", "best-practice"]
+
+  [[rules.conditions]]
+  property = "auto_minor_version_upgrade"
+  condition = "EQUAL"
+  value = true
+
+# RDS should use modern engine versions
+[[rules]]
+name = "aws-rds-no-deprecated-engine"
+description = "Ensure RDS instances are not running deprecated database engine versions"
+level = 2
+object = "aws_db_instance"
+tags = ["patching", "security"]
+
+  [[rules.conditions]]
+  property = "engine_version_deprecated"
+  condition = "EQUAL"
+  value = false
+
+# RDS deletion protection
+[[rules]]
+name = "aws-rds-deletion-protection"
+description = "Ensure RDS instances have deletion protection enabled"
+level = 1
+object = "aws_db_instance"
+tags = ["reliability", "best-practice"]
+
+  [[rules.conditions]]
+  property = "deletion_protection"
+  condition = "EQUAL"
+  value = true
+
+# RDS enhanced monitoring enabled
+[[rules]]
+name = "aws-rds-enhanced-monitoring"
+description = "Ensure RDS instances have enhanced monitoring enabled"
+level = 0
+object = "aws_db_instance"
+tags = ["monitoring", "best-practice"]
+
+  [[rules.conditions]]
+  property = "monitoring_interval"
+  condition = "SUP"
+  value = 0
+
+# RDS should use KMS CMK encryption
+[[rules]]
+name = "aws-rds-kms-encryption"
+description = "Ensure RDS instances are encrypted with a customer-managed KMS key"
+level = 1
+object = "aws_db_instance"
+tags = ["encryption", "best-practice"]
+
+  [[rules.conditions]]
+  property = "kms_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# RDS IAM authentication enabled
+[[rules]]
+name = "aws-rds-iam-auth-enabled"
+description = "Ensure RDS instances have IAM database authentication enabled"
+level = 1
+object = "aws_db_instance"
+tags = ["soc2", "authentication", "best-practice"]
+
+  [[rules.conditions]]
+  property = "iam_database_authentication_enabled"
+  condition = "EQUAL"
+  value = true
+
+# RDS Performance Insights enabled
+[[rules]]
+name = "aws-rds-performance-insights"
+description = "Ensure RDS instances have Performance Insights enabled"
+level = 0
+object = "aws_db_instance"
+tags = ["monitoring", "best-practice"]
+
+  [[rules.conditions]]
+  property = "performance_insights_enabled"
+  condition = "EQUAL"
+  value = true
+
+# RDS should not use default port
+[[rules]]
+name = "aws-rds-no-default-port"
+description = "Ensure RDS instances do not use default database ports (security through obscurity)"
+level = 0
+object = "aws_db_instance"
+tags = ["best-practice"]
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "port", condition = "DIFFERENT", value = 3306 },
+    { property = "port", condition = "DIFFERENT", value = 5432 },
+    { property = "port", condition = "DIFFERENT", value = 1433 },
+    { property = "port", condition = "DIFFERENT", value = 1521 },
+  ]
+
+# RDS copy tags to snapshots
+[[rules]]
+name = "aws-rds-copy-tags-to-snapshots"
+description = "Ensure RDS instances copy tags to snapshots for tracking"
+level = 0
+object = "aws_db_instance"
+tags = ["governance", "best-practice"]
+
+  [[rules.conditions]]
+  property = "copy_tags_to_snapshot"
+  condition = "EQUAL"
+  value = true

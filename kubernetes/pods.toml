@@ -1,0 +1,153 @@
+[metadata]
+version = "1.0.0"
+provider = "kubernetes"
+description = "CIS Kubernetes Benchmark - Pod Security"
+tags = ["cis", "kubernetes", "security", "pods", "nsa-hardening"]
+
+# CIS 5.2.2 - Containers should not run in privileged mode
+[[rules]]
+name = "k8s-pod-no-privileged"
+description = "CIS 5.2.2 - Ensure containers do not run in privileged mode"
+level = 3
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.securityContext.privileged"
+  condition = "DIFFERENT"
+  value = true
+
+# CIS 5.2.6 - Containers should not run as root
+[[rules]]
+name = "k8s-pod-no-run-as-root"
+description = "CIS 5.2.6 - Ensure containers do not run with runAsUser=0"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.securityContext.runAsNonRoot"
+  condition = "EQUAL"
+  value = true
+
+# CIS 5.2.3 - Containers should not allow privilege escalation
+[[rules]]
+name = "k8s-pod-no-privilege-escalation"
+description = "CIS 5.2.3 - Ensure allowPrivilegeEscalation is set to false"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.securityContext.allowPrivilegeEscalation"
+  condition = "EQUAL"
+  value = false
+
+# CIS 5.2.4 - Containers should not share host PID namespace
+[[rules]]
+name = "k8s-pod-no-host-pid"
+description = "CIS 5.2.4 - Ensure pods do not share host PID namespace"
+level = 3
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.hostPID"
+  condition = "DIFFERENT"
+  value = true
+
+# CIS 5.2.4 - Containers should not share host IPC namespace
+[[rules]]
+name = "k8s-pod-no-host-ipc"
+description = "CIS 5.2.4 - Ensure pods do not share host IPC namespace"
+level = 3
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.hostIPC"
+  condition = "DIFFERENT"
+  value = true
+
+# CIS 5.2.5 - Containers should not share host network namespace
+[[rules]]
+name = "k8s-pod-no-host-network"
+description = "CIS 5.2.5 - Ensure pods do not share host network namespace"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.hostNetwork"
+  condition = "DIFFERENT"
+  value = true
+
+# NSA - Containers should use read-only root filesystem
+[[rules]]
+name = "k8s-pod-readonly-rootfs"
+description = "NSA Hardening - Ensure containers use read-only root filesystem"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.securityContext.readOnlyRootFilesystem"
+  condition = "EQUAL"
+  value = true
+
+# CIS 5.2.7 - Containers should drop all capabilities
+[[rules]]
+name = "k8s-pod-drop-all-capabilities"
+description = "CIS 5.2.7 - Ensure containers drop ALL capabilities"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.securityContext.capabilities.drop"
+  condition = "INCLUDE"
+  value = "ALL"
+
+# CIS 5.2.8 - Containers should not add NET_RAW capability
+[[rules]]
+name = "k8s-pod-no-net-raw"
+description = "CIS 5.2.8 - Ensure containers do not add NET_RAW capability"
+level = 2
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.containers.0.securityContext.capabilities.add"
+  condition = "NOT_INCLUDE"
+  value = "NET_RAW"
+
+# NSA - Containers should have resource limits defined
+[[rules]]
+name = "k8s-pod-resource-limits"
+description = "NSA Hardening - Ensure containers have CPU and memory limits"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "spec.containers.0.resources.limits.memory", condition = "DIFFERENT", value = "" },
+    { property = "spec.containers.0.resources.limits.cpu", condition = "DIFFERENT", value = "" },
+  ]
+
+# NSA - Containers should have liveness and readiness probes
+[[rules]]
+name = "k8s-pod-health-probes"
+description = "NSA Hardening - Ensure containers define liveness and readiness probes"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "spec.containers.0.livenessProbe", condition = "DIFFERENT", value = "" },
+    { property = "spec.containers.0.readinessProbe", condition = "DIFFERENT", value = "" },
+  ]
+
+# CIS 5.2.9 - Containers should use non-root group
+[[rules]]
+name = "k8s-pod-run-as-group"
+description = "CIS 5.2.9 - Ensure runAsGroup is set to non-zero value"
+level = 1
+object = "pod"
+
+  [[rules.conditions]]
+  property = "spec.securityContext.runAsGroup"
+  condition = "SUP"
+  value = 0

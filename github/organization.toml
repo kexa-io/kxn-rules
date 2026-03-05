@@ -1,0 +1,124 @@
+[metadata]
+version = "1.0.0"
+provider = "integrations/github"
+description = "GitHub organization security settings, 2FA enforcement, and permission rules"
+tags = ["github", "organization", "security", "2fa", "permissions"]
+
+[[rules]]
+name = "github-org-2fa-required"
+description = "Ensure two-factor authentication is required for all organization members"
+level = 3
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  property = "two_factor_requirement"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-org-default-repo-permission"
+description = "Ensure default repository permission is set to read or none"
+level = 2
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "default_repository_permission", condition = "EQUAL", value = "read" },
+    { property = "default_repository_permission", condition = "EQUAL", value = "none" },
+  ]
+
+[[rules]]
+name = "github-org-no-public-members"
+description = "Ensure organization membership visibility is not set to public by default"
+level = 1
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  property = "members_can_create_public_repositories"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "github-org-admin-mfa"
+description = "Ensure all organization admins have 2FA enabled"
+level = 3
+object = "github_membership"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "role", condition = "DIFFERENT", value = "admin" },
+    { property = "two_factor_enabled", condition = "EQUAL", value = true },
+  ]
+
+[[rules]]
+name = "github-org-no-outside-collaborators"
+description = "Ensure outside collaborators are reviewed and minimized"
+level = 1
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  property = "members_can_invite_outside_collaborators"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "github-org-actions-restricted"
+description = "Ensure GitHub Actions permissions are restricted to approved actions"
+level = 2
+object = "github_actions_organization_permissions"
+
+  [[rules.conditions]]
+  property = "allowed_actions"
+  condition = "DIFFERENT"
+  value = "all"
+
+[[rules]]
+name = "github-org-no-public-pages"
+description = "Ensure members cannot create public GitHub Pages sites"
+level = 1
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  property = "members_can_create_public_pages"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "github-org-dependabot-security-updates"
+description = "Ensure Dependabot security updates are enabled at the organization level"
+level = 2
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  property = "dependabot_security_updates_enabled_for_new_repositories"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-org-secret-scanning"
+description = "Ensure secret scanning is enabled at the organization level"
+level = 3
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  property = "advanced_security_enabled_for_new_repositories"
+  condition = "EQUAL"
+  value = true
+
+  [[rules.conditions]]
+  property = "secret_scanning_enabled_for_new_repositories"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-org-no-forking-private"
+description = "Ensure forking is disabled for private repositories"
+level = 2
+object = "github_organization_settings"
+
+  [[rules.conditions]]
+  property = "members_can_fork_private_repositories"
+  condition = "EQUAL"
+  value = false

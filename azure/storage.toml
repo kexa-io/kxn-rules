@@ -1,0 +1,120 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure Storage account security rules based on CIS Microsoft Azure Foundations Benchmark"
+tags = ["cis", "azure", "storage", "security", "encryption"]
+
+[[rules]]
+name = "azure-storage-https-only"
+description = "CIS 3.1 - Ensure that Secure transfer required is set to Enabled"
+level = 3
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "enable_https_traffic_only"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-storage-encryption-enabled"
+description = "CIS 3.2 - Ensure that storage account encryption uses CMK"
+level = 2
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "customer_managed_key"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-storage-logging-enabled"
+description = "CIS 3.3 - Ensure Storage logging is enabled for Blob service"
+level = 2
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "blob_properties.0.delete_retention_policy.0.days"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+[[rules]]
+name = "azure-storage-no-public-access"
+description = "CIS 3.5 - Ensure that public access is disabled for storage accounts"
+level = 3
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "allow_nested_items_to_be_public"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-storage-default-deny"
+description = "CIS 3.6 - Ensure default network access rule for Storage Accounts is Deny"
+level = 2
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "network_rules.0.default_action"
+  condition = "EQUAL"
+  value = "Deny"
+
+[[rules]]
+name = "azure-storage-trusted-services"
+description = "CIS 3.7 - Ensure trusted Microsoft services are enabled for storage"
+level = 1
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "network_rules.0.bypass"
+  condition = "INCLUDE"
+  value = "AzureServices"
+
+[[rules]]
+name = "azure-storage-soft-delete-enabled"
+description = "CIS 3.8 - Ensure soft delete is enabled for Azure Storage blobs"
+level = 2
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "blob_properties.0.delete_retention_policy.0.days"
+  condition = "SUP_OR_EQUAL"
+  value = 7
+
+[[rules]]
+name = "azure-storage-min-tls-version"
+description = "CIS 3.9 - Ensure minimum TLS version is set to 1.2"
+level = 3
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "min_tls_version"
+  condition = "EQUAL"
+  value = "TLS1_2"
+
+[[rules]]
+name = "azure-storage-private-endpoint"
+description = "Ensure storage accounts use private endpoints for secure connectivity"
+level = 2
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "network_rules.0.default_action"
+  condition = "EQUAL"
+  value = "Deny"
+
+  [[rules.conditions]]
+  property = "network_rules.0.private_link_access"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-storage-infrastructure-encryption"
+description = "Ensure infrastructure encryption is enabled for double encryption"
+level = 1
+object = "azurerm_storage_account"
+
+  [[rules.conditions]]
+  property = "infrastructure_encryption_enabled"
+  condition = "EQUAL"
+  value = true

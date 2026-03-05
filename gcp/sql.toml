@@ -1,0 +1,120 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP Cloud SQL security rules based on CIS Google Cloud Platform Benchmark"
+tags = ["cis", "gcp", "sql", "database", "security"]
+
+[[rules]]
+name = "gcp-sql-no-public-ip"
+description = "CIS 6.6 - Ensure that Cloud SQL database instances do not have public IPs"
+level = 3
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.ip_configuration.0.ipv4_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "gcp-sql-no-authorize-all"
+description = "CIS 6.5 - Ensure that Cloud SQL database instances are not open to the world"
+level = 3
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.ip_configuration.0.authorized_networks"
+  condition = "NOT_INCLUDE"
+  value = "0.0.0.0/0"
+
+[[rules]]
+name = "gcp-sql-ssl-required"
+description = "CIS 6.1 - Ensure that Cloud SQL database instances require all incoming connections to use SSL"
+level = 3
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.ip_configuration.0.require_ssl"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "gcp-sql-backup-enabled"
+description = "CIS 6.7 - Ensure that Cloud SQL database instances are configured with automated backups"
+level = 2
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.backup_configuration.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+  [[rules.conditions]]
+  property = "settings.0.backup_configuration.0.point_in_time_recovery_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "gcp-sql-no-default-database-flags"
+description = "CIS 6.2 - Ensure that the log_checkpoints database flag is set to on for PostgreSQL"
+level = 2
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.database_flags"
+  condition = "INCLUDE"
+  value = "log_checkpoints"
+
+[[rules]]
+name = "gcp-sql-log-disconnections"
+description = "CIS 6.2.2 - Ensure that the log_disconnections flag is set to on for PostgreSQL"
+level = 2
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.database_flags"
+  condition = "INCLUDE"
+  value = "log_disconnections"
+
+[[rules]]
+name = "gcp-sql-cmek-encryption"
+description = "Ensure Cloud SQL instances are encrypted with CMEK"
+level = 2
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "encryption_key_name"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-sql-maintenance-window"
+description = "Ensure Cloud SQL instances have a maintenance window configured"
+level = 1
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.maintenance_window"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-sql-high-availability"
+description = "Ensure Cloud SQL instances are configured for high availability"
+level = 1
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.availability_type"
+  condition = "EQUAL"
+  value = "REGIONAL"
+
+[[rules]]
+name = "gcp-sql-private-network"
+description = "Ensure Cloud SQL instances use private networking"
+level = 2
+object = "google_sql_database_instance"
+
+  [[rules.conditions]]
+  property = "settings.0.ip_configuration.0.private_network"
+  condition = "DIFFERENT"
+  value = ""

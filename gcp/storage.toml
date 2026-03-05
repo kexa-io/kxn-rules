@@ -1,0 +1,120 @@
+[metadata]
+version = "1.0.0"
+provider = "google"
+description = "GCP Cloud Storage bucket security rules based on CIS Google Cloud Platform Benchmark"
+tags = ["cis", "gcp", "storage", "bucket", "security"]
+
+[[rules]]
+name = "gcp-storage-no-public-access"
+description = "CIS 5.1 - Ensure that Cloud Storage bucket is not publicly accessible"
+level = 3
+object = "google_storage_bucket_iam_member"
+
+  [[rules.conditions]]
+  property = "member"
+  condition = "DIFFERENT"
+  value = "allUsers"
+
+  [[rules.conditions]]
+  property = "member"
+  condition = "DIFFERENT"
+  value = "allAuthenticatedUsers"
+
+[[rules]]
+name = "gcp-storage-uniform-access"
+description = "CIS 5.2 - Ensure that Cloud Storage buckets have uniform bucket-level access enabled"
+level = 2
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "uniform_bucket_level_access"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "gcp-storage-versioning-enabled"
+description = "Ensure Cloud Storage buckets have versioning enabled for data protection"
+level = 2
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "versioning.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "gcp-storage-logging-enabled"
+description = "Ensure Cloud Storage buckets have access logging enabled"
+level = 2
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "logging.0.log_bucket"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-storage-cmek-encryption"
+description = "CIS 5.3 - Ensure Cloud Storage buckets are encrypted with CMEK"
+level = 2
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "encryption.0.default_kms_key_name"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-storage-lifecycle-policy"
+description = "Ensure Cloud Storage buckets have lifecycle management policies configured"
+level = 1
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "lifecycle_rule"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-storage-retention-policy"
+description = "Ensure Cloud Storage buckets have retention policies for compliance"
+level = 1
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "retention_policy.0.retention_period"
+  condition = "SUP"
+  value = 0
+
+[[rules]]
+name = "gcp-storage-labels-applied"
+description = "Ensure Cloud Storage buckets have labels for resource management"
+level = 1
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "labels"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "gcp-storage-no-legacy-acl"
+description = "Ensure buckets do not use legacy ACLs when uniform access is available"
+level = 2
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "uniform_bucket_level_access"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "gcp-storage-public-prevention"
+description = "Ensure public access prevention is enforced on buckets"
+level = 2
+object = "google_storage_bucket"
+
+  [[rules.conditions]]
+  property = "public_access_prevention"
+  condition = "EQUAL"
+  value = "enforced"

@@ -1,0 +1,205 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS CIS Foundations Benchmark - CloudTrail, CloudWatch, and Logging Rules"
+tags = ["cis", "aws", "cloudtrail", "cloudwatch", "logging", "security"]
+
+# CIS 3.1 - Ensure CloudTrail is enabled in all regions
+[[rules]]
+name = "aws-cloudtrail-enabled-all-regions"
+description = "CIS 3.1 - Ensure CloudTrail is enabled in all regions"
+level = 3
+object = "aws_cloudtrail"
+tags = ["cis-3.1", "soc2", "hipaa", "pci-dss", "audit"]
+
+  [[rules.conditions]]
+  property = "is_multi_region_trail"
+  condition = "EQUAL"
+  value = true
+
+  [[rules.conditions]]
+  property = "is_logging"
+  condition = "EQUAL"
+  value = true
+
+# CIS 3.2 - Ensure CloudTrail log file validation is enabled
+[[rules]]
+name = "aws-cloudtrail-log-validation"
+description = "CIS 3.2 - Ensure CloudTrail log file validation is enabled"
+level = 2
+object = "aws_cloudtrail"
+tags = ["cis-3.2", "soc2", "hipaa", "audit"]
+
+  [[rules.conditions]]
+  property = "enable_log_file_validation"
+  condition = "EQUAL"
+  value = true
+
+# CIS 3.4 - Ensure CloudTrail trails are integrated with CloudWatch Logs
+[[rules]]
+name = "aws-cloudtrail-cloudwatch-integration"
+description = "CIS 3.4 - Ensure CloudTrail trails are integrated with CloudWatch Logs"
+level = 2
+object = "aws_cloudtrail"
+tags = ["cis-3.4", "soc2", "hipaa", "monitoring"]
+
+  [[rules.conditions]]
+  property = "cloud_watch_logs_group_arn"
+  condition = "DIFFERENT"
+  value = ""
+
+# CIS 3.5 - Ensure AWS Config is enabled in all regions
+[[rules]]
+name = "aws-config-enabled-all-regions"
+description = "CIS 3.5 - Ensure AWS Config is enabled in all regions"
+level = 2
+object = "aws_config_configuration_recorder_status"
+tags = ["cis-3.5", "soc2", "hipaa", "audit"]
+
+  [[rules.conditions]]
+  property = "is_enabled"
+  condition = "EQUAL"
+  value = true
+
+# CIS 3.6 - Ensure S3 bucket for CloudTrail logs has access logging enabled
+[[rules]]
+name = "aws-cloudtrail-s3-logging"
+description = "CIS 3.6 - Ensure S3 bucket access logging is enabled on the CloudTrail S3 bucket"
+level = 2
+object = "aws_cloudtrail"
+tags = ["cis-3.6", "soc2", "audit"]
+
+  [[rules.conditions]]
+  property = "s3_bucket_logging_enabled"
+  condition = "EQUAL"
+  value = true
+
+# CIS 3.7 - Ensure CloudTrail logs are encrypted at rest using KMS CMK
+[[rules]]
+name = "aws-cloudtrail-kms-encryption"
+description = "CIS 3.7 - Ensure CloudTrail logs are encrypted at rest using KMS CMKs"
+level = 2
+object = "aws_cloudtrail"
+tags = ["cis-3.7", "soc2", "hipaa", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "kms_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# CIS 4.1 - Ensure a log metric filter and alarm exist for unauthorized API calls
+[[rules]]
+name = "aws-cloudwatch-alarm-unauthorized-api"
+description = "CIS 4.1 - Ensure a log metric filter and alarm exist for unauthorized API calls"
+level = 2
+object = "aws_cloudwatch_log_metric_filter"
+tags = ["cis-4.1", "soc2", "monitoring"]
+
+  [[rules.conditions]]
+  property = "pattern"
+  condition = "INCLUDE"
+  value = "UnauthorizedAccess"
+
+# CIS 4.3 - Ensure a log metric filter and alarm exist for root account usage
+[[rules]]
+name = "aws-cloudwatch-alarm-root-usage"
+description = "CIS 4.3 - Ensure a log metric filter and alarm exist for usage of 'root' account"
+level = 2
+object = "aws_cloudwatch_log_metric_filter"
+tags = ["cis-4.3", "soc2", "hipaa", "monitoring"]
+
+  [[rules.conditions]]
+  property = "pattern"
+  condition = "INCLUDE"
+  value = "Root"
+
+# CIS 4.4 - Ensure a log metric filter and alarm exist for IAM policy changes
+[[rules]]
+name = "aws-cloudwatch-alarm-iam-changes"
+description = "CIS 4.4 - Ensure a log metric filter and alarm exist for IAM policy changes"
+level = 2
+object = "aws_cloudwatch_log_metric_filter"
+tags = ["cis-4.4", "soc2", "monitoring"]
+
+  [[rules.conditions]]
+  property = "pattern"
+  condition = "INCLUDE"
+  value = "IAMPolicy"
+
+# CIS 4.5 - Ensure a log metric filter and alarm exist for CloudTrail config changes
+[[rules]]
+name = "aws-cloudwatch-alarm-cloudtrail-changes"
+description = "CIS 4.5 - Ensure a log metric filter and alarm exist for CloudTrail configuration changes"
+level = 2
+object = "aws_cloudwatch_log_metric_filter"
+tags = ["cis-4.5", "soc2", "monitoring"]
+
+  [[rules.conditions]]
+  property = "pattern"
+  condition = "INCLUDE"
+  value = "CloudTrail"
+
+# CIS 4.8 - Ensure a log metric filter and alarm exist for S3 bucket policy changes
+[[rules]]
+name = "aws-cloudwatch-alarm-s3-policy-changes"
+description = "CIS 4.8 - Ensure a log metric filter and alarm exist for S3 bucket policy changes"
+level = 2
+object = "aws_cloudwatch_log_metric_filter"
+tags = ["cis-4.8", "soc2", "monitoring"]
+
+  [[rules.conditions]]
+  property = "pattern"
+  condition = "INCLUDE"
+  value = "S3BucketPolicy"
+
+# CIS 4.12 - Ensure a log metric filter and alarm exist for network gateway changes
+[[rules]]
+name = "aws-cloudwatch-alarm-network-gw-changes"
+description = "CIS 4.12 - Ensure a log metric filter and alarm exist for network gateway changes"
+level = 2
+object = "aws_cloudwatch_log_metric_filter"
+tags = ["cis-4.12", "soc2", "monitoring"]
+
+  [[rules.conditions]]
+  property = "pattern"
+  condition = "INCLUDE"
+  value = "NetworkGateway"
+
+# CloudWatch log group retention
+[[rules]]
+name = "aws-cloudwatch-log-retention"
+description = "Ensure CloudWatch Log Groups have a retention period of at least 365 days"
+level = 1
+object = "aws_cloudwatch_log_group"
+tags = ["soc2", "hipaa", "audit"]
+
+  [[rules.conditions]]
+  property = "retention_in_days"
+  condition = "SUP_OR_EQUAL"
+  value = 365
+
+# CloudWatch log group encryption
+[[rules]]
+name = "aws-cloudwatch-log-encryption"
+description = "Ensure CloudWatch Log Groups are encrypted with KMS"
+level = 1
+object = "aws_cloudwatch_log_group"
+tags = ["soc2", "hipaa", "encryption"]
+
+  [[rules.conditions]]
+  property = "kms_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# GuardDuty enabled
+[[rules]]
+name = "aws-guardduty-enabled"
+description = "Ensure Amazon GuardDuty is enabled for threat detection"
+level = 2
+object = "aws_guardduty_detector"
+tags = ["soc2", "security", "monitoring"]
+
+  [[rules.conditions]]
+  property = "status"
+  condition = "EQUAL"
+  value = "ENABLED"

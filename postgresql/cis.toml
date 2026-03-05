@@ -1,0 +1,119 @@
+[metadata]
+version = "1.0.0"
+provider = "postgresql"
+description = "CIS Benchmark for PostgreSQL — server settings, security, and access control"
+tags = ["cis", "postgresql", "database", "security"]
+
+[[rules]]
+name = "pg-cis-ssl-enabled"
+description = "CIS 6.8 - Ensure SSL is enabled"
+level = 2
+object = "settings"
+
+  [[rules.conditions]]
+  property = "ssl"
+  condition = "EQUAL"
+  value = "on"
+
+[[rules]]
+name = "pg-cis-log-connections"
+description = "CIS 6.2 - Ensure log_connections is enabled"
+level = 1
+object = "settings"
+
+  [[rules.conditions]]
+  property = "log_connections"
+  condition = "EQUAL"
+  value = "on"
+
+[[rules]]
+name = "pg-cis-log-disconnections"
+description = "CIS 6.3 - Ensure log_disconnections is enabled"
+level = 1
+object = "settings"
+
+  [[rules.conditions]]
+  property = "log_disconnections"
+  condition = "EQUAL"
+  value = "on"
+
+[[rules]]
+name = "pg-cis-password-encryption"
+description = "CIS 8.2 - Ensure password_encryption is set to scram-sha-256"
+level = 2
+object = "settings"
+
+  [[rules.conditions]]
+  property = "password_encryption"
+  condition = "EQUAL"
+  value = "scram-sha-256"
+
+[[rules]]
+name = "pg-cis-log-statement"
+description = "CIS 6.7 - Ensure log_statement is set to ddl or all"
+level = 1
+object = "settings"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "log_statement", condition = "EQUAL", value = "ddl" },
+    { property = "log_statement", condition = "EQUAL", value = "all" },
+  ]
+
+[[rules]]
+name = "pg-cis-log-duration"
+description = "CIS 6.4 - Ensure log_duration is enabled for slow query tracking"
+level = 0
+object = "settings"
+
+  [[rules.conditions]]
+  property = "log_min_duration_statement"
+  condition = "SUP_OR_EQUAL"
+  value = 0
+
+[[rules]]
+name = "pg-cis-no-superuser-roles"
+description = "Ensure non-system roles do not have superuser privilege"
+level = 2
+object = "roles"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "rolsuper", condition = "EQUAL", value = false },
+    { property = "rolname", condition = "EQUAL", value = "postgres" },
+  ]
+
+[[rules]]
+name = "pg-cis-log-checkpoints"
+description = "CIS 6.5 - Ensure log_checkpoints is enabled"
+level = 1
+object = "settings"
+
+  [[rules.conditions]]
+  property = "log_checkpoints"
+  condition = "EQUAL"
+  value = "on"
+
+[[rules]]
+name = "pg-cis-pgaudit-enabled"
+description = "Ensure pgaudit extension is loaded for audit logging"
+level = 1
+object = "settings"
+
+  [[rules.conditions]]
+  property = "shared_preload_libraries"
+  condition = "INCLUDE"
+  value = "pgaudit"
+
+[[rules]]
+name = "pg-cis-listen-address"
+description = "Ensure listen_addresses is not set to wildcard (*)"
+level = 1
+object = "settings"
+
+  [[rules.conditions]]
+  property = "listen_addresses"
+  condition = "DIFFERENT"
+  value = "*"

@@ -1,0 +1,140 @@
+[metadata]
+version = "1.0.0"
+provider = "azurerm"
+description = "Azure Network security rules based on CIS Microsoft Azure Foundations Benchmark"
+tags = ["cis", "azure", "network", "nsg", "security"]
+
+[[rules]]
+name = "azure-nsg-no-inbound-all"
+description = "CIS 6.1 - Ensure that NSG does not allow inbound traffic from 0.0.0.0/0 to any port"
+level = 3
+object = "azurerm_network_security_rule"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "direction", condition = "EQUAL", value = "Inbound" },
+    { property = "access", condition = "EQUAL", value = "Allow" },
+    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
+  ]
+
+[[rules]]
+name = "azure-nsg-no-ssh-from-internet"
+description = "CIS 6.2 - Ensure that SSH access is restricted from the internet"
+level = 3
+object = "azurerm_network_security_rule"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "destination_port_range", condition = "DIFFERENT", value = "22" },
+    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
+    { property = "access", condition = "EQUAL", value = "Deny" },
+  ]
+
+[[rules]]
+name = "azure-nsg-no-rdp-from-internet"
+description = "CIS 6.3 - Ensure that RDP access is restricted from the internet"
+level = 3
+object = "azurerm_network_security_rule"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "destination_port_range", condition = "DIFFERENT", value = "3389" },
+    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
+    { property = "access", condition = "EQUAL", value = "Deny" },
+  ]
+
+[[rules]]
+name = "azure-nsg-no-udp-from-internet"
+description = "CIS 6.4 - Ensure that UDP access is restricted from the internet"
+level = 2
+object = "azurerm_network_security_rule"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "protocol", condition = "DIFFERENT", value = "Udp" },
+    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
+    { property = "access", condition = "EQUAL", value = "Deny" },
+  ]
+
+[[rules]]
+name = "azure-public-ip-has-ddos-protection"
+description = "Ensure DDoS protection is associated with public IP addresses"
+level = 2
+object = "azurerm_public_ip"
+
+  [[rules.conditions]]
+  property = "ddos_protection_mode"
+  condition = "EQUAL"
+  value = "Enabled"
+
+[[rules]]
+name = "azure-network-watcher-enabled"
+description = "CIS 6.5 - Ensure that Network Watcher is enabled"
+level = 2
+object = "azurerm_network_watcher"
+
+  [[rules.conditions]]
+  property = "id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-nsg-flow-logs-enabled"
+description = "CIS 6.6 - Ensure that NSG Flow Logs are enabled"
+level = 2
+object = "azurerm_network_watcher_flow_log"
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true
+
+  [[rules.conditions]]
+  property = "retention_policy.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+  [[rules.conditions]]
+  property = "retention_policy.0.days"
+  condition = "SUP_OR_EQUAL"
+  value = 90
+
+[[rules]]
+name = "azure-vnet-has-nsg"
+description = "Ensure all subnets have an associated Network Security Group"
+level = 2
+object = "azurerm_subnet"
+
+  [[rules.conditions]]
+  property = "network_security_group_id"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-public-ip-has-tags"
+description = "Ensure public IP addresses are tagged for inventory and cost management"
+level = 1
+object = "azurerm_public_ip"
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "azure-nsg-no-sql-from-internet"
+description = "Ensure SQL Server port 1433 is not exposed to the internet"
+level = 3
+object = "azurerm_network_security_rule"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "destination_port_range", condition = "DIFFERENT", value = "1433" },
+    { property = "source_address_prefix", condition = "DIFFERENT", value = "*" },
+    { property = "access", condition = "EQUAL", value = "Deny" },
+  ]

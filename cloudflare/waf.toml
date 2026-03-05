@@ -1,0 +1,113 @@
+[metadata]
+version = "1.0.0"
+provider = "cloudflare"
+description = "Cloudflare WAF and firewall security rules"
+tags = ["cloudflare", "waf", "firewall", "security"]
+
+[[rules]]
+name = "cf-waf-managed-rules-enabled"
+description = "Ensure Cloudflare Managed Ruleset is enabled"
+level = 2
+object = "waf_ruleset"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "kind", condition = "EQUAL", value = "managed" },
+    { property = "enabled", condition = "EQUAL", value = true },
+  ]
+
+[[rules]]
+name = "cf-waf-owasp-ruleset-enabled"
+description = "Ensure OWASP Core Ruleset is enabled and set to high sensitivity"
+level = 2
+object = "waf_ruleset"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "name", condition = "INCLUDE", value = "OWASP" },
+    { property = "enabled", condition = "EQUAL", value = true },
+  ]
+
+[[rules]]
+name = "cf-waf-rate-limiting-configured"
+description = "Ensure rate limiting rules are configured for the zone"
+level = 1
+object = "rate_limit"
+
+  [[rules.conditions]]
+  property = "threshold"
+  condition = "SUP"
+  value = 0
+
+[[rules]]
+name = "cf-firewall-no-allow-all"
+description = "Ensure no firewall rule allows all traffic unconditionally"
+level = 3
+object = "firewall_rule"
+
+  [[rules.conditions]]
+  property = "filter.expression"
+  condition = "DIFFERENT"
+  value = "true"
+
+[[rules]]
+name = "cf-waf-security-level"
+description = "Ensure zone security level is at least medium"
+level = 1
+object = "zone_settings"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "security_level", condition = "EQUAL", value = "medium" },
+    { property = "security_level", condition = "EQUAL", value = "high" },
+    { property = "security_level", condition = "EQUAL", value = "under_attack" },
+  ]
+
+[[rules]]
+name = "cf-waf-challenge-passage"
+description = "Ensure challenge passage TTL is 30 minutes or less"
+level = 0
+object = "zone_settings"
+
+  [[rules.conditions]]
+  property = "challenge_ttl"
+  condition = "INF_OR_EQUAL"
+  value = 1800
+
+[[rules]]
+name = "cf-waf-ip-access-no-wide-allow"
+description = "Ensure IP access rules do not whitelist entire /8 or larger blocks"
+level = 2
+object = "ip_access_rule"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "configuration.target", condition = "DIFFERENT", value = "ip_range" },
+    { property = "configuration.value", condition = "NOT_INCLUDE", value = "/8" },
+  ]
+
+[[rules]]
+name = "cf-waf-browser-integrity-check"
+description = "Ensure Browser Integrity Check is enabled"
+level = 1
+object = "zone_settings"
+
+  [[rules.conditions]]
+  property = "browser_check"
+  condition = "EQUAL"
+  value = "on"
+
+[[rules]]
+name = "cf-waf-hotlink-protection"
+description = "Ensure Hotlink Protection is enabled to prevent bandwidth theft"
+level = 0
+object = "zone_settings"
+
+  [[rules.conditions]]
+  property = "hotlink_protection"
+  condition = "EQUAL"
+  value = "on"

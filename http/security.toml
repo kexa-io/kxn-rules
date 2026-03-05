@@ -1,0 +1,119 @@
+[metadata]
+version = "1.0.0"
+provider = "http"
+description = "HTTP security checks — TLS, headers, status codes, best practices"
+tags = ["http", "web", "security", "tls", "headers"]
+
+[[rules]]
+name = "http-tls-certificate-present"
+description = "Ensure HTTPS endpoint has a valid TLS certificate"
+level = 2
+object = "request"
+
+  [[rules.conditions]]
+  property = "certificate"
+  condition = "DIFFERENT"
+  value = "null"
+
+[[rules]]
+name = "http-tls-certificate-not-expired"
+description = "Ensure TLS certificate expiry is more than 30 days away"
+level = 2
+object = "request"
+
+  [[rules.conditions]]
+  property = "certificate.days_remaining"
+  condition = "SUP"
+  value = 30
+
+[[rules]]
+name = "http-status-2xx"
+description = "Ensure HTTP response returns a 2xx status code"
+level = 1
+object = "request"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "code", condition = "SUP_OR_EQUAL", value = 200 },
+    { property = "code", condition = "INF", value = 300 },
+  ]
+
+[[rules]]
+name = "http-hsts-header"
+description = "Ensure Strict-Transport-Security header is present with max-age"
+level = 2
+object = "request"
+
+  [[rules.conditions]]
+  property = "headers.strict-transport-security"
+  condition = "REGEX"
+  value = "max-age=\\d+"
+
+[[rules]]
+name = "http-x-frame-options"
+description = "Ensure X-Frame-Options header is DENY or SAMEORIGIN"
+level = 1
+object = "request"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "headers.x-frame-options", condition = "EQUAL", value = "DENY" },
+    { property = "headers.x-frame-options", condition = "EQUAL", value = "SAMEORIGIN" },
+  ]
+
+[[rules]]
+name = "http-x-content-type-options"
+description = "Ensure X-Content-Type-Options is set to nosniff"
+level = 1
+object = "request"
+
+  [[rules.conditions]]
+  property = "headers.x-content-type-options"
+  condition = "EQUAL"
+  value = "nosniff"
+
+[[rules]]
+name = "http-csp-header"
+description = "Ensure Content-Security-Policy header is present"
+level = 1
+object = "request"
+
+  [[rules.conditions]]
+  property = "headers.content-security-policy"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "http-no-server-version"
+description = "Ensure Server header does not leak version information"
+level = 1
+object = "request"
+
+  [[rules.conditions]]
+  property = "headers.server"
+  condition = "NOT_INCLUDE"
+  value = "/"
+
+[[rules]]
+name = "http-response-time"
+description = "Ensure response time is under 5000ms"
+level = 1
+object = "request"
+
+  [[rules.conditions]]
+  property = "delays"
+  condition = "INF"
+  value = 5000
+
+[[rules]]
+name = "http-referrer-policy"
+description = "Ensure Referrer-Policy header is set"
+level = 0
+object = "request"
+
+  [[rules.conditions]]
+  property = "headers.referrer-policy"
+  condition = "DIFFERENT"
+  value = ""

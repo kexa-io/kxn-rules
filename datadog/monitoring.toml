@@ -1,0 +1,117 @@
+[metadata]
+version = "1.0.0"
+provider = "datadog"
+description = "Datadog monitoring and SLO compliance rules"
+tags = ["datadog", "monitoring", "slo", "observability"]
+
+[[rules]]
+name = "dd-monitor-has-notification"
+description = "Ensure every monitor has a notification channel configured"
+level = 1
+object = "monitor"
+
+  [[rules.conditions]]
+  property = "message"
+  condition = "REGEX"
+  value = "@(slack|pagerduty|opsgenie|email|webhook)"
+
+[[rules]]
+name = "dd-monitor-no-silenced"
+description = "Ensure monitors are not permanently silenced"
+level = 1
+object = "monitor"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "overall_state", condition = "DIFFERENT", value = "No Data" },
+    { property = "options.silenced", condition = "EQUAL", value = "" },
+  ]
+
+[[rules]]
+name = "dd-monitor-renotify-interval"
+description = "Ensure monitors have a renotification interval set (non-zero)"
+level = 0
+object = "monitor"
+
+  [[rules.conditions]]
+  property = "options.renotify_interval"
+  condition = "SUP"
+  value = 0
+
+[[rules]]
+name = "dd-monitor-has-tags"
+description = "Ensure monitors are tagged for proper categorization"
+level = 0
+object = "monitor"
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "dd-monitor-evaluation-delay"
+description = "Ensure cloud monitors have an evaluation delay to account for metric lag"
+level = 0
+object = "monitor"
+
+  [[rules.conditions]]
+  property = "options.evaluation_delay"
+  condition = "SUP"
+  value = 0
+
+[[rules]]
+name = "dd-slo-target-above-99"
+description = "Ensure SLO targets are at least 99%"
+level = 1
+object = "slo"
+
+  [[rules.conditions]]
+  property = "target_threshold"
+  condition = "SUP_OR_EQUAL"
+  value = 99.0
+
+[[rules]]
+name = "dd-slo-has-warning-threshold"
+description = "Ensure SLOs have a warning threshold configured"
+level = 0
+object = "slo"
+
+  [[rules.conditions]]
+  property = "warning_threshold"
+  condition = "SUP"
+  value = 0
+
+[[rules]]
+name = "dd-slo-has-tags"
+description = "Ensure SLOs are tagged for team ownership"
+level = 0
+object = "slo"
+
+  [[rules.conditions]]
+  property = "tags"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "dd-dashboard-has-description"
+description = "Ensure dashboards have a description for discoverability"
+level = 0
+object = "dashboard"
+
+  [[rules.conditions]]
+  property = "description"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "dd-monitor-no-data-timeout"
+description = "Ensure monitors have a no-data timeout configured"
+level = 1
+object = "monitor"
+
+  [[rules.conditions]]
+  property = "options.no_data_timeframe"
+  condition = "SUP"
+  value = 0

@@ -1,0 +1,117 @@
+[metadata]
+version = "1.0.0"
+provider = "vault"
+description = "HashiCorp Vault auth backend security rules"
+tags = ["vault", "auth", "security", "secrets"]
+
+[[rules]]
+name = "vault-auth-default-token-ttl"
+description = "Ensure default token TTL is 1 hour or less"
+level = 1
+object = "auth_method"
+
+  [[rules.conditions]]
+  property = "config.default_lease_ttl"
+  condition = "INF_OR_EQUAL"
+  value = 3600
+
+[[rules]]
+name = "vault-auth-max-token-ttl"
+description = "Ensure max token TTL is 24 hours or less"
+level = 2
+object = "auth_method"
+
+  [[rules.conditions]]
+  property = "config.max_lease_ttl"
+  condition = "INF_OR_EQUAL"
+  value = 86400
+
+[[rules]]
+name = "vault-auth-no-root-token"
+description = "Ensure root token is revoked after initial setup"
+level = 3
+object = "token"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "display_name", condition = "DIFFERENT", value = "root" },
+    { property = "orphan", condition = "EQUAL", value = false },
+  ]
+
+[[rules]]
+name = "vault-auth-token-max-uses"
+description = "Ensure service tokens have a max use limit set"
+level = 1
+object = "token_role"
+
+  [[rules.conditions]]
+  property = "token_num_uses"
+  condition = "SUP"
+  value = 0
+
+[[rules]]
+name = "vault-auth-userpass-no-default-policy"
+description = "Ensure userpass users have explicit policies (not just default)"
+level = 1
+object = "auth_userpass_user"
+
+  [[rules.conditions]]
+  property = "token_policies"
+  condition = "DIFFERENT"
+  value = "default"
+
+[[rules]]
+name = "vault-auth-approle-secret-id-ttl"
+description = "Ensure AppRole secret_id has a TTL of 24 hours or less"
+level = 2
+object = "auth_approle_role"
+
+  [[rules.conditions]]
+  property = "secret_id_ttl"
+  condition = "INF_OR_EQUAL"
+  value = 86400
+
+[[rules]]
+name = "vault-auth-approle-bind-cidr"
+description = "Ensure AppRole roles bind secret_id to CIDR blocks"
+level = 1
+object = "auth_approle_role"
+
+  [[rules.conditions]]
+  property = "secret_id_bound_cidrs"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "vault-auth-oidc-bound-audiences"
+description = "Ensure OIDC auth has bound audiences configured"
+level = 2
+object = "auth_oidc_role"
+
+  [[rules.conditions]]
+  property = "bound_audiences"
+  condition = "DIFFERENT"
+  value = ""
+
+[[rules]]
+name = "vault-auth-kubernetes-bound-namespaces"
+description = "Ensure Kubernetes auth roles bind to specific namespaces"
+level = 2
+object = "auth_kubernetes_role"
+
+  [[rules.conditions]]
+  property = "bound_service_account_namespaces"
+  condition = "NOT_INCLUDE"
+  value = "*"
+
+[[rules]]
+name = "vault-audit-enabled"
+description = "Ensure at least one audit device is enabled"
+level = 3
+object = "audit_device"
+
+  [[rules.conditions]]
+  property = "type"
+  condition = "DIFFERENT"
+  value = ""

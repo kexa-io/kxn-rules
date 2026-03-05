@@ -1,0 +1,163 @@
+[metadata]
+version = "1.0.0"
+provider = "aws"
+description = "AWS CIS Foundations Benchmark - EC2 and EBS Security Rules"
+tags = ["cis", "aws", "ec2", "ebs", "security", "compute"]
+
+# CIS 2.2.1 - Ensure EBS volume encryption is enabled by default
+[[rules]]
+name = "aws-ebs-encryption-by-default"
+description = "CIS 2.2.1 - Ensure EBS volume encryption is enabled by default in all regions"
+level = 2
+object = "aws_ebs_encryption_by_default"
+tags = ["cis-2.2.1", "soc2", "hipaa", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "enabled"
+  condition = "EQUAL"
+  value = true
+
+# EBS volumes must be encrypted
+[[rules]]
+name = "aws-ebs-volume-encrypted"
+description = "Ensure all EBS volumes are encrypted"
+level = 2
+object = "aws_ebs_volume"
+tags = ["soc2", "hipaa", "pci-dss", "encryption"]
+
+  [[rules.conditions]]
+  property = "encrypted"
+  condition = "EQUAL"
+  value = true
+
+# EBS volumes use KMS CMK
+[[rules]]
+name = "aws-ebs-volume-kms-key"
+description = "Ensure EBS volumes are encrypted with a customer-managed KMS key"
+level = 1
+object = "aws_ebs_volume"
+tags = ["encryption", "best-practice"]
+
+  [[rules.conditions]]
+  property = "kms_key_id"
+  condition = "DIFFERENT"
+  value = ""
+
+# EC2 instances should not use public IPs directly
+[[rules]]
+name = "aws-ec2-no-public-ip"
+description = "Ensure EC2 instances do not have a public IP address assigned directly"
+level = 1
+object = "aws_instance"
+tags = ["soc2", "network", "best-practice"]
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "public_ip", condition = "EQUAL", value = "" },
+    { property = "associate_public_ip_address", condition = "EQUAL", value = false },
+  ]
+
+# EC2 instances should use IMDSv2
+[[rules]]
+name = "aws-ec2-imdsv2-required"
+description = "CIS 5.6 - Ensure EC2 instance metadata service version 2 (IMDSv2) is required"
+level = 2
+object = "aws_instance"
+tags = ["cis-5.6", "soc2", "security"]
+
+  [[rules.conditions]]
+  property = "metadata_options.0.http_tokens"
+  condition = "EQUAL"
+  value = "required"
+
+# EC2 instances should have monitoring enabled
+[[rules]]
+name = "aws-ec2-detailed-monitoring"
+description = "Ensure EC2 detailed monitoring is enabled"
+level = 0
+object = "aws_instance"
+tags = ["monitoring", "best-practice"]
+
+  [[rules.conditions]]
+  property = "monitoring"
+  condition = "EQUAL"
+  value = true
+
+# EC2 instances should not use default security group
+[[rules]]
+name = "aws-ec2-no-default-sg"
+description = "Ensure EC2 instances do not use the default security group"
+level = 2
+object = "aws_instance"
+tags = ["soc2", "network", "security"]
+
+  [[rules.conditions]]
+  property = "vpc_security_group_ids"
+  condition = "NOT_INCLUDE"
+  value = "default"
+
+# EBS snapshots should not be public
+[[rules]]
+name = "aws-ebs-snapshot-not-public"
+description = "Ensure EBS snapshots are not publicly restorable"
+level = 3
+object = "aws_ebs_snapshot"
+tags = ["soc2", "hipaa", "pci-dss", "data-exposure"]
+
+  [[rules.conditions]]
+  property = "create_volume_permissions"
+  condition = "NOT_INCLUDE"
+  value = "all"
+
+# EC2 instances should have termination protection
+[[rules]]
+name = "aws-ec2-termination-protection"
+description = "Ensure production EC2 instances have termination protection enabled"
+level = 1
+object = "aws_instance"
+tags = ["best-practice", "reliability"]
+
+  [[rules.conditions]]
+  property = "disable_api_termination"
+  condition = "EQUAL"
+  value = true
+
+# EC2 instances should use encrypted root volumes
+[[rules]]
+name = "aws-ec2-encrypted-root-volume"
+description = "Ensure EC2 instances have encrypted root volumes"
+level = 2
+object = "aws_instance"
+tags = ["soc2", "hipaa", "encryption"]
+
+  [[rules.conditions]]
+  property = "root_block_device.0.encrypted"
+  condition = "EQUAL"
+  value = true
+
+# AMIs should not be public
+[[rules]]
+name = "aws-ami-not-public"
+description = "Ensure AMIs are not publicly accessible"
+level = 3
+object = "aws_ami"
+tags = ["soc2", "data-exposure"]
+
+  [[rules.conditions]]
+  property = "public"
+  condition = "EQUAL"
+  value = false
+
+# EC2 instances should use recent AMIs
+[[rules]]
+name = "aws-ec2-recent-ami"
+description = "Ensure EC2 instances are using AMIs created within the last 180 days"
+level = 1
+object = "aws_instance"
+tags = ["patching", "best-practice"]
+
+  [[rules.conditions]]
+  property = "ami_creation_date_age_days"
+  condition = "INF"
+  value = 180
