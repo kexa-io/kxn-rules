@@ -1,0 +1,41 @@
+[metadata]
+version = "1.0.0"
+provider = "ssh"
+description = "Proxmox VE node package update rules (connect via SSH to PVE nodes)"
+tags = ["proxmox", "ssh", "packages", "updates"]
+
+[[rules]]
+name = "pve-no-pending-updates"
+description = "Proxmox nodes should have no pending package updates"
+level = 1
+object = "packages"
+tags = ["patching"]
+
+  [[rules.conditions]]
+  property = "upgradable_count"
+  condition = "EQUAL"
+  value = 0
+
+[[rules]]
+name = "pve-no-critical-updates"
+description = "Proxmox nodes should not have security-critical packages pending (pve-manager, proxmox-ve, kernel, openssl)"
+level = 2
+object = "packages"
+tags = ["security", "patching"]
+
+  [[rules.conditions]]
+  property = "packages"
+  condition = "NOT_ANY"
+  value = { property = "name", condition = "REGEX", value = "^(pve-manager|proxmox-ve|pve-kernel|libssl|openssl|corosync|ceph)" }
+
+[[rules]]
+name = "pve-max-20-pending-updates"
+description = "Alert when Proxmox node has more than 20 packages to update"
+level = 2
+object = "packages"
+tags = ["patching"]
+
+  [[rules.conditions]]
+  property = "upgradable_count"
+  condition = "INF"
+  value = 20

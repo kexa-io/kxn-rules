@@ -1,0 +1,119 @@
+[metadata]
+version = "1.0.0"
+provider = "proxmox"
+description = "Proxmox VE compliance and monitoring rules"
+tags = ["proxmox", "virtualization", "infrastructure"]
+
+# --- Nodes ---
+
+[[rules]]
+name = "pve-all-nodes-online"
+description = "All Proxmox nodes must be online"
+level = 3
+object = "nodes"
+tags = ["availability", "critical"]
+
+  [[rules.conditions]]
+  property = "online"
+  condition = "NOT_INCLUDE"
+  value = false
+
+[[rules]]
+name = "pve-node-cpu-below-90"
+description = "No node should have CPU utilization above 90%"
+level = 2
+object = "nodes"
+tags = ["performance"]
+
+  [[rules.conditions]]
+  property = "cpu_utilization"
+  condition = "NOT_ANY"
+  value = { property = ".", condition = "SUP", value = "0.90" }
+
+[[rules]]
+name = "pve-node-memory-below-90"
+description = "No node should use more than 90% of available memory (30GB for 32GB nodes)"
+level = 2
+object = "nodes"
+tags = ["performance"]
+
+  [[rules.conditions]]
+  property = "memory_used"
+  condition = "NOT_ANY"
+  value = { property = ".", condition = "SUP", value = 30064771072 }
+
+[[rules]]
+name = "pve-node-uptime-check"
+description = "All nodes should have uptime > 300s (detect recent unplanned reboots)"
+level = 1
+object = "nodes"
+tags = ["availability"]
+
+  [[rules.conditions]]
+  property = "uptime"
+  condition = "NOT_ANY"
+  value = { property = ".", condition = "INF", value = 300 }
+
+# --- VMs ---
+
+[[rules]]
+name = "pve-no-stopped-vms"
+description = "Alert on stopped VMs (potential waste or unplanned shutdown)"
+level = 1
+object = "vms"
+tags = ["hygiene", "cost"]
+
+  [[rules.conditions]]
+  property = "vms"
+  condition = "NOT_ANY"
+  value = { property = "status", condition = "EQUAL", value = "stopped" }
+
+[[rules]]
+name = "pve-vms-have-tags"
+description = "All VMs should be tagged for organization and governance"
+level = 1
+object = "vms"
+tags = ["governance", "tagging"]
+
+  [[rules.conditions]]
+  property = "vms"
+  condition = "NOT_ANY"
+  value = { property = "tags", condition = "COUNT", value = 0 }
+
+[[rules]]
+name = "pve-no-template-running"
+description = "Template VMs should not be running"
+level = 1
+object = "vms"
+tags = ["hygiene"]
+
+  [[rules.conditions]]
+  property = "vms"
+  condition = "NOT_ANY"
+  value = { property = "template", condition = "EQUAL", value = true }
+
+# --- Version ---
+
+[[rules]]
+name = "pve-version-supported"
+description = "Proxmox VE should be on a supported major version (8+)"
+level = 2
+object = "version"
+tags = ["security", "compliance"]
+
+  [[rules.conditions]]
+  property = "release"
+  condition = "REGEX"
+  value = "^(8|9|10|11|12)\\."
+
+[[rules]]
+name = "pve-version-not-eol"
+description = "Proxmox VE 7.x and below are end-of-life"
+level = 3
+object = "version"
+tags = ["security", "eol"]
+
+  [[rules.conditions]]
+  property = "release"
+  condition = "NOT_STARTS_WITH"
+  value = "7."
