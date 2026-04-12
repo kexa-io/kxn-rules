@@ -1,0 +1,713 @@
+[metadata]
+version = "1.0.0"
+provider = "azure"
+description = "CIS Microsoft Azure Foundations Benchmark — key controls"
+tags = ["cis", "azure", "security", "compliance"]
+
+# =============================================================================
+# Storage Account Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-3.1-secure-transfer-required"
+description = "Ensure that 'Secure transfer required' is set to 'Enabled'"
+level = 2
+object = "storage_account"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.1"
+  section = "Storage Accounts"
+
+  [[rules.conditions]]
+  property = "enable_https_traffic_only"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-3.7-public-access-disabled"
+description = "Ensure that 'Public access level' is disabled for storage accounts with blob containers"
+level = 2
+object = "storage_account"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.7"
+  section = "Storage Accounts"
+
+  [[rules.conditions]]
+  property = "allow_blob_public_access"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-cis-3.2-storage-default-network-access-deny"
+description = "Ensure default network access rule for Storage Accounts is set to deny"
+level = 2
+object = "storage_account"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.2"
+  section = "Storage Accounts"
+
+  [[rules.conditions]]
+  property = "network_rules.default_action"
+  condition = "EQUAL"
+  value = "Deny"
+
+# =============================================================================
+# Network Security Group Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-6.1-nsg-no-rdp-from-internet"
+description = "Ensure that RDP access is restricted from the internet"
+level = 3
+object = "nsg"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "6.1"
+  section = "Networking"
+
+  [[rules.conditions]]
+  operator = "NAND"
+  criteria = [
+    { property = "security_rules.destination_port_range", condition = "INCLUDE", value = "3389" },
+    { property = "security_rules.source_address_prefix", condition = "EQUAL", value = "*" },
+    { property = "security_rules.access", condition = "EQUAL", value = "Allow" },
+  ]
+
+[[rules]]
+name = "azure-cis-6.2-nsg-no-ssh-from-internet"
+description = "Ensure that SSH access is restricted from the internet"
+level = 3
+object = "nsg"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "6.2"
+  section = "Networking"
+
+  [[rules.conditions]]
+  operator = "NAND"
+  criteria = [
+    { property = "security_rules.destination_port_range", condition = "INCLUDE", value = "22" },
+    { property = "security_rules.source_address_prefix", condition = "EQUAL", value = "*" },
+    { property = "security_rules.access", condition = "EQUAL", value = "Allow" },
+  ]
+
+# =============================================================================
+# Key Vault Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-8.4-key-vault-soft-delete"
+description = "Ensure the key vault is recoverable — soft delete enabled"
+level = 2
+object = "key_vault"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "8.4"
+  section = "Key Vault"
+
+  [[rules.conditions]]
+  property = "soft_delete_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-8.5-key-vault-purge-protection"
+description = "Ensure the key vault is recoverable — purge protection enabled"
+level = 2
+object = "key_vault"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "8.5"
+  section = "Key Vault"
+
+  [[rules.conditions]]
+  property = "purge_protection_enabled"
+  condition = "EQUAL"
+  value = true
+
+# =============================================================================
+# SQL Server Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-4.1.1-sql-auditing-enabled"
+description = "Ensure that 'Auditing' is set to 'On' for SQL servers"
+level = 2
+object = "sql_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.1.1"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "auditing_policy.state"
+  condition = "EQUAL"
+  value = "Enabled"
+
+[[rules]]
+name = "azure-cis-4.1.2-sql-tde-enabled"
+description = "Ensure that 'Data encryption' (TDE) is set to 'On' for SQL databases"
+level = 2
+object = "sql_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.1.2"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "transparent_data_encryption.status"
+  condition = "EQUAL"
+  value = "Enabled"
+
+[[rules]]
+name = "azure-cis-4.2.1-sql-advanced-threat-protection"
+description = "Ensure that Advanced Threat Protection is enabled on SQL server"
+level = 2
+object = "sql_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.2.1"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "threat_detection_policy.state"
+  condition = "EQUAL"
+  value = "Enabled"
+
+# =============================================================================
+# Virtual Machine & Disk Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-7.2-os-disk-encryption"
+description = "Ensure that 'OS and Data' disks are encrypted with CMK"
+level = 2
+object = "disk"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "7.2"
+  section = "Virtual Machines"
+
+  [[rules.conditions]]
+  property = "encryption_settings.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-7.4-vm-unattached-disks-encrypted"
+description = "Ensure that unattached disks are encrypted"
+level = 1
+object = "disk"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "7.4"
+  section = "Virtual Machines"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "managed_by", condition = "DIFFERENT", value = "" },
+    { property = "encryption_settings.enabled", condition = "EQUAL", value = true },
+  ]
+
+[[rules]]
+name = "azure-cis-7.1-vm-managed-disks"
+description = "Ensure Virtual Machines utilize Managed Disks"
+level = 1
+object = "vm"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "7.1"
+  section = "Virtual Machines"
+
+  [[rules.conditions]]
+  property = "storage_profile.os_disk.managed_disk"
+  condition = "DIFFERENT"
+  value = ""
+
+# =============================================================================
+# AKS Cluster Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-8.7-aks-rbac-enabled"
+description = "Ensure RBAC is enabled on AKS clusters"
+level = 2
+object = "aks_cluster"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "8.7"
+  section = "Other Security Considerations"
+
+  [[rules.conditions]]
+  property = "enable_rbac"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-8.8-aks-network-policy"
+description = "Ensure AKS cluster has Network Policy configured"
+level = 2
+object = "aks_cluster"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "8.8"
+  section = "Other Security Considerations"
+
+  [[rules.conditions]]
+  property = "network_profile.network_policy"
+  condition = "DIFFERENT"
+  value = ""
+
+# =============================================================================
+# App Service Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-9.2-app-service-https-only"
+description = "Ensure web app redirects all HTTP traffic to HTTPS"
+level = 2
+object = "app_service"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "9.2"
+  section = "AppService"
+
+  [[rules.conditions]]
+  property = "https_only"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-9.3-app-service-tls-1.2"
+description = "Ensure web app is using the latest version of TLS encryption"
+level = 2
+object = "app_service"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "9.3"
+  section = "AppService"
+
+  [[rules.conditions]]
+  property = "site_config.min_tls_version"
+  condition = "SUP_OR_EQUAL"
+  value = "1.2"
+
+[[rules]]
+name = "azure-cis-9.10-app-service-ftps-required"
+description = "Ensure FTP deployments are disabled or use FTPS"
+level = 2
+object = "app_service"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "9.10"
+  section = "AppService"
+
+  [[rules.conditions]]
+  property = "site_config.ftps_state"
+  condition = "DIFFERENT"
+  value = "AllAllowed"
+
+# =============================================================================
+# Public IP Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-6.6-public-ip-ddos-protection"
+description = "Ensure that DDoS Protection Standard is associated with public IPs"
+level = 1
+object = "public_ip"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "6.6"
+  section = "Networking"
+
+  [[rules.conditions]]
+  property = "ddos_settings.protection_mode"
+  condition = "EQUAL"
+  value = "Enabled"
+
+[[rules]]
+name = "azure-cis-6.5-minimize-public-ips"
+description = "Ensure public IP addresses are evaluated and minimized"
+level = 0
+object = "public_ip"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "6.5"
+  section = "Networking"
+
+  [[rules.conditions]]
+  property = "ip_address"
+  condition = "DIFFERENT"
+  value = ""
+
+# =============================================================================
+# Security Center / Defender Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-2.1-defender-enabled"
+description = "CIS 2.1 - Ensure Microsoft Defender is enabled"
+level = 2
+object = "security_center_subscription_pricing"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.1"
+  section = "Security Center"
+
+  [[rules.conditions]]
+  property = "tier"
+  condition = "EQUAL"
+  value = "Standard"
+
+# =============================================================================
+# Storage Account Additional Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-3.3-storage-latest-tls"
+description = "CIS 3.3 - Ensure storage account uses latest TLS version"
+level = 2
+object = "storage_account"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.3"
+  section = "Storage Accounts"
+
+  [[rules.conditions]]
+  property = "min_tls_version"
+  condition = "EQUAL"
+  value = "TLS1_2"
+
+[[rules]]
+name = "azure-cis-3.9-storage-queue-logging"
+description = "CIS 3.9 - Ensure storage logging is enabled for Queue service"
+level = 1
+object = "storage_account"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.9"
+  section = "Storage Accounts"
+
+  [[rules.conditions]]
+  property = "queue_properties.0.logging.0.read"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-3.10-storage-blob-logging"
+description = "CIS 3.10 - Ensure storage logging is enabled for Blob service"
+level = 1
+object = "storage_account"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.10"
+  section = "Storage Accounts"
+
+  [[rules.conditions]]
+  property = "blob_properties.0.logging.0.read"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-3.12-storage-infrastructure-encryption"
+description = "CIS 3.12 - Ensure infrastructure encryption for storage accounts is enabled"
+level = 1
+object = "storage_account"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.12"
+  section = "Storage Accounts"
+
+  [[rules.conditions]]
+  property = "infrastructure_encryption_enabled"
+  condition = "EQUAL"
+  value = true
+
+# =============================================================================
+# SQL Server Additional Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-4.1.3-sql-audit-retention-90-days"
+description = "CIS 4.1.3 - Ensure SQL server audit retention is greater than or equal to 90 days"
+level = 1
+object = "sql_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.1.3"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "auditing_policy.retention_in_days"
+  condition = "SUP_OR_EQUAL"
+  value = 90
+
+[[rules]]
+name = "azure-cis-4.2.2-sql-va-email-admins"
+description = "CIS 4.2.2 - Ensure VA setting 'Send scan reports to' is configured for SQL server"
+level = 1
+object = "sql_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.2.2"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "vulnerability_assessment.email_subscription_admins"
+  condition = "EQUAL"
+  value = true
+
+# =============================================================================
+# PostgreSQL Flexible Server Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-4.3.1-postgresql-ssl-enforced"
+description = "CIS 4.3.1 - Ensure 'Enforce SSL connection' is set to 'ENABLED' for PostgreSQL"
+level = 2
+object = "postgresql_flexible_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.3.1"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "ssl_enforcement_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-4.3.8-postgresql-infrastructure-encryption"
+description = "CIS 4.3.8 - Ensure infrastructure encryption for PostgreSQL is enabled"
+level = 1
+object = "postgresql_flexible_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.3.8"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "infrastructure_encryption_enabled"
+  condition = "EQUAL"
+  value = true
+
+# =============================================================================
+# MySQL Flexible Server Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-4.4.1-mysql-ssl-enforced"
+description = "CIS 4.4.1 - Ensure 'Enforce SSL connection' is set to 'ENABLED' for MySQL"
+level = 2
+object = "mysql_flexible_server"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.4.1"
+  section = "Database Services"
+
+  [[rules.conditions]]
+  property = "ssl_enforcement_enabled"
+  condition = "EQUAL"
+  value = true
+
+# =============================================================================
+# Logging / Monitor Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-5.1-diagnostic-setting-captures-all"
+description = "CIS 5.1 - Ensure diagnostic setting captures all activity categories"
+level = 1
+object = "monitor_diagnostic_setting"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.1"
+  section = "Logging and Monitoring"
+
+  [[rules.conditions]]
+  property = "enabled_log"
+  condition = "DIFFERENT"
+  value = ""
+
+# =============================================================================
+# Log Analytics Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-5.3-log-retention-90-days"
+description = "CIS 5.3 - Ensure log analytics workspace retention is 90 days or greater"
+level = 1
+object = "log_analytics_workspace"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.3"
+  section = "Logging and Monitoring"
+
+  [[rules.conditions]]
+  property = "retention_in_days"
+  condition = "SUP_OR_EQUAL"
+  value = 90
+
+# =============================================================================
+# Network Watcher Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-6.5-network-watcher-enabled"
+description = "CIS 6.5 - Ensure Network Watcher is enabled"
+level = 1
+object = "network_watcher"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "6.5"
+  section = "Networking"
+
+  [[rules.conditions]]
+  property = "name"
+  condition = "DIFFERENT"
+  value = ""
+
+# =============================================================================
+# Virtual Machine Additional Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-7.5-vm-no-extensions"
+description = "CIS 7.5 - Ensure that only approved extensions are installed on VMs"
+level = 0
+object = "virtual_machine"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "7.5"
+  section = "Virtual Machines"
+
+  [[rules.conditions]]
+  property = "extensions"
+  condition = "EQUAL"
+  value = ""
+
+# =============================================================================
+# Container Registry Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-8.1-acr-admin-user-disabled"
+description = "CIS 8.1 - Ensure ACR admin user is disabled"
+level = 2
+object = "container_registry"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "8.1"
+  section = "Other Security Considerations"
+
+  [[rules.conditions]]
+  property = "admin_enabled"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "azure-cis-8.2-acr-private-endpoint"
+description = "CIS 8.2 - Ensure ACR uses private endpoint and disables public network access"
+level = 1
+object = "container_registry"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "8.2"
+  section = "Other Security Considerations"
+
+  [[rules.conditions]]
+  property = "public_network_access_enabled"
+  condition = "EQUAL"
+  value = false
+
+# =============================================================================
+# App Service Additional Rules
+# =============================================================================
+
+[[rules]]
+name = "azure-cis-9.1-app-service-auth-enabled"
+description = "CIS 9.1 - Ensure App Service Authentication is set on Azure App Service"
+level = 1
+object = "app_service"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "9.1"
+  section = "AppService"
+
+  [[rules.conditions]]
+  property = "auth_settings.0.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-9.4-app-service-http2"
+description = "CIS 9.4 - Ensure the web app is using the latest HTTP version"
+level = 0
+object = "app_service"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "9.4"
+  section = "AppService"
+
+  [[rules.conditions]]
+  property = "site_config.0.http2_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "azure-cis-9.5-app-service-managed-identity"
+description = "CIS 9.5 - Ensure that a managed identity is used for the web app"
+level = 1
+object = "app_service"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "9.5"
+  section = "AppService"
+
+  [[rules.conditions]]
+  property = "identity.0.type"
+  condition = "DIFFERENT"
+  value = ""
