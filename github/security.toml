@@ -1,0 +1,336 @@
+[metadata]
+version = "1.0.0"
+provider = "github"
+description = "GitHub Organization and Repository Security Best Practices"
+tags = ["github", "security", "best-practices"]
+
+# =============================================================================
+# Organization — Authentication & Permissions
+# =============================================================================
+
+[[rules]]
+name = "github-sec-org-1-require-2fa"
+description = "Ensure two-factor authentication is required for all organization members"
+level = 3
+object = "organization"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "1.1"
+  section = "Organization Security"
+
+  [[rules.conditions]]
+  property = "two_factor_requirement_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-org-2-default-permissions-read"
+description = "Ensure default repository permissions are set to read or none"
+level = 2
+object = "organization"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "1.2"
+  section = "Organization Security"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "default_repository_permission", condition = "EQUAL", value = "read" },
+    { property = "default_repository_permission", condition = "EQUAL", value = "none" },
+  ]
+
+[[rules]]
+name = "github-sec-org-3-no-public-fork"
+description = "Ensure members cannot fork private repositories to public"
+level = 2
+object = "organization"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "1.3"
+  section = "Organization Security"
+
+  [[rules.conditions]]
+  property = "members_can_fork_private_repositories"
+  condition = "EQUAL"
+  value = false
+
+# =============================================================================
+# Repositories — Branch Protection & Vulnerability Alerts
+# =============================================================================
+
+[[rules]]
+name = "github-sec-repo-1-branch-protection"
+description = "Ensure default branch has branch protection enabled"
+level = 2
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.1"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "default_branch_protection.enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-repo-2-require-pr-reviews"
+description = "Ensure pull request reviews are required before merging to default branch"
+level = 2
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.2"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "default_branch_protection.required_pull_request_reviews.enabled", condition = "EQUAL", value = true },
+    { property = "default_branch_protection.required_pull_request_reviews.required_approving_review_count", condition = "SUP_OR_EQUAL", value = 1 },
+  ]
+
+[[rules]]
+name = "github-sec-repo-3-dismiss-stale-reviews"
+description = "Ensure stale pull request reviews are dismissed on new commits"
+level = 1
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.3"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "default_branch_protection.required_pull_request_reviews.dismiss_stale_reviews"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-repo-4-vulnerability-alerts"
+description = "Ensure vulnerability alerts (Dependabot) are enabled"
+level = 2
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.4"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "vulnerability_alerts_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-repo-5-no-force-push-default"
+description = "Ensure force pushes are blocked on the default branch"
+level = 2
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.5"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "default_branch_protection.allow_force_pushes"
+  condition = "EQUAL"
+  value = false
+
+[[rules]]
+name = "github-sec-repo-6-no-delete-default-branch"
+description = "Ensure default branch cannot be deleted"
+level = 3
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.6"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "default_branch_protection.allow_deletions"
+  condition = "EQUAL"
+  value = false
+
+# =============================================================================
+# Webhooks — Transport Security
+# =============================================================================
+
+[[rules]]
+name = "github-sec-webhook-1-ssl-verification"
+description = "Ensure webhook SSL verification is enabled"
+level = 2
+object = "webhook"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.1"
+  section = "Webhook Security"
+
+  [[rules.conditions]]
+  property = "insecure_ssl"
+  condition = "EQUAL"
+  value = "0"
+
+[[rules]]
+name = "github-sec-webhook-2-https-url"
+description = "Ensure webhook URL uses HTTPS"
+level = 2
+object = "webhook"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.2"
+  section = "Webhook Security"
+
+  [[rules.conditions]]
+  property = "config.url"
+  condition = "STARTS_WITH"
+  value = "https://"
+
+# =============================================================================
+# Actions — Secrets & Permissions
+# =============================================================================
+
+[[rules]]
+name = "github-sec-actions-1-secret-not-exposed"
+description = "Ensure Actions secrets are scoped to selected repositories, not the entire organization"
+level = 1
+object = "actions_org_secret"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.1"
+  section = "GitHub Actions Security"
+
+  [[rules.conditions]]
+  property = "visibility"
+  condition = "DIFFERENT"
+  value = "all"
+
+# =============================================================================
+# Repositories — Additional Security Controls
+# =============================================================================
+
+[[rules]]
+name = "github-sec-repo-7-secret-scanning"
+description = "Ensure secret scanning is enabled on the repository"
+level = 2
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.7"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "secret_scanning_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-repo-8-automated-security-fixes"
+description = "Ensure automated security fixes (Dependabot security updates) are enabled"
+level = 1
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.8"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "automated_security_fixes_enabled"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-repo-9-signed-commits"
+description = "Ensure signed commits are required on the default branch"
+level = 1
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.9"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "default_branch_protection.required_signatures"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-repo-10-status-checks"
+description = "Ensure status checks are required and strict before merging"
+level = 1
+object = "repository"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.10"
+  section = "Repository Security"
+
+  [[rules.conditions]]
+  property = "default_branch_protection.required_status_checks.strict"
+  condition = "EQUAL"
+  value = true
+
+[[rules]]
+name = "github-sec-repo-11-delete-branch-on-merge"
+description = "Ensure branches are automatically deleted after merging"
+level = 0
+object = "repository"
+
+  [[rules.conditions]]
+  property = "delete_branch_on_merge"
+  condition = "EQUAL"
+  value = true
+
+# =============================================================================
+# Actions — Additional Controls
+# =============================================================================
+
+[[rules]]
+name = "github-sec-actions-2-restricted-actions"
+description = "Ensure GitHub Actions are restricted — do not allow all actions to run"
+level = 1
+object = "actions_permissions"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.2"
+  section = "GitHub Actions Security"
+
+  [[rules.conditions]]
+  property = "allowed_actions"
+  condition = "DIFFERENT"
+  value = "all"
+
+# =============================================================================
+# Webhooks — Additional Security
+# =============================================================================
+
+[[rules]]
+name = "github-sec-webhook-3-has-secret"
+description = "Ensure webhooks have a secret configured for payload validation"
+level = 2
+object = "webhook"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.3"
+  section = "Webhook Security"
+
+  [[rules.conditions]]
+  property = "config.secret"
+  condition = "DIFFERENT"
+  value = ""

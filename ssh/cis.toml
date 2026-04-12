@@ -2,53 +2,7 @@
 version = "1.0.0"
 provider = "ssh"
 description = "CIS Benchmark for SSH (OpenSSH Server)"
-tags = ["cis", "ssh", "security", "hardening"]
-
-[[rules]]
-name = "ssh-cis-5.2.4-protocol-2"
-description = "CIS 5.2.4 - Ensure SSH Protocol is set to 2"
-level = 2
-object = "sshd_config"
-
-  [[rules.conditions]]
-  property = "protocol"
-  condition = "EQUAL"
-  value = "2"
-
-[[rules]]
-name = "ssh-cis-5.2.5-max-auth-tries"
-description = "CIS 5.2.5 - Ensure SSH MaxAuthTries is set to 4 or less"
-level = 1
-object = "sshd_config"
-
-  [[rules.conditions]]
-  property = "maxauthtries"
-  condition = "INF_OR_EQUAL"
-  value = 4
-
-[[rules]]
-name = "ssh-cis-5.2.6-idle-timeout"
-description = "CIS 5.2.6 - Ensure SSH idle timeout interval is configured"
-level = 1
-object = "sshd_config"
-
-  [[rules.conditions]]
-  operator = "AND"
-  criteria = [
-    { property = "clientaliveinterval", condition = "SUP", value = 0 },
-    { property = "clientalivecountmax", condition = "INF_OR_EQUAL", value = 3 },
-  ]
-
-[[rules]]
-name = "ssh-cis-5.2.8-disable-x11-forwarding"
-description = "CIS 5.2.8 - Ensure SSH X11 forwarding is disabled"
-level = 1
-object = "sshd_config"
-
-  [[rules.conditions]]
-  property = "x11forwarding"
-  condition = "EQUAL"
-  value = "no"
+tags = ["cis", "ssh", "security"]
 
 [[rules]]
 name = "ssh-cis-5.2.10-no-root-login"
@@ -56,55 +10,79 @@ description = "CIS 5.2.10 - Ensure SSH root login is disabled"
 level = 2
 object = "sshd_config"
 
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.10"
+  section = "SSH Server Configuration"
+
+  [[rules.compliance]]
+  framework = "PCI-DSS"
+  control = "2.2.4"
+
+  [[rules.compliance]]
+  framework = "ISO-27001"
+  control = "A.8.5"
+  section = "Secure Authentication"
+
+  [[rules.compliance]]
+  framework = "NIST-800-53"
+  control = "AC-7"
+  section = "Unsuccessful Logon Attempts"
+
+  [[rules.compliance]]
+  framework = "SOC-2"
+  control = "CC6.1"
+  section = "Logical Access"
+
+  [[rules.compliance]]
+  framework = "HIPAA"
+  control = "164.312(a)(1)"
+  section = "Access Control"
+
   [[rules.conditions]]
   property = "permitrootlogin"
   condition = "EQUAL"
   value = "no"
 
-[[rules]]
-name = "ssh-cis-5.2.15-strong-ciphers"
-description = "CIS 5.2.15 - Ensure only strong ciphers are used"
-level = 2
-object = "sshd_config"
-
-  [[rules.conditions]]
-  operator = "AND"
-  criteria = [
-    { property = "ciphers", condition = "NOT_INCLUDE", value = "3des-cbc" },
-    { property = "ciphers", condition = "NOT_INCLUDE", value = "aes128-cbc" },
-    { property = "ciphers", condition = "NOT_INCLUDE", value = "aes192-cbc" },
-    { property = "ciphers", condition = "NOT_INCLUDE", value = "aes256-cbc" },
-  ]
-
-[[rules]]
-name = "ssh-cis-5.2.16-strong-macs"
-description = "CIS 5.2.16 - Ensure only strong MAC algorithms are used"
-level = 2
-object = "sshd_config"
-
-  [[rules.conditions]]
-  operator = "AND"
-  criteria = [
-    { property = "macs", condition = "NOT_INCLUDE", value = "hmac-md5" },
-    { property = "macs", condition = "NOT_INCLUDE", value = "hmac-sha1" },
-  ]
-
-[[rules]]
-name = "ssh-cis-5.2.17-strong-kex"
-description = "CIS 5.2.17 - Ensure only strong Key Exchange algorithms are used"
-level = 2
-object = "sshd_config"
-
-  [[rules.conditions]]
-  property = "kexalgorithms"
-  condition = "NOT_INCLUDE"
-  value = "diffie-hellman-group1-sha1"
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*PermitRootLogin/d' /etc/ssh/sshd_config && echo 'PermitRootLogin no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
 
 [[rules]]
 name = "ssh-cis-5.2.19-disable-empty-passwords"
 description = "CIS 5.2.19 - Ensure SSH PermitEmptyPasswords is disabled"
 level = 2
 object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.19"
+
+  [[rules.compliance]]
+  framework = "PCI-DSS"
+  control = "8.3"
+  section = "Strong Authentication"
+
+  [[rules.compliance]]
+  framework = "ISO-27001"
+  control = "A.8.5"
+  section = "Secure Authentication"
+
+  [[rules.compliance]]
+  framework = "NIST-800-53"
+  control = "AC-7"
+  section = "Unsuccessful Logon Attempts"
+
+  [[rules.compliance]]
+  framework = "SOC-2"
+  control = "CC6.1"
+  section = "Logical Access"
+
+  [[rules.compliance]]
+  framework = "HIPAA"
+  control = "164.312(a)(1)"
+  section = "Access Control"
 
   [[rules.conditions]]
   operator = "OR"
@@ -113,13 +91,567 @@ object = "sshd_config"
     { property = "permitemptypasswords", condition = "EQUAL", value = "" },
   ]
 
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*PermitEmptyPasswords/d' /etc/ssh/sshd_config && echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
 [[rules]]
-name = "ssh-cis-5.2.20-permit-user-environment"
-description = "CIS 5.2.20 - Ensure SSH PermitUserEnvironment is disabled"
+name = "ssh-cis-5.2.5-max-auth-tries"
+description = "CIS 5.2.5 - Ensure SSH MaxAuthTries is set to 4 or less"
 level = 1
 object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.5"
+
+  [[rules.compliance]]
+  framework = "PCI-DSS"
+  control = "8.3"
+  section = "Strong Authentication"
+
+  [[rules.compliance]]
+  framework = "ISO-27001"
+  control = "A.8.5"
+  section = "Secure Authentication"
+
+  [[rules.compliance]]
+  framework = "NIST-800-53"
+  control = "AC-7"
+  section = "Unsuccessful Logon Attempts"
+
+  [[rules.conditions]]
+  property = "maxauthtries"
+  condition = "INF_OR_EQUAL"
+  value = 4
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*MaxAuthTries/d' /etc/ssh/sshd_config && echo 'MaxAuthTries 4' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.8-disable-x11-forwarding"
+description = "CIS 5.2.8 - Ensure SSH X11 forwarding is disabled"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.8"
+
+  [[rules.conditions]]
+  property = "x11forwarding"
+  condition = "EQUAL"
+  value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*X11Forwarding/d' /etc/ssh/sshd_config && echo 'X11Forwarding no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.6-idle-timeout"
+description = "CIS 5.2.6 - Ensure SSH idle timeout interval is configured"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.6"
+
+  [[rules.conditions]]
+  operator = "AND"
+  criteria = [
+    { property = "clientaliveinterval", condition = "SUP", value = 0 },
+    { property = "clientalivecountmax", condition = "INF_OR_EQUAL", value = 3 },
+  ]
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*ClientAliveInterval/d' /etc/ssh/sshd_config && echo 'ClientAliveInterval 300' >> /etc/ssh/sshd_config && sed -i '/^#*ClientAliveCountMax/d' /etc/ssh/sshd_config && echo 'ClientAliveCountMax 3' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.15-strong-ciphers"
+description = "CIS 5.2.15 - Ensure only strong ciphers are used"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.15"
+
+  [[rules.compliance]]
+  framework = "PCI-DSS"
+  control = "4.1"
+
+  [[rules.compliance]]
+  framework = "ISO-27001"
+  control = "A.8.24"
+  section = "Cryptography"
+
+  [[rules.compliance]]
+  framework = "NIST-800-53"
+  control = "SC-8"
+  section = "Transmission Confidentiality"
+
+  [[rules.compliance]]
+  framework = "SOC-2"
+  control = "CC6.7"
+  section = "Data Transmission"
+
+  [[rules.compliance]]
+  framework = "HIPAA"
+  control = "164.312(e)(1)"
+  section = "Transmission Security"
+
+  [[rules.conditions]]
+  property = "ciphers"
+  condition = "NOT_INCLUDE"
+  value = "3des-cbc"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*Ciphers/d' /etc/ssh/sshd_config && echo 'Ciphers aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.4-protocol-2"
+description = "CIS 5.2.4 - Ensure SSH Protocol is set to 2"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.4"
+
+  [[rules.compliance]]
+  framework = "PCI-DSS"
+  control = "2.2"
+  section = "System Hardening"
+
+  [[rules.compliance]]
+  framework = "ISO-27001"
+  control = "A.8.9"
+  section = "Configuration Management"
+
+  [[rules.compliance]]
+  framework = "NIST-800-53"
+  control = "SC-8"
+  section = "Transmission Confidentiality"
+
+  [[rules.conditions]]
+  property = "protocol"
+  condition = "EQUAL"
+  value = "2"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*Protocol/d' /etc/ssh/sshd_config && echo 'Protocol 2' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.1-sshd-config-owner-root"
+description = "CIS 5.2.1 - Ensure sshd_config is owned by root (uid 0)"
+level = 2
+object = "file_permissions"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.1"
+
+  [[rules.conditions]]
+  property = "sshd_config.uid"
+  condition = "EQUAL"
+  value = 0
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "chown root:root /etc/ssh/sshd_config"
+  timeout = 10
+
+[[rules]]
+name = "ssh-cis-5.2.2-loglevel"
+description = "CIS 5.2.2 - Ensure SSH LogLevel is set to INFO or VERBOSE"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.2"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "loglevel", condition = "EQUAL", value = "INFO" },
+    { property = "loglevel", condition = "EQUAL", value = "VERBOSE" },
+  ]
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*LogLevel/d' /etc/ssh/sshd_config && echo 'LogLevel INFO' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.3-sshd-config-permissions"
+description = "CIS 5.2.3 - Ensure permissions on sshd_config are 600 or more restrictive"
+level = 2
+object = "file_permissions"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.3"
+
+  [[rules.conditions]]
+  property = "sshd_config.mode"
+  condition = "INF_OR_EQUAL"
+  value = 600
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "chmod 600 /etc/ssh/sshd_config"
+  timeout = 10
+
+[[rules]]
+name = "ssh-cis-5.2.7-no-hostbased-auth"
+description = "CIS 5.2.7 - Ensure SSH HostbasedAuthentication is disabled"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.7"
+
+  [[rules.conditions]]
+  property = "hostbasedauthentication"
+  condition = "EQUAL"
+  value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*HostbasedAuthentication/d' /etc/ssh/sshd_config && echo 'HostbasedAuthentication no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.9-ignore-rhosts"
+description = "CIS 5.2.9 - Ensure SSH IgnoreRhosts is enabled"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.9"
+
+  [[rules.conditions]]
+  property = "ignorerhosts"
+  condition = "EQUAL"
+  value = "yes"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*IgnoreRhosts/d' /etc/ssh/sshd_config && echo 'IgnoreRhosts yes' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.11-no-permit-user-environment"
+description = "CIS 5.2.11 - Ensure SSH PermitUserEnvironment is disabled"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.11"
 
   [[rules.conditions]]
   property = "permituserenvironment"
   condition = "EQUAL"
   value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*PermitUserEnvironment/d' /etc/ssh/sshd_config && echo 'PermitUserEnvironment no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.12-strong-macs"
+description = "CIS 5.2.12 - Ensure only strong MAC algorithms are used"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.12"
+
+  [[rules.conditions]]
+  property = "macs"
+  condition = "NOT_INCLUDE"
+  value = "hmac-md5"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*MACs/d' /etc/ssh/sshd_config && echo 'MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.13-strong-kex-algorithms"
+description = "CIS 5.2.13 - Ensure only strong Key Exchange algorithms are used"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.13"
+
+  [[rules.conditions]]
+  property = "kexalgorithms"
+  condition = "NOT_INCLUDE"
+  value = "diffie-hellman-group1-sha1"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*KexAlgorithms/d' /etc/ssh/sshd_config && echo 'KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.14-no-tcp-forwarding"
+description = "CIS 5.2.14 - Ensure SSH AllowTcpForwarding is disabled"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.14"
+
+  [[rules.conditions]]
+  property = "allowtcpforwarding"
+  condition = "EQUAL"
+  value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*AllowTcpForwarding/d' /etc/ssh/sshd_config && echo 'AllowTcpForwarding no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.16-banner-configured"
+description = "CIS 5.2.16 - Ensure SSH warning banner is configured"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.16"
+
+  [[rules.conditions]]
+  property = "banner"
+  condition = "DIFFERENT"
+  value = ""
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "echo 'Authorized access only. All activity is monitored.' > /etc/issue.net && sed -i '/^#*Banner/d' /etc/ssh/sshd_config && echo 'Banner /etc/issue.net' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.17-login-grace-time"
+description = "CIS 5.2.17 - Ensure SSH LoginGraceTime is set to 60 seconds or less"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.17"
+
+  [[rules.conditions]]
+  property = "logingracetime"
+  condition = "INF_OR_EQUAL"
+  value = 60
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*LoginGraceTime/d' /etc/ssh/sshd_config && echo 'LoginGraceTime 60' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.18-maxstartups-restrictive"
+description = "CIS 5.2.18 - Ensure SSH MaxStartups is configured restrictively"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.18"
+
+  [[rules.conditions]]
+  property = "maxstartups"
+  condition = "REGEX"
+  value = "^([1-9]|10):\\d+:\\d+$"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*MaxStartups/d' /etc/ssh/sshd_config && echo 'MaxStartups 10:30:60' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.20-use-pam"
+description = "CIS 5.2.20 - Ensure SSH PAM is enabled"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.20"
+
+  [[rules.conditions]]
+  property = "usepam"
+  condition = "EQUAL"
+  value = "yes"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*UsePAM/d' /etc/ssh/sshd_config && echo 'UsePAM yes' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.21-no-agent-forwarding"
+description = "CIS 5.2.21 - Ensure SSH AllowAgentForwarding is disabled"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.21"
+
+  [[rules.conditions]]
+  property = "allowagentforwarding"
+  condition = "EQUAL"
+  value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*AllowAgentForwarding/d' /etc/ssh/sshd_config && echo 'AllowAgentForwarding no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.22-max-sessions"
+description = "CIS 5.2.22 - Ensure SSH MaxSessions is set to 10 or less"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.22"
+
+  [[rules.conditions]]
+  property = "maxsessions"
+  condition = "INF_OR_EQUAL"
+  value = 10
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*MaxSessions/d' /etc/ssh/sshd_config && echo 'MaxSessions 10' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.23-no-gateway-ports"
+description = "CIS 5.2.23 - Ensure SSH GatewayPorts is disabled"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.23"
+
+  [[rules.conditions]]
+  property = "gatewayports"
+  condition = "EQUAL"
+  value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*GatewayPorts/d' /etc/ssh/sshd_config && echo 'GatewayPorts no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.24-no-permit-tunnel"
+description = "CIS 5.2.24 - Ensure SSH PermitTunnel is disabled"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.24"
+
+  [[rules.conditions]]
+  property = "permittunnel"
+  condition = "EQUAL"
+  value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*PermitTunnel/d' /etc/ssh/sshd_config && echo 'PermitTunnel no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.25-strict-modes"
+description = "CIS 5.2.25 - Ensure SSH StrictModes is enabled"
+level = 2
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.25"
+
+  [[rules.conditions]]
+  property = "strictmodes"
+  condition = "EQUAL"
+  value = "yes"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*StrictModes/d' /etc/ssh/sshd_config && echo 'StrictModes yes' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.26-compression"
+description = "CIS 5.2.26 - Ensure SSH Compression is set to delayed or no"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.26"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "compression", condition = "EQUAL", value = "delayed" },
+    { property = "compression", condition = "EQUAL", value = "no" },
+  ]
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*Compression/d' /etc/ssh/sshd_config && echo 'Compression no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15
+
+[[rules]]
+name = "ssh-cis-5.2.27-no-usedns"
+description = "CIS 5.2.27 - Ensure SSH UseDNS is disabled"
+level = 1
+object = "sshd_config"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2.27"
+
+  [[rules.conditions]]
+  property = "usedns"
+  condition = "EQUAL"
+  value = "no"
+
+  [[rules.remediation]]
+  type = "shell"
+  command = "sed -i '/^#*UseDNS/d' /etc/ssh/sshd_config && echo 'UseDNS no' >> /etc/ssh/sshd_config && sshd -t && systemctl restart sshd"
+  timeout = 15

@@ -1,0 +1,459 @@
+[metadata]
+version = "1.0.0"
+provider = "oracle"
+description = "CIS Benchmark for Oracle Database 19c/21c"
+tags = ["cis", "oracle", "database", "security", "compliance"]
+
+# ── Section 1: Auditing ──────────────────────────────────────────────
+
+[[rules]]
+name = "oracle-cis-1.1-audit-trail"
+description = "CIS 1.1 - Ensure audit_trail is set to DB, OS, XML, or DB,EXTENDED"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "1.1"
+  section = "Auditing and Logging"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "audit_trail", condition = "EQUAL", value = "DB" },
+    { property = "audit_trail", condition = "EQUAL", value = "OS" },
+    { property = "audit_trail", condition = "EQUAL", value = "XML" },
+    { property = "audit_trail", condition = "EQUAL", value = "DB,EXTENDED" },
+  ]
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET audit_trail=DB SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-1.2-audit-sys-operations"
+description = "CIS 1.2 - Ensure AUDIT_SYS_OPERATIONS is set to TRUE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "1.2"
+  section = "Auditing and Logging"
+
+  [[rules.conditions]]
+  property = "audit_sys_operations"
+  condition = "EQUAL"
+  value = "TRUE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET audit_sys_operations=TRUE SCOPE=SPFILE"
+
+# ── Section 2: Authentication and Network ─────────────────────────────
+
+[[rules]]
+name = "oracle-cis-2.1-remote-login-passwordfile"
+description = "CIS 2.1 - Ensure remote_login_passwordfile is set to EXCLUSIVE or NONE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.1"
+  section = "Authentication and Authorization"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "remote_login_passwordfile", condition = "EQUAL", value = "EXCLUSIVE" },
+    { property = "remote_login_passwordfile", condition = "EQUAL", value = "NONE" },
+  ]
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET remote_login_passwordfile=EXCLUSIVE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.2-remote-os-authent"
+description = "CIS 2.2 - Ensure remote_os_authent is set to FALSE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.2"
+  section = "Authentication and Authorization"
+
+  [[rules.conditions]]
+  property = "remote_os_authent"
+  condition = "EQUAL"
+  value = "FALSE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET remote_os_authent=FALSE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.3-remote-os-roles"
+description = "CIS 2.3 - Ensure remote_os_roles is set to FALSE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.3"
+  section = "Authentication and Authorization"
+
+  [[rules.conditions]]
+  property = "remote_os_roles"
+  condition = "EQUAL"
+  value = "FALSE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET remote_os_roles=FALSE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.4-sec-case-sensitive-logon"
+description = "CIS 2.4 - Ensure sec_case_sensitive_logon is set to TRUE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.4"
+  section = "Authentication and Authorization"
+
+  [[rules.conditions]]
+  property = "sec_case_sensitive_logon"
+  condition = "EQUAL"
+  value = "TRUE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET sec_case_sensitive_logon=TRUE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.5-o7-dictionary-accessibility"
+description = "CIS 2.5 - Ensure O7_DICTIONARY_ACCESSIBILITY is set to FALSE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.5"
+  section = "Authentication and Authorization"
+
+  [[rules.conditions]]
+  property = "o7_dictionary_accessibility"
+  condition = "EQUAL"
+  value = "FALSE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET O7_DICTIONARY_ACCESSIBILITY=FALSE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.6-global-names"
+description = "CIS 2.6 - Ensure GLOBAL_NAMES is set to TRUE"
+level = 1
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.6"
+  section = "Authentication and Authorization"
+
+  [[rules.conditions]]
+  property = "global_names"
+  condition = "EQUAL"
+  value = "TRUE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET global_names=TRUE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.7-os-roles"
+description = "CIS 2.7 - Ensure OS_ROLES is set to FALSE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.7"
+  section = "Authentication and Authorization"
+
+  [[rules.conditions]]
+  property = "os_roles"
+  condition = "EQUAL"
+  value = "FALSE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET os_roles=FALSE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.8-remote-listener"
+description = "CIS 2.8 - Ensure REMOTE_LISTENER is empty (no remote listeners)"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.8"
+  section = "Network Security"
+
+  [[rules.conditions]]
+  property = "remote_listener"
+  condition = "EQUAL"
+  value = ""
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET remote_listener='' SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.9-sec-protocol-error-action"
+description = "CIS 2.9 - Ensure SEC_PROTOCOL_ERROR_FURTHER_ACTION is set to DROP,3"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.9"
+  section = "Network Security"
+
+  [[rules.conditions]]
+  property = "sec_protocol_error_further_action"
+  condition = "EQUAL"
+  value = "(DROP,3)"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET sec_protocol_error_further_action='(DROP,3)' SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.10-sec-protocol-error-trace"
+description = "CIS 2.10 - Ensure SEC_PROTOCOL_ERROR_TRACE_ACTION is set to LOG"
+level = 1
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.10"
+  section = "Network Security"
+
+  [[rules.conditions]]
+  property = "sec_protocol_error_trace_action"
+  condition = "EQUAL"
+  value = "LOG"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET sec_protocol_error_trace_action=LOG SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.11-hide-version-banner"
+description = "CIS 2.11 - Ensure SEC_RETURN_SERVER_RELEASE_BANNER is FALSE"
+level = 1
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.11"
+  section = "Network Security"
+
+  [[rules.conditions]]
+  property = "sec_return_server_release_banner"
+  condition = "EQUAL"
+  value = "FALSE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET sec_return_server_release_banner=FALSE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.12-utl-file-dir-empty"
+description = "CIS 2.12 - Ensure UTL_FILE_DIR is empty (prevents file system access)"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.12"
+  section = "Security Settings"
+
+  [[rules.conditions]]
+  property = "utl_file_dir"
+  condition = "EQUAL"
+  value = ""
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET utl_file_dir='' SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-2.13-resource-limit"
+description = "CIS 2.13 - Ensure RESOURCE_LIMIT is set to TRUE"
+level = 1
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "2.13"
+  section = "Security Settings"
+
+  [[rules.conditions]]
+  property = "resource_limit"
+  condition = "EQUAL"
+  value = "TRUE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET resource_limit=TRUE SCOPE=SPFILE"
+
+# ── Section 3: Password Policies ─────────────────────────────────────
+
+[[rules]]
+name = "oracle-cis-3.1-failed-login-attempts"
+description = "CIS 3.1 - Ensure failed_login_attempts is set to 5 or less"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.1"
+  section = "Password Policies"
+
+  [[rules.conditions]]
+  property = "failed_login_attempts"
+  condition = "INF_OR_EQUAL"
+  value = 5
+
+[[rules]]
+name = "oracle-cis-3.2-password-life-time"
+description = "CIS 3.2 - Ensure password_life_time is set to 90 days or less"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.2"
+  section = "Password Policies"
+
+  [[rules.conditions]]
+  property = "password_life_time"
+  condition = "INF_OR_EQUAL"
+  value = 90
+
+[[rules]]
+name = "oracle-cis-3.3-password-reuse-max"
+description = "CIS 3.3 - Ensure password_reuse_max is set to 20 or more"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.3"
+  section = "Password Policies"
+
+  [[rules.conditions]]
+  property = "password_reuse_max"
+  condition = "SUP_OR_EQUAL"
+  value = 20
+
+[[rules]]
+name = "oracle-cis-3.4-password-lock-time"
+description = "CIS 3.4 - Ensure password_lock_time is set to 1 day or more"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "3.4"
+  section = "Password Policies"
+
+  [[rules.conditions]]
+  property = "password_lock_time"
+  condition = "SUP_OR_EQUAL"
+  value = 1
+
+# ── Section 4: Security Settings ─────────────────────────────────────
+
+[[rules]]
+name = "oracle-cis-4.1-sql92-security"
+description = "CIS 4.1 - Ensure sql92_security is set to TRUE"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.1"
+  section = "Security Settings"
+
+  [[rules.conditions]]
+  property = "sql92_security"
+  condition = "EQUAL"
+  value = "TRUE"
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET sql92_security=TRUE SCOPE=SPFILE"
+
+[[rules]]
+name = "oracle-cis-4.2-sec-max-failed-login-attempts"
+description = "CIS 4.2 - Ensure sec_max_failed_login_attempts is set to 10 or less"
+level = 2
+object = "parameters"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "4.2"
+  section = "Security Settings"
+
+  [[rules.conditions]]
+  property = "sec_max_failed_login_attempts"
+  condition = "INF_OR_EQUAL"
+  value = 10
+
+  [[rules.remediation]]
+  type = "sql"
+  query = "ALTER SYSTEM SET sec_max_failed_login_attempts=10 SCOPE=SPFILE"
+
+# ── Section 5: User Account Security ─────────────────────────────────
+
+[[rules]]
+name = "oracle-cis-5.1-no-open-sample-schemas"
+description = "CIS 5.1 - Sample schema accounts (SCOTT, HR, OE, SH) should be locked"
+level = 2
+object = "users"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.1"
+  section = "User Accounts"
+
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "username", condition = "DIFFERENT", value = "SCOTT" },
+    { property = "account_status", condition = "INCLUDE", value = "LOCKED" },
+  ]
+
+[[rules]]
+name = "oracle-cis-5.2-no-expired-open-accounts"
+description = "CIS 5.2 - No accounts should be EXPIRED & OPEN simultaneously"
+level = 1
+object = "users"
+
+  [[rules.compliance]]
+  framework = "CIS"
+  control = "5.2"
+  section = "User Accounts"
+
+  [[rules.conditions]]
+  property = "account_status"
+  condition = "DIFFERENT"
+  value = "EXPIRED"
