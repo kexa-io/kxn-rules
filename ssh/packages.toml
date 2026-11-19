@@ -1,15 +1,13 @@
 [metadata]
 version = "1.0.0"
 provider = "ssh"
-description = "Package update monitoring rules for apt/yum/apk systems"
-tags = ["ssh", "packages", "updates", "patching"]
+description = "SSH package update monitoring rules"
 
 [[rules]]
-name = "ssh-no-pending-updates"
-description = "Alert when packages are available for upgrade"
+name = "ssh-packages-no-upgradable"
+description = "Alert when packages are available for upgrade (apt/yum/apk)"
 level = 1
 object = "packages"
-tags = ["patching"]
 
   [[rules.conditions]]
   property = "upgradable_count"
@@ -17,11 +15,10 @@ tags = ["patching"]
   value = 0
 
 [[rules]]
-name = "ssh-max-50-pending-updates"
+name = "ssh-packages-critical-upgradable"
 description = "Critical alert when more than 50 packages need upgrading"
 level = 2
 object = "packages"
-tags = ["patching", "critical"]
 
   [[rules.conditions]]
   property = "upgradable_count"
@@ -29,11 +26,11 @@ tags = ["patching", "critical"]
   value = 50
 
 [[rules]]
-name = "ssh-no-security-updates-pending"
-description = "Security-critical packages (openssl, libssl, openssh, sudo, kernel) should not have pending updates"
+name = "ssh-packages-security-libs"
+description = "Alert when security-critical packages (openssl, libssl, openssh, sudo, kernel) have updates"
 level = 2
 object = "packages"
-tags = ["security", "patching"]
+tags = ["security"]
 
   [[rules.conditions]]
   property = "packages"

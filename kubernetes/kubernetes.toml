@@ -30,15 +30,52 @@ tags = ["pods", "critical"]
 
 [[rules]]
 name = "k8s-excessive-restarts"
-description = "Total container restarts across cluster should be low"
+description = "Too many containers restarting in the last hour (cumulative totals are not alerted on: they never reset)"
 level = 2
 object = "cluster_stats"
 tags = ["pods", "restarts"]
 
   [[rules.conditions]]
-  property = "total_restarts"
+  property = "containers_restarted_last_hour"
   condition = "INF"
-  value = 100
+  value = 5
+
+# Pod-level companion rules to k8s-excessive-restarts. The cluster_stats
+# rule above is a single aggregate row that doesn't say which container
+# is responsible; these fire per (namespace, pod, container) so the
+# webhook payload carries the noisy pod's identity directly.
+
+[[rules]]
+name = "k8s-pod-high-restart-count"
+description = "Container restart count is high — likely crashloop or stuck retry"
+level = 3
+object = "pod_restarts"
+tags = ["pods", "restarts", "crashloop"]
+
+# restart_count is lifetime-cumulative and never resets except on pod
+# recreation (see kexa-io/kxn#170) — a single resolved incident trips
+# this forever. Require the last restart to also be recent (within the
+# last hour): pass if restart_count is low OR the last restart is old,
+# so the alert only fires while the pod is genuinely still restarting.
+  [[rules.conditions]]
+  operator = "OR"
+  criteria = [
+    { property = "restart_count", condition = "INF", value = 20 },
+    { property = "last_restart_age_seconds", condition = "SUP", value = 3600 },
+  ]
+
+[[rules]]
+name = "k8s-pod-oomkilled"
+description = "Container last terminated by OOMKilled — bump memory limit"
+level = 3
+object = "pod_restarts"
+tags = ["pods", "restarts", "oom", "resources"]
+
+  # Conditions state the compliant case: a pod that was NOT OOM-killed.
+  [[rules.conditions]]
+  property = "oom_killed"
+  condition = "EQUAL"
+  value = false
 
 [[rules]]
 name = "k8s-nodes-not-ready"
@@ -76,14 +113,18 @@ tags = ["events", "warning"]
   condition = "INF"
   value = 50
 
+# Every container must declare `resources.limits`. A container without the
+# key resolves to "" so EQUAL "" catches it; NOT_ANY fails the pod as soon as
+# one container has no limits. Per-container CPU/memory detail lives in
+# kubernetes-resources.toml (object `pod_efficiency`).
 [[rules]]
 name = "k8s-pod-resource-limits"
-description = "All pods should have resource limits defined"
+description = "All pods should have resource limits defined on every container"
 level = 1
 object = "pods"
 tags = ["resources", "best-practice"]
 
   [[rules.conditions]]
   property = "containers"
-  condition = "NOT_INCLUDE"
-  value = ""
+  condition = "NOT_ANY"
+  value = { property = "resources.limits", condition = "EQUAL", value = "" }
