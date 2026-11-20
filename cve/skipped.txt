@@ -1,0 +1,1 @@
+CVE-2026-40217  BerriAI LiteLLM: Python library/proxy installed via pip or container, no distribution package, and no version in the Server header or default page
