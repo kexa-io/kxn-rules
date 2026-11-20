@@ -1,0 +1,65 @@
+name: Sync from kxn releases
+
+# kxn's quick scan and `kxn rules pull` download this repository. Its packs
+# are maintained in kexa-io/kxn (rules/); this workflow mirrors them from the
+# latest kxn release every day, or from a given tag on demand.
+#
+# No secret is needed: kexa-io/kxn is public, and the commit is made here with
+# this repository's own GITHUB_TOKEN.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "kxn release tag to sync from (default: the latest release)"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-kxn
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick the kxn release
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          TAG="${INPUT_TAG:-$(gh release view --repo kexa-io/kxn --json tagName -q .tagName)}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Syncing from kexa-io/kxn@$TAG"
+
+      - name: Fetch that release's rules
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/kxn"
+          curl -fsSL "https://github.com/kexa-io/kxn/archive/refs/tags/$TAG.tar.gz" \
+            | tar -xz -C "$RUNNER_TEMP/kxn" --strip-components=1
+
+      - name: Mirror rules/
+        run: python3 -I "$RUNNER_TEMP/kxn/scripts/sync-rules.py" "$RUNNER_TEMP/kxn/rules" .
+
+      - name: Commit and push
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Already in sync with kexa-io/kxn@$TAG"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync rules from kexa-io/kxn@$TAG"
+          git push
