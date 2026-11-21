@@ -1,0 +1,5 @@
+CVE-2026-129448  Apache Roller: Java webapp with no distribution package, and no reliable remote version (footer is theme-dependent; the web.xml mitigation is not visible)
+CVE-2026-123890  Broadcom VMware vCenter: Photon OS-based appliance with no distribution package, and no version in HTTP banner or headers
+CVE-2025-42884  SAP NetWeaver Enterprise Portal: SAP application server with no distribution package, and no version in HTTP banner or headers
+CVE-2026-76466  Cisco Expressway Series: network appliance with no distribution package, and no version in HTTP banner or headers
+CVE-2024-10441  Synology DiskStation Manager (DSM) / BeeStation OS: NAS appliance OS with no distribution package, and no version in HTTP banner or headers
