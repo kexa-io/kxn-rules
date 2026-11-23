@@ -5,6 +5,8 @@
   "azure/best-practices.toml",
   "azure/cis.toml",
   "azure/secrets-rotation.toml",
+  "cassandra/cis.toml",
+  "cassandra/monitoring.toml",
   "cve/monitoring.toml",
   "docker/cis.toml",
   "docker/harbor-monitoring.toml",
