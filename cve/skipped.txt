@@ -1,1 +1,6 @@
 CVE-2026-40217  BerriAI LiteLLM: Python library/proxy installed via pip or container, no distribution package, and no version in the Server header or default page
+CVE-2026-103406  Juniper Session Smart Conductor/Router: SSR OS is not Junos, so no ssh device os, package, container image or remote version banner applies
+CVE-2026-133469  Vates Xen Orchestra: installed from source or XOA appliance, no distribution package or official versioned container image, and no version in headers or the default page
+CVE-2025-41450  Danfoss AK-SM 800A Series: embedded refrigeration controller firmware, not an OS package, container image or supported network device OS, and no version in headers or the default page
+CVE-2023-25914  Danfoss AK-SM 800A Series: embedded refrigeration controller firmware, not an OS package, container image or supported network device OS, and no version in headers or the default page
+CVE-2023-25915  Danfoss AK-SM 800A Series: embedded refrigeration controller firmware, not an OS package, container image or supported network device OS, and no version in headers or the default page
