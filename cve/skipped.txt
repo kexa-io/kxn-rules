@@ -1,1 +1,6 @@
 CVE-2026-40217  BerriAI LiteLLM: Python library/proxy installed via pip or container, no distribution package, and no version in the Server header or default page
+CVE-2026-120705  OSGeo GeoServer: not in NVD yet and KEV gives no affected or fixed versions, so no version range can be written without guessing; no distribution package and no version in HTTP headers
+CVE-2026-129243  OSGeo GeoServer: not in NVD yet and KEV gives no affected or fixed versions, so no version range can be written without guessing; no distribution package and no version in HTTP headers
+CVE-2026-136716  generated rules failed the checks (workflow run 46155138539)
+CVE-2026-103406  Juniper Session Smart Conductor/Router: SSR OS is not a supported device os, no distribution package or container image, and no version visible over HTTP
+CVE-2026-133469  Vates Xen Orchestra: Node.js application installed from source or the XOA appliance, no official distribution package or versioned container image, and no version in HTTP headers or the default page
